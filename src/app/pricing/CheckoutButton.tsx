@@ -86,7 +86,7 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
           type="text"
           value={promoCode}
           onChange={e => setPromoCode(e.target.value)}
-          placeholder="Enter code"
+          placeholder="Enter code (e.g. VIPSCOUTACCESS)"
           autoFocus
           className="w-full border border-[#E8E5E1] rounded-lg px-3 py-2 text-xs text-[#1A1A2E] placeholder-[#9B9690] outline-none focus:border-[#5B9A6F] bg-white transition-colors uppercase tracking-widest"
         />

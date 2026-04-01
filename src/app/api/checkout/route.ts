@@ -54,8 +54,22 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
   }
 
+  // ── Promo code lookup ─────────────────────────────────────────────────────
+  let discounts: { promotion_code: string }[] | undefined
+
+  if (couponCode) {
+    const promoCodes = await stripe.promotionCodes.list({
+      code: couponCode,
+      limit: 1,
+      active: true,
+    })
+    if (promoCodes.data.length === 0) {
+      return NextResponse.json({ error: 'Invalid promo code. Please check and try again.' }, { status: 400 })
+    }
+    discounts = [{ promotion_code: promoCodes.data[0].id }]
+  }
+
   // ── Build checkout session ─────────────────────────────────────────────────
-  const discounts = couponCode ? [{ coupon: couponCode }] : undefined
 
   let session: Stripe.Checkout.Session
 
@@ -102,10 +116,6 @@ export async function POST(request: NextRequest) {
       })
     }
   } catch (err) {
-    const stripeErr = err as Stripe.errors.StripeError
-    if (stripeErr.type === 'StripeInvalidRequestError' && couponCode) {
-      return NextResponse.json({ error: 'Invalid promo code. Please check and try again.' }, { status: 400 })
-    }
     throw err
   }
 
