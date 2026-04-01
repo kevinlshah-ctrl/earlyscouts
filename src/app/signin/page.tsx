@@ -37,7 +37,12 @@ export default function SignInPage() {
     const { error } = await signIn(email)
     if (error) {
       setStatus('error')
-      setErrorMsg(error)
+      const isRateLimit = /rate.limit|too.many|wait.*minute|security.purpose/i.test(error)
+      setErrorMsg(
+        isRateLimit
+          ? 'Please wait a few minutes before requesting another link.'
+          : error
+      )
     } else {
       setStatus('sent')
     }

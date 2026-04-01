@@ -162,14 +162,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     async (email: string): Promise<{ error: string | null }> => {
-      const redirectTo =
+      const base =
         typeof window !== 'undefined'
-          ? `${window.location.origin}/auth/callback`
-          : `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback`
+          ? window.location.origin
+          : (process.env.NEXT_PUBLIC_APP_URL ?? '')
+
+      // Thread authReturnTo through the magic link so route.ts can redirect
+      // back to the right page after the server-side code exchange.
+      let returnPath = '/schools'
+      try {
+        returnPath = sessionStorage.getItem('authReturnTo') ?? '/schools'
+      } catch {}
+
+      const callbackUrl = returnPath !== '/schools'
+        ? `${base}/auth/callback?next=${encodeURIComponent(returnPath)}`
+        : `${base}/auth/callback`
 
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
-        options: { emailRedirectTo: redirectTo },
+        options: { emailRedirectTo: callbackUrl },
       })
       return { error: error?.message ?? null }
     },
