@@ -1,0 +1,42 @@
+[
+  {
+    "id": "lausd",
+    "name": "Los Angeles Unified School District",
+    "state": "CA",
+    "tourPageUrl": "https://explore.lausd.org/",
+    "enrollmentUrl": "https://achieve.lausd.net/enroll",
+    "permitsUrl": null
+  },
+  {
+    "id": "smmusd",
+    "name": "Santa Monica-Malibu USD",
+    "state": "CA",
+    "tourPageUrl": "https://www.smmusd.org/departments/student-services/enrollment-new-students",
+    "enrollmentUrl": "https://www.smmusd.org/domain/4194",
+    "permitsUrl": "https://www.smmusd.org/departments/student-services/permits"
+  },
+  {
+    "id": "ccusd",
+    "name": "Culver City USD",
+    "state": "CA",
+    "tourPageUrl": null,
+    "enrollmentUrl": "https://www.ccusd.org/enrollment",
+    "permitsUrl": null
+  },
+  {
+    "id": "nycdoe",
+    "name": "New York City DOE",
+    "state": "NY",
+    "tourPageUrl": "https://www.schools.nyc.gov/enrollment",
+    "enrollmentUrl": "https://www.schools.nyc.gov/enrollment",
+    "permitsUrl": null
+  },
+  {
+    "id": "sfusd",
+    "name": "San Francisco USD",
+    "state": "CA",
+    "tourPageUrl": "https://www.sfusd.edu/enrollment",
+    "enrollmentUrl": "https://www.sfusd.edu/enrollment",
+    "permitsUrl": null
+  }
+]

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "smmusd",
+    "name": "Santa Monica-Malibu Unified School District",
+    "state": "CA",
+    "boardUrl": "https://www.smmusd.org/board-of-education/board-meetings",
+    "minutesListUrl": "https://www.smmusd.org/board-of-education/board-meetings",
+    "format": "pdf",
+    "scrapeMethod": "list_page",
+    "linkPattern": "minutes",
+    "maxMeetings": 3,
+    "disabled": false
+  },
+  {
+    "id": "lausd",
+    "name": "Los Angeles Unified School District",
+    "state": "CA",
+    "boardUrl": "https://www.lausd.org/board",
+    "minutesListUrl": "https://www.lausd.org/board",
+    "format": "pdf",
+    "scrapeMethod": "list_page",
+    "linkPattern": "minutes",
+    "maxMeetings": 3,
+    "disabled": true,
+    "_note": "lausd.org blocks scrapers with 403. Needs Puppeteer/Playwright or manual PDF download."
+  },
+  {
+    "id": "ccusd",
+    "name": "Culver City Unified School District",
+    "state": "CA",
+    "boardUrl": "https://go.boarddocs.com/ca/ccusd/Board.nsf/Public",
+    "minutesListUrl": "https://go.boarddocs.com/ca/ccusd/Board.nsf/Public",
+    "format": "pdf",
+    "scrapeMethod": "list_page",
+    "linkPattern": "minutes",
+    "maxMeetings": 3,
+    "disabled": true,
+    "_note": "Uses BoardDocs — minutes links are JavaScript-rendered. HTML scraping not possible."
+  },
+  {
+    "id": "mbusd",
+    "name": "Manhattan Beach Unified School District",
+    "state": "CA",
+    "boardUrl": "https://go.boarddocs.com/ca/mbusd/Board.nsf/Public",
+    "minutesListUrl": "https://go.boarddocs.com/ca/mbusd/Board.nsf/Public",
+    "format": "pdf",
+    "scrapeMethod": "list_page",
+    "linkPattern": "minutes",
+    "maxMeetings": 3,
+    "disabled": true,
+    "_note": "Uses BoardDocs — minutes links are JavaScript-rendered. HTML scraping not possible."
+  },
+  {
+    "id": "bvusd",
+    "name": "Bellflower Unified School District",
+    "state": "CA",
+    "boardUrl": "https://www.bellflowerschools.org/board",
+    "minutesListUrl": "https://www.bellflowerschools.org/board",
+    "format": "pdf",
+    "scrapeMethod": "list_page",
+    "linkPattern": "minutes",
+    "maxMeetings": 3,
+    "disabled": true,
+    "_note": "Domain unreachable — verify current URL at bellflowerschools.org."
+  }
+]
