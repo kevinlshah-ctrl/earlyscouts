@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import { getBrowserClient } from '@/lib/supabase-browser'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
-// The supabase browser client (detectSessionInUrl: true) automatically
-// exchanges the PKCE code in the URL for a session on page load.
-// This page just waits for SIGNED_IN, determines new vs. returning user,
-// then redirects appropriately.
+// With @supabase/ssr, createBrowserClient does NOT auto-exchange the PKCE
+// code from the URL (unlike the old auth-helpers createClientComponentClient).
+// We subscribe to onAuthStateChange first, then explicitly call
+// exchangeCodeForSession so the SIGNED_IN event fires into our listener.
 
 export default function AuthCallbackPage() {
   const router = useRouter()
@@ -57,7 +57,17 @@ export default function AuthCallbackPage() {
       }
     )
 
-    // Fallback: if nothing fires in 15 s the magic link was probably expired
+    // Exchange the PKCE code that Supabase puts in the URL after the user
+    // clicks the magic link.  This triggers the SIGNED_IN event above.
+    const code = new URLSearchParams(window.location.search).get('code')
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).catch(() => {
+        setError('The sign-in link has expired or is invalid. Please try again.')
+      })
+    }
+
+    // Fallback: if SIGNED_IN never fires (no code, network error, etc.) show
+    // an error after 15 s rather than spinning forever.
     const timeout = setTimeout(() => {
       subscription.unsubscribe()
       setError('The sign-in link has expired or is invalid. Please try again.')
