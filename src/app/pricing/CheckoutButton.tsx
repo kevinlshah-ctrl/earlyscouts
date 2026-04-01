@@ -10,9 +10,10 @@ interface Props {
   label: string
   className: string
   loadingLabel?: string
+  next?: string
 }
 
-export default function CheckoutButton({ tier, label, className, loadingLabel = 'Loading...' }: Props) {
+export default function CheckoutButton({ tier, label, className, loadingLabel = 'Loading...', next }: Props) {
   const { user } = useAuth()
   const router   = useRouter()
   const [loading, setLoading] = useState(false)
@@ -22,9 +23,9 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
     setError(null)
 
     if (!user) {
-      // Save the pricing page as the post-auth destination
-      try { sessionStorage.setItem('authReturnTo', '/pricing') } catch {}
-      router.push('/signin?next=/pricing')
+      const returnTo = next ?? '/pricing'
+      try { sessionStorage.setItem('authReturnTo', returnTo) } catch {}
+      router.push(`/signin?next=${encodeURIComponent(returnTo)}`)
       return
     }
 

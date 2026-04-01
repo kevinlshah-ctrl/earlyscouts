@@ -38,6 +38,17 @@ const nextConfig = {
         destination: '/guides/playbook',
         permanent: true,
       },
+      // Account/dashboard aliases → profile
+      {
+        source: '/account',
+        destination: '/profile',
+        permanent: true,
+      },
+      {
+        source: '/dashboard',
+        destination: '/profile',
+        permanent: true,
+      },
     ]
   },
 }

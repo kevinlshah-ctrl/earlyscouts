@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getBrowserClient } from '@/lib/supabase-browser'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 // The supabase browser client (detectSessionInUrl: true) automatically
 // exchanges the PKCE code in the URL for a session on page load.
@@ -17,7 +18,7 @@ export default function AuthCallbackPage() {
     const supabase = getBrowserClient()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         if (event === 'SIGNED_IN' && session) {
           subscription.unsubscribe()
 

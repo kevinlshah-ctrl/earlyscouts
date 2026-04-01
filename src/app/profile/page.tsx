@@ -398,7 +398,7 @@ export default function ProfilePage() {
                   : 'Upgrade to unlock full deep-dive reports and transfer playbooks.'}
               </p>
 
-              {tier === 'extended' ? (
+              {tier === 'extended' || tier === 'premium' ? (
                 <button
                   onClick={handleStripePortal}
                   disabled={stripeLoading}

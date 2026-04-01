@@ -292,6 +292,7 @@ function RenderFeederFlow({ block }: { block: FeederFlowBlock }) {
 
 function RenderComparisonTable({ block }: { block: ComparisonTableBlock }) {
   return (
+    <div className={styles.compTableWrap}>
     <table className={styles.compTable}>
       <thead>
         <tr>
@@ -313,6 +314,7 @@ function RenderComparisonTable({ block }: { block: ComparisonTableBlock }) {
         ))}
       </tbody>
     </table>
+    </div>
   )
 }
 
@@ -380,6 +382,45 @@ function ReportSectionComp({ section }: { section: import('@/lib/types').ReportS
   )
 }
 
+// ── Lazy Section ─────────────────────────────────────────────────────────────
+// Renders a lightweight placeholder until the section is within 800px of the
+// viewport, then swaps in the real content. This prevents the 30–60 s DOM-parse
+// freeze that occurs when all playbook chapters mount simultaneously.
+
+function LazySection({
+  section,
+  eager = false,
+}: {
+  section: import('@/lib/types').ReportSection
+  eager?: boolean
+}) {
+  const [visible, setVisible] = useState(eager)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (eager || visible) return
+    const el = ref.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '800px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [eager, visible])
+
+  if (visible) return <ReportSectionComp section={section} />
+
+  // Placeholder — keeps the id so TOC anchor links resolve before content loads
+  return <div ref={ref} id={section.id} style={{ minHeight: '600px' }} />
+}
+
 // ── Alerts Card ───────────────────────────────────────────────────────────────
 
 function AlertsCard({ alerts }: { alerts: AlertItem[] }) {
@@ -433,7 +474,13 @@ function RelatedSchools({ schools }: { schools: RelatedSchoolItem[] }) {
 
 // ── Main Export ───────────────────────────────────────────────────────────────
 
-export default function SchoolReport({ school }: { school: School }) {
+export default function SchoolReport({
+  school,
+  forcePaywall = false,
+}: {
+  school: School
+  forcePaywall?: boolean
+}) {
   const data = school.reportData!
   const hero = data.hero ?? {}
   const quick_stats = data.quick_stats ?? []
@@ -455,8 +502,9 @@ export default function SchoolReport({ school }: { school: School }) {
     school.name.toLowerCase().includes('blueprint') || school.name.toLowerCase().includes('playbook')
 
   const { profile } = useAuth()
-  // Guides (playbooks/blueprints) are always fully visible — no paywall
-  const isPaid = isGuide || hasActiveAccess(profile)
+  // forcePaywall=true overrides even isGuide — used by server-gated guide pages
+  // that have already stripped sections before sending to the client.
+  const isPaid = !forcePaywall && (isGuide || hasActiveAccess(profile))
 
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -658,9 +706,9 @@ export default function SchoolReport({ school }: { school: School }) {
 
       {/* ── Sections ── */}
       {isPaid ? (
-        // Full access — render every section
-        sections.map(section => (
-          <ReportSectionComp key={section.id} section={section} />
+        // Full access — first section eager, rest lazy-rendered via IntersectionObserver
+        sections.map((section, i) => (
+          <LazySection key={section.id} section={section} eager={i === 0} />
         ))
       ) : (
         // Free access — first section visible, second section blurred preview, then paywall
@@ -683,7 +731,7 @@ export default function SchoolReport({ school }: { school: School }) {
               Get all {sections.length} sections — comparison tables, parent review
               synthesis, tour questions, enrollment details, and the Scout&apos;s Verdict.
             </p>
-            <a href="/pricing" className={styles.paywallCta}>
+            <a href={`/pricing?next=/schools/${school.slug}`} className={styles.paywallCta}>
               Get Premium for $34.99
             </a>
             <p className={styles.paywallNote}>

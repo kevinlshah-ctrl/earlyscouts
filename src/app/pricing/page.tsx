@@ -15,7 +15,8 @@ const COMPARE = [
   { label: 'Cost',               us: '$34.99 + $9.99/mo',  consultant: '$200–$500', diy: 'Free'      },
 ]
 
-export default function PricingPage() {
+export default function PricingPage({ searchParams }: { searchParams?: { next?: string } }) {
+  const next = searchParams?.next
   return (
     <main className="min-h-screen bg-[#FFFAF6]">
       <Nav />
@@ -113,6 +114,7 @@ export default function PricingPage() {
                 label="Get Premium for $34.99"
                 loadingLabel="Setting up checkout..."
                 className="block w-full text-center bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
+                next={next}
               />
             </div>
 
@@ -155,6 +157,7 @@ export default function PricingPage() {
                   label="Get Premium Extended"
                   loadingLabel="Setting up checkout..."
                   className="block w-full text-center border-2 border-[#5B9A6F] text-[#5B9A6F] hover:bg-[#5B9A6F] hover:text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+                  next={next}
                 />
                 <p className="text-[10px] text-[#9B9690] text-center">
                   Starts with $34.99 for 3 days, then $9.99/mo
