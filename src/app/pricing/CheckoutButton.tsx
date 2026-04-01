@@ -16,8 +16,10 @@ interface Props {
 export default function CheckoutButton({ tier, label, className, loadingLabel = 'Loading...', next }: Props) {
   const { user } = useAuth()
   const router   = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+  const [showPromo, setShowPromo] = useState(false)
+  const [promoCode, setPromoCode] = useState('')
 
   async function handleClick() {
     setError(null)
@@ -40,7 +42,10 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
           'Content-Type':  'application/json',
           'Authorization': `Bearer ${session?.access_token ?? ''}`,
         },
-        body: JSON.stringify({ tier }),
+        body: JSON.stringify({
+          tier,
+          couponCode: promoCode.trim().toUpperCase() || undefined,
+        }),
       })
 
       const data: { url?: string; error?: string } = await res.json()
@@ -59,7 +64,7 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <button
         onClick={handleClick}
         disabled={loading}
@@ -67,6 +72,26 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
       >
         {loading ? loadingLabel : label}
       </button>
+
+      {!showPromo ? (
+        <button
+          type="button"
+          onClick={() => setShowPromo(true)}
+          className="text-xs text-center text-[#9B9690] hover:text-[#6E6A65] transition-colors"
+        >
+          Have a promo code?
+        </button>
+      ) : (
+        <input
+          type="text"
+          value={promoCode}
+          onChange={e => setPromoCode(e.target.value)}
+          placeholder="Enter code"
+          autoFocus
+          className="w-full border border-[#E8E5E1] rounded-lg px-3 py-2 text-xs text-[#1A1A2E] placeholder-[#9B9690] outline-none focus:border-[#5B9A6F] bg-white transition-colors uppercase tracking-widest"
+        />
+      )}
+
       {error && (
         <p className="text-xs text-red-500 text-center">{error}</p>
       )}
