@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --background: #FFFAF6;
+  --foreground: #1A1A2E;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Deep Report HTML content styles ────────────────────────────────────────── */
+.deep-report h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.35rem;
+  color: #1A1A2E;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.deep-report h2:first-child {
+  margin-top: 0;
+}
+.deep-report h3 {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1A1A2E;
+  margin-top: 1.5rem;
+  margin-bottom: 0.4rem;
+}
+.deep-report p {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+.deep-report ul, .deep-report ol {
+  padding-left: 1.4rem;
+  margin-bottom: 1rem;
+}
+.deep-report li {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+.deep-report strong {
+  font-weight: 600;
+  color: #1A1A2E;
+}
+.deep-report a {
+  color: #2a7a5a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.deep-report a:hover {
+  opacity: 0.8;
+}
+.deep-report img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+.deep-report .photo-caption {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 0.25rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+.deep-report .street-view-block {
+  margin-bottom: 2rem;
+}
+.deep-report .street-view-img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  margin-top: 0;
+}
+
+/* Hide scrollbar for horizontal scroll rows */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

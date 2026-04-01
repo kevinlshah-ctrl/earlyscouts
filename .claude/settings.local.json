@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(wc:*)",
+      "Bash(npx next:*)",
+      "Bash(grep -r \"paywall\\\\|blurred\\\\|blur\" /c/Users/KevinShah/earlyscouts/src --include=*.ts --include=*.tsx --include=*.js --include=*.jsx)",
+      "Bash(xargs ls:*)",
+      "Bash(grep -A 5 -B 5 \"Get Premium\\\\|Get Full Access\\\\|$34.99\\\\|$9.99\" /c/Users/KevinShah/earlyscouts/src/app/pricing/page.tsx)",
+      "Bash(grep -r \"STRIPE_PREMIUM_PRICE_ID\\\\|STRIPE_EXTENDED\\\\|price_id\" /c/Users/KevinShah/earlyscouts --include=*.ts --include=*.tsx --include=.env*)"
+    ]
+  }
+}

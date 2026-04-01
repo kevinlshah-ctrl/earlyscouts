@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+export async function DELETE(request: NextRequest) {
+  const authHeader = request.headers.get('Authorization')
+  const token = authHeader?.replace('Bearer ', '')
+
+  if (!token) {
+    return NextResponse.json({ error: 'Missing auth token' }, { status: 401 })
+  }
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !serviceKey) {
+    return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 })
+  }
+
+  const supabaseAdmin = createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+
+  // Verify the JWT belongs to a real user
+  const { data: { user }, error: verifyError } = await supabaseAdmin.auth.getUser(token)
+  if (verifyError || !user) {
+    return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
+  }
+
+  // user_profiles is deleted by CASCADE when auth.users row is removed
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

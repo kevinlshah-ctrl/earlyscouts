@@ -1,0 +1,1311 @@
+/* SchoolReport.module.css — mirrors mar-vista-report-v2.html styles */
+
+/* ─── Site Header ─── */
+.siteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  max-width: 1152px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 20;
+}
+.siteHeaderLogo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: #1A1A2E;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+.siteHeaderLogo span {
+  color: #2D6A4F;
+}
+.siteHeaderNav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.siteHeaderLink {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3D3A36;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.siteHeaderLink:hover {
+  color: #2D6A4F;
+}
+.siteHeaderCtas {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.siteHeaderSignIn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3D3A36;
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1px solid #D4D0CC;
+  border-radius: 20px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.siteHeaderSignIn:hover {
+  color: #2D6A4F;
+  border-color: #2D6A4F;
+}
+.siteHeaderGetStarted {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: #2D6A4F;
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+.siteHeaderGetStarted:hover {
+  background: #245c43;
+}
+
+/* ─── Breadcrumb ─── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 8px;
+  font-size: 13px;
+}
+.breadcrumbLink {
+  color: #2D6A4F;
+  text-decoration: none;
+}
+.breadcrumbLink:hover {
+  text-decoration: underline;
+}
+.breadcrumbSep {
+  color: #D4D0CC;
+}
+.breadcrumbCurrent {
+  color: #9B9690;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+/* ─── Sticky Header Wrapper ─── */
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #FFFAF6;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.stickyHeaderScrolled {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border-bottom: 1px solid #E8E5E1;
+}
+
+/* ─── Related Schools Nav ─── */
+.relatedNav {
+  padding: 0 24px 6px;
+  max-width: 1152px;
+  margin: 0 auto;
+  border-top: 1px solid #F0EDE8;
+}
+
+.relatedNavRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 5px;
+  padding: 4px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.relatedNavRow::-webkit-scrollbar {
+  display: none;
+}
+
+.relatedNavLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #9B9690;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.relatedNavScroll {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.relatedNavPill {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  color: #2D6A4F;
+  background: #2D6A4F08;
+  border: 1px solid #2D6A4F20;
+  padding: 4px 12px;
+  border-radius: 100px;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.relatedNavPill:hover {
+  background: #2D6A4F18;
+  border-color: #2D6A4F;
+}
+
+/* ─── Guide Nav Pills (peach, distinct from school links) ─── */
+.guideNavPill {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  color: #C97B3A;
+  background: #FEF3E8;
+  border: 1px solid #F2C49A;
+  border-radius: 20px;
+  padding: 4px 12px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.guideNavPill:hover {
+  background: #FDEBD0;
+  border-color: #C97B3A;
+  color: #8B5A1E;
+}
+
+/* ─── SMMUSD Transfer Banner ─── */
+.smmusdBanner {
+  max-width: 800px;
+  margin: 0 auto 4px;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FEF3E8;
+  border-left: 3px solid #F2945C;
+  border-radius: 0 6px 6px 0;
+  flex-wrap: wrap;
+}
+
+.smmusdBannerIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.smmusdBannerText {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #7A6A5A;
+}
+
+.smmusdBannerLink {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #C97B3A;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.smmusdBannerLink:hover {
+  color: #2D6A4F;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .siteHeaderNav {
+    display: none;
+  }
+  .siteHeaderCtas {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .siteHeader {
+    padding: 10px 16px;
+  }
+
+  .relatedNav {
+    padding: 0 16px 5px;
+  }
+
+  .relatedNavPill {
+    font-size: 11.5px;
+    padding: 3px 10px;
+  }
+
+  .guideNavPill {
+    font-size: 11.5px;
+    padding: 3px 10px;
+  }
+
+  .smmusdBanner {
+    padding: 8px 16px;
+    gap: 6px;
+  }
+}
+
+/* ─── Layout ─── */
+.report {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px 100px;
+  font-size: 16.5px;
+  line-height: 1.75;
+  color: #1A1A2E;
+  background: #FFFAF6;
+  min-height: 100vh;
+}
+
+/* ─── Hero ─── */
+.heroArea {
+  background: #1A2E26;
+  color: white;
+  margin: 0 -24px;
+  border-radius: 0 0 24px 24px;
+  overflow: hidden;
+  position: relative;
+  min-height: 310px;
+}
+/* Satellite aerial filtered to near-invisible watermark; color wash creates duotone */
+.heroImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(100%) contrast(1.2) brightness(0.85);
+  mix-blend-mode: luminosity;
+  opacity: 0.70;
+}
+/* Green color wash sits above the image, multiply blend creates the duotone tint */
+.heroColorWash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(160deg, #1A2E26 0%, #1a3a3a 40%, #2D6A4F 100%);
+  mix-blend-mode: multiply;
+  z-index: 2;
+}
+.heroFollowBtn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  z-index: 8;
+}
+.heroOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 36px 28px 32px;
+  background: linear-gradient(to top, rgba(26,46,38,0.95) 25%, rgba(26,46,38,0.5) 65%, transparent);
+  z-index: 5;
+}
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  background: #2D6A4F;
+  color: white;
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-bottom: 14px;
+}
+.heroTitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 38px;
+  line-height: 1.15;
+  margin-bottom: 6px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
+.heroAddress {
+  color: #9B9690;
+  font-size: 14.5px;
+  margin-bottom: 18px;
+}
+.metaRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.metaPill {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 4px 11px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.75);
+  letter-spacing: 0.3px;
+}
+.metaPillAccent {
+  background: rgba(45,106,79,0.35);
+  color: #7ECAB0;
+}
+
+/* ─── Scout Summary Strip ─── */
+.scoutStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: #E8E5E1;
+  border-radius: 16px;
+  /* overflow visible so tooltips can escape the strip */
+  overflow: visible;
+  margin: -20px 8px 0;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  /* re-apply rounded corners on outer edges via child selectors */
+}
+.scoutStripItem {
+  background: white;
+  padding: 18px 16px;
+  text-align: center;
+  position: relative;
+}
+/* Restore corner rounding since overflow is now visible */
+.scoutStripItem:first-child {
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+}
+.scoutStripItem:last-child {
+  border-top-right-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+.ssValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1A2E;
+  line-height: 1.2;
+}
+.ssValueGreen {
+  color: #2D6A4F;
+}
+.ssLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #9B9690;
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* ─── Table of Contents ─── */
+.toc {
+  background: white;
+  border: 1px solid #E8E5E1;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin: 40px 0 52px;
+}
+.tocHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tocHeaderLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #9B9690;
+}
+.tocLine {
+  flex: 1;
+  height: 1px;
+  background: #E8E5E1;
+}
+.tocList {
+  list-style: none;
+  counter-reset: toc;
+  columns: 2;
+  column-gap: 32px;
+  padding: 0;
+  margin: 0;
+}
+.tocItem {
+  counter-increment: toc;
+  break-inside: avoid;
+}
+.tocLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #1A1A2E;
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 7px 0;
+  transition: color 0.2s;
+}
+.tocLink:hover {
+  color: #2D6A4F;
+}
+.tocLink::before {
+  content: counter(toc, decimal-leading-zero);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #D4D0CC;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+/* ─── Sections ─── */
+.section {
+  margin-bottom: 64px;
+  scroll-margin-top: 32px;
+}
+.sectionLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #2D6A4F;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sectionNum {
+  background: #2D6A4F;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  letter-spacing: 0;
+}
+.sectionTitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  font-weight: 400;
+  margin-bottom: 6px;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  color: #1A1A2E;
+}
+.sectionSubtitle {
+  font-size: 15px;
+  color: #9B9690;
+  margin-bottom: 28px;
+  font-style: italic;
+}
+.sectionH3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 21px;
+  font-weight: 400;
+  margin: 36px 0 14px;
+  line-height: 1.3;
+  color: #1A1A2E;
+}
+.para {
+  margin-bottom: 18px;
+  color: #4A4744;
+  line-height: 1.8;
+}
+
+/* ─── Divider ─── */
+.sectionDivider {
+  height: 1px;
+  background: #E8E5E1;
+  margin: 64px 0;
+  position: relative;
+}
+.sectionDivider::after {
+  content: '◆';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #FFFAF6;
+  padding: 0 12px;
+  color: #D4D0CC;
+  font-size: 10px;
+}
+
+/* ─── Callout Cards ─── */
+.callout {
+  border-left: 4px solid #2D6A4F;
+  padding: 22px 26px;
+  background: rgba(45,106,79,0.07);
+  border-radius: 0 14px 14px 0;
+  margin: 28px 0;
+}
+.calloutAmber {
+  border-left-color: #E8B84B;
+  background: rgba(232,184,75,0.08);
+}
+.calloutRed {
+  border-left-color: #E05555;
+  background: rgba(224,85,85,0.06);
+}
+.calloutSky {
+  border-left-color: #6BB3D9;
+  background: rgba(107,179,217,0.07);
+}
+.calloutLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #2D6A4F;
+  margin-bottom: 8px;
+}
+.calloutLabelAmber {
+  color: #C49A2A;
+}
+.calloutLabelRed {
+  color: #E05555;
+}
+.calloutLabelSky {
+  color: #6BB3D9;
+}
+.calloutText {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.65;
+  color: #1A1A2E;
+  margin: 0;
+}
+
+/* ─── Stats Grid ─── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 12px;
+  margin: 28px 0;
+}
+.statBox {
+  background: white;
+  border: 1px solid #E8E5E1;
+  border-radius: 14px;
+  padding: 18px 20px;
+  transition: box-shadow 0.2s;
+}
+.statBox:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.statLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #9B9690;
+  margin-bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.statValue {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1A1A2E;
+  line-height: 1.1;
+}
+.statValueGreen {
+  color: #2D6A4F;
+}
+.statContext {
+  font-size: 12px;
+  color: #6E6A65;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ─── Score Bars ─── */
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+.scoreLabel {
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 90px;
+  flex-shrink: 0;
+  color: #4A4744;
+}
+.scoreLabelWide {
+  width: 120px;
+}
+.scoreBarBg {
+  flex: 1;
+  height: 10px;
+  background: #F5F3F0;
+  border-radius: 100px;
+  overflow: hidden;
+}
+.scoreBar {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.8s ease;
+}
+.scoreBarGreen { background: #2D6A4F; }
+.scoreBarSky { background: #6BB3D9; }
+.scoreBarPeach { background: #F2945C; }
+.scoreBarHoney { background: #E8B84B; }
+.scoreBarGray { background: #9B9690; }
+.scorePct {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+  color: #1A1A2E;
+  font-weight: 500;
+}
+.scoreSource {
+  font-size: 11.5px;
+  color: #9B9690;
+  font-family: 'DM Mono', monospace;
+  margin-top: 10px;
+}
+
+/* ─── Photo Blocks ─── */
+.photoBlock {
+  margin: 28px 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #E8E5E1;
+}
+.photoBlock img {
+  width: 100%;
+  display: block;
+  min-height: 180px;
+  background: #F5F3F0;
+  object-fit: cover;
+}
+.photoCaption {
+  padding: 12px 18px;
+  background: white;
+  font-size: 12.5px;
+  color: #6E6A65;
+  font-style: italic;
+  line-height: 1.5;
+}
+.photoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 28px 0;
+}
+.photoGrid .photoBlock {
+  margin: 0;
+}
+.photoGridImg {
+  height: 200px;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ─── Feeder Flow ─── */
+.feederFlow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 28px 0;
+  padding: 32px 20px;
+  background: white;
+  border: 1px solid #E8E5E1;
+  border-radius: 16px;
+}
+.feederBox {
+  padding: 16px 28px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 15px;
+  width: 100%;
+  max-width: 380px;
+}
+.feederBoxCurrent {
+  background: #2D6A4F;
+  color: white;
+}
+.feederBoxMiddle {
+  background: white;
+  border: 2px solid #6BB3D9;
+  color: #6BB3D9;
+}
+.feederBoxHigh {
+  background: white;
+  border: 2px solid #F2945C;
+  color: #F2945C;
+}
+.feederSub {
+  font-weight: 400;
+  font-size: 11.5px;
+  opacity: 0.8;
+  margin-top: 3px;
+}
+.feederArrow {
+  font-size: 18px;
+  color: #D4D0CC;
+}
+.feederOr {
+  font-size: 12px;
+  color: #9B9690;
+  font-style: italic;
+  font-family: 'DM Serif Display', serif;
+}
+
+/* ─── Comparison Table ─── */
+.compTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 28px 0;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #E8E5E1;
+  font-size: 14px;
+}
+.compTable th,
+.compTable td {
+  padding: 13px 16px;
+  text-align: left;
+  border-bottom: 1px solid #FAF9F7;
+}
+.compTable th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #9B9690;
+  background: #FAF9F7;
+  font-weight: 500;
+}
+.compTable tr:last-child td {
+  border-bottom: none;
+}
+.compTableHighlight {
+  background: rgba(45,106,79,0.07) !important;
+}
+.compTableSchoolName {
+  font-weight: 600;
+  color: #1A1A2E;
+}
+.compTable td {
+  color: #4A4744;
+}
+
+/* ─── Tour Questions Card ─── */
+.tourCard {
+  background: #1A1A2E;
+  color: white;
+  border-radius: 16px;
+  padding: 32px;
+  margin: 32px 0;
+}
+.tourCardTitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: white;
+  margin: 0 0 6px 0;
+}
+.tourCardSub {
+  color: #9B9690;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.tourQ {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.tourQ:last-child {
+  border-bottom: none;
+}
+.tourQNum {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #7ECAB0;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+.tourQText {
+  color: #D4D0CC;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* ─── Timeline ─── */
+.timeline {
+  margin: 24px 0;
+}
+.timelineItem {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #FAF9F7;
+}
+.timelineItem:last-child {
+  border-bottom: none;
+}
+.timelineDate {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #2D6A4F;
+  width: 56px;
+  flex-shrink: 0;
+  padding-top: 1px;
+  font-weight: 500;
+}
+.timelineContent {
+  flex: 1;
+  font-size: 14px;
+  color: #4A4744;
+}
+
+/* ─── Verdict ─── */
+.verdict {
+  background: #1A1A2E;
+  color: white;
+  border-radius: 20px;
+  padding: 40px 36px;
+  margin-top: 56px;
+}
+.verdictTitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  font-weight: 400;
+  margin-bottom: 18px;
+  color: white;
+}
+.verdictPara {
+  color: #C8C5C1;
+  margin-bottom: 14px;
+  line-height: 1.8;
+}
+.verdictDivider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 24px 0;
+}
+.bestForLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #7ECAB0;
+  margin-bottom: 10px;
+}
+.bestForText {
+  color: white;
+  font-weight: 500;
+}
+.considerLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #9B9690;
+  margin-bottom: 10px;
+  margin-top: 16px;
+}
+.considerText {
+  color: #C8C5C1;
+}
+
+/* ─── Report Footer ─── */
+.reportFooter {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid #E8E5E1;
+  text-align: center;
+}
+.reportFooterBrand {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  color: #1A1A2E;
+  margin-bottom: 4px;
+}
+.reportFooterText {
+  font-size: 12px;
+  color: #9B9690;
+  line-height: 1.6;
+}
+
+/* ─── Alerts Card ─── */
+.alertsCard {
+  background: white;
+  border: 1px solid #E8E5E1;
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin: 28px 0 12px;
+}
+.alertsLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #F2945C;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.alertItem {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-bottom: 1px solid #FAF9F7;
+}
+.alertItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.alertItem:first-child {
+  padding-top: 0;
+}
+.alertIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  line-height: 1;
+}
+.alertContent {
+  flex: 1;
+}
+.alertTitle {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1A1A2E;
+  margin-bottom: 2px;
+}
+.alertText {
+  font-size: 14px;
+  color: #6E6A65;
+  line-height: 1.5;
+}
+.alertCta {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: #2D6A4F;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.alertCta:hover {
+  opacity: 0.75;
+}
+
+/* ─── Related Schools ─── */
+.relatedSection {
+  margin-top: 48px;
+}
+.relatedLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #9B9690;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.relatedLine {
+  flex: 1;
+  height: 1px;
+  background: #E8E5E1;
+}
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.relatedCard {
+  background: white;
+  border: 1px solid #E8E5E1;
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.relatedCard:hover {
+  border-color: #2D6A4F;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+/* tag sits above the school name */
+.relatedTag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #2D6A4F;
+  background: rgba(45,106,79,0.08);
+  padding: 3px 8px;
+  border-radius: 100px;
+  display: inline-block;
+  align-self: flex-start;
+}
+.relatedName {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  color: #1A1A2E;
+  line-height: 1.3;
+}
+.relatedArrow {
+  color: #2D6A4F;
+  font-size: 14px;
+  margin-top: auto;
+}
+
+/* ─── Feeder/Table links ─── */
+.feederLink {
+  color: inherit;
+  text-decoration: none;
+}
+.feederLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.compLink {
+  color: #2D6A4F;
+  text-decoration: none;
+}
+.compLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ─── Stat Tooltips ─── */
+.tooltipWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltipTrigger {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: #C4BFB9;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s;
+  /* reset any inherited text-transform from parent */
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tooltipTrigger:hover {
+  color: #7A6A5A;
+}
+
+.tooltipBox {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  background: #FFFAF6;
+  border: 1px solid #E8E5E1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: #3D3A36;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+  z-index: 9999;
+  pointer-events: none;
+  white-space: normal;
+}
+
+/* Arrow pointing down toward the icon */
+.tooltipArrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: #FFFAF6;
+  border-right: 1px solid #E8E5E1;
+  border-bottom: 1px solid #E8E5E1;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  /* Tooltip: narrower + ensure it doesn't escape left edge on first stat */
+  .tooltipBox {
+    width: 240px;
+    font-size: 12px;
+  }
+  /* First stat in a row — shift tooltip right so it doesn't bleed left */
+  .scoutStripItem:first-child .tooltipBox,
+  .statBox:first-child .tooltipBox {
+    left: 0;
+    transform: translateX(0);
+  }
+  .scoutStripItem:first-child .tooltipBox .tooltipArrow,
+  .statBox:first-child .tooltipBox .tooltipArrow {
+    left: 20px;
+  }
+  /* Last stat in a row — shift tooltip left */
+  .scoutStripItem:last-child .tooltipBox,
+  .statBox:last-child .tooltipBox {
+    left: auto;
+    right: 0;
+    transform: translateX(0);
+  }
+  .scoutStripItem:last-child .tooltipBox .tooltipArrow,
+  .statBox:last-child .tooltipBox .tooltipArrow {
+    left: auto;
+    right: 20px;
+  }
+
+  .heroTitle { font-size: 28px; }
+  .heroOverlay { padding: 28px 20px 24px; }
+  .heroArea { min-height: 240px; }
+  .scoutStrip { grid-template-columns: repeat(2, 1fr); margin: -16px 4px 0; }
+  .sectionTitle { font-size: 25px; }
+  .tocList { columns: 1; }
+  .statsGrid { grid-template-columns: 1fr 1fr; }
+  .photoGrid { grid-template-columns: 1fr; }
+  .photoGridImg { height: 180px; }
+  .compTable { font-size: 12px; }
+  .compTable th,
+  .compTable td { padding: 10px; }
+  .verdict { padding: 28px 22px; }
+  .tourCard { padding: 24px 20px; }
+  .relatedGrid { grid-template-columns: repeat(2, 1fr); }
+  .alertsCard { padding: 20px; }
+}
+
+/* ─── Paywall ─── */
+
+/* Blurred preview of the next locked section */
+.paywallPreview {
+  position: relative;
+  max-height: 200px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+.paywallPreviewInner {
+  filter: blur(3px);
+  opacity: 0.55;
+}
+/* Gradient fade that wipes out the bottom of the preview */
+.paywallPreviewFade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(to bottom, transparent, #FFFAF6);
+  pointer-events: none;
+}
+
+/* Paywall upgrade card */
+.paywallCard {
+  background: white;
+  border: 1.5px solid #E8E5E1;
+  border-radius: 20px;
+  padding: 36px 28px;
+  text-align: center;
+  box-shadow: 0 4px 28px rgba(26, 46, 38, 0.09);
+  margin: 0 0 32px;
+  position: relative;
+  z-index: 1;
+}
+.paywallLock {
+  font-size: 30px;
+  margin-bottom: 14px;
+}
+.paywallTitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: #1A1A2E;
+  margin-bottom: 10px;
+  font-weight: 400;
+}
+.paywallBody {
+  font-size: 14px;
+  color: #6E6A65;
+  line-height: 1.65;
+  max-width: 360px;
+  margin: 0 auto 24px;
+}
+.paywallCta {
+  display: inline-block;
+  background: #5B9A6F;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 36px;
+  border-radius: 100px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.paywallCta:hover { background: #4a8a5e; }
+.paywallNote {
+  font-size: 11.5px;
+  color: #9B9690;
+  margin-top: 10px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 640px) {
+  .paywallCard { padding: 28px 20px; }
+  .paywallTitle { font-size: 19px; }
+  .paywallBody { font-size: 13px; }
+}

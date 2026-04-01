@@ -1,0 +1,244 @@
+'use client'
+
+import { useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import type { School, ReportSection, ContentBlock } from '@/lib/types'
+
+/* ── Free section IDs — these render without paywall ── */
+const FREE_SECTION_IDS = new Set(['overview', 'pipeline', 'feeder-pipeline'])
+
+/* ── Section labels for the TOC ── */
+const SECTION_DESCRIPTIONS: Record<string, string> = {
+  overview: 'Editorial opinion, demographics, and key context',
+  academics: '3-year score trends vs. district and state averages',
+  comparison: 'Side-by-side with 4-5 schools parents actually compare',
+  community: 'Synthesized from Movoto, Niche, Yelp, and GreatSchools',
+  culture: 'Synthesized from Movoto, Niche, Yelp, and GreatSchools',
+  pipeline: 'Elementary → middle → high school flow map',
+  'feeder-pipeline': 'Elementary → middle → high school flow map',
+  enrollment: 'Contact info, permit details, key dates',
+  programs: 'Detailed program descriptions and offerings',
+  construction: 'Active renovations, campus photos, facility updates',
+}
+
+function getScoutTake(sections: ReportSection[]): string | null {
+  for (const section of sections) {
+    for (const block of section.content) {
+      if (block.type === 'callout' && (block as any).label === 'Scout Take') {
+        return (block as any).text
+      }
+    }
+  }
+  return null
+}
+
+function estimateReadTime(sections: ReportSection[]): number {
+  let chars = 0
+  for (const section of sections) {
+    for (const block of section.content) {
+      if ('text' in block && typeof (block as any).text === 'string') {
+        chars += (block as any).text.length
+      }
+      if (block.type === 'comparison_table') {
+        chars += ((block as any).rows?.length || 0) * 80
+      }
+      if (block.type === 'tour_questions') {
+        chars += ((block as any).questions?.length || 0) * 60
+      }
+    }
+  }
+  const minutes = Math.round(chars / 1500)
+  return Math.max(10, Math.min(30, Math.round(minutes / 5) * 5))
+}
+
+function estimateSourceCount(school: School): number {
+  if (!school.reportData) return 15
+  const sections = school.reportData.sections.length
+  const stats = school.reportData.quick_stats?.length || 0
+  const alerts = school.reportData.alerts?.length || 0
+  return sections * 4 + stats + alerts + 8
+}
+
+interface SchoolPreviewModalProps {
+  school: School | null
+  onClose: () => void
+}
+
+export default function SchoolPreviewModal({ school, onClose }: SchoolPreviewModalProps) {
+  // Close on Escape key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+  }, [onClose])
+
+  useEffect(() => {
+    if (school) {
+      document.addEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'hidden'
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [school, handleKeyDown])
+
+  if (!school) return null
+
+  const reportData = school.reportData
+  const sections = reportData?.sections || []
+  const scoutTake = getScoutTake(sections)
+  const readTime = estimateReadTime(sections)
+  const sourceCount = estimateSourceCount(school)
+  const generatedAt = reportData?.generated_at || school.lastUpdated
+  const quickStats = reportData?.quick_stats || []
+  const isGuide = school.enrollment === 0 || school.grades === ''
+
+  // Rating color
+  const ratingColor =
+    (school.ratings.greatSchools || 0) >= 8 ? 'bg-scout-green/10 text-scout-green'
+    : (school.ratings.greatSchools || 0) >= 6 ? 'bg-honey/10 text-honey'
+    : 'bg-peach/10 text-peach'
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[998] transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Sheet */}
+      <div className="fixed inset-x-0 bottom-0 z-[999] max-h-[80vh] overflow-y-auto bg-white rounded-t-2xl shadow-2xl animate-slide-up">
+        <div className="max-w-lg mx-auto px-5 py-5">
+
+          {/* Drag handle */}
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-1 rounded-full bg-gray-200" />
+          </div>
+
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h2 className="font-serif text-xl text-charcoal leading-snug">{school.name}</h2>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="text-xs font-mono text-gray-400">{school.district || school.type}</span>
+                {school.ratings.greatSchools !== null && school.ratings.greatSchools > 0 && (
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${ratingColor}`}>
+                    {school.ratings.greatSchools}/10
+                  </span>
+                )}
+                {school.grades && (
+                  <span className="text-xs text-gray-400">{school.grades}</span>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-charcoal text-xl leading-none p-1 -mt-1"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+
+          {/* Scout Take teaser (FREE) */}
+          {scoutTake && (
+            <div className="bg-[#E8F5EC] border border-[#5B9A6F]/20 rounded-xl px-4 py-3 mb-4">
+              <p className="text-xs font-mono uppercase tracking-widest text-[#5B9A6F] mb-1.5">Scout Take</p>
+              <p className="text-sm text-charcoal leading-relaxed">
+                {scoutTake.length > 350 ? scoutTake.slice(0, 350) + '...' : scoutTake}
+              </p>
+            </div>
+          )}
+
+          {/* Quick Stats (FREE) */}
+          {quickStats.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {quickStats.slice(0, 4).map((stat, i) => (
+                <div key={i} className="bg-cream rounded-lg px-3 py-2 text-center">
+                  <p className="text-lg font-bold text-charcoal">{stat.value}</p>
+                  <p className="text-xs text-gray-400">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Table of Contents */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-mono uppercase tracking-widest text-gray-400">
+                {isGuide ? "What's in this guide" : "What's in this report"}
+              </p>
+              <p className="text-xs text-gray-400">
+                ~{readTime} min read &middot; {sourceCount}+ sources
+              </p>
+            </div>
+
+            <div className="border border-gray-100 rounded-xl overflow-hidden">
+              {sections.map((section, i) => {
+                const isFree = FREE_SECTION_IDS.has(section.id)
+                const desc = SECTION_DESCRIPTIONS[section.id] || section.subtitle || ''
+                return (
+                  <div
+                    key={section.id}
+                    className={`flex items-center gap-3 px-4 py-3 ${
+                      i < sections.length - 1 ? 'border-b border-gray-50' : ''
+                    }`}
+                  >
+                    <span className={`flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold shrink-0 ${
+                      isFree
+                        ? 'bg-scout-green/10 text-scout-green'
+                        : 'bg-gray-50 text-gray-300 border border-gray-100'
+                    }`}>
+                      {isFree ? '✓' : '🔒'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold leading-snug ${
+                        isFree ? 'text-charcoal' : 'text-gray-400'
+                      }`}>
+                        {section.title}
+                      </p>
+                      {desc && (
+                        <p className="text-xs text-gray-400 leading-snug mt-0.5 truncate">{desc}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Free vs Paid summary */}
+          <div className="bg-cream rounded-xl px-4 py-3 mb-4 text-center">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              <span className="font-semibold text-charcoal">Free:</span> Scout Take + Quick Stats + Pipeline Map
+              <br />
+              <span className="font-semibold text-scout-green">Full access:</span> All {sections.length} sections including comparisons, reviews &amp; enrollment
+            </p>
+          </div>
+
+          {/* CTA */}
+          <Link
+            href={`/schools/${school.slug}`}
+            className="block w-full text-center bg-scout-green hover:bg-scout-green-dark text-white text-sm font-semibold py-3.5 rounded-xl transition-colors mb-2"
+          >
+            {isGuide ? 'Read Full Guide' : 'Get Full Access for $34.99'}
+          </Link>
+          <p className="text-xs text-gray-400 text-center mb-1">
+            Full access from $34.99 · Stay connected $9.99/mo
+          </p>
+        </div>
+      </div>
+
+      {/* Slide-up animation */}
+      <style jsx global>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        .animate-slide-up {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
+    </>
+  )
+}
