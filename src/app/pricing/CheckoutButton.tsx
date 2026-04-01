@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { getBrowserClient } from '@/lib/supabase-browser'
@@ -21,12 +21,28 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
   const [showPromo, setShowPromo] = useState(false)
   const [promoCode, setPromoCode] = useState('')
 
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem('pendingPromoCode')
+      if (pending) {
+        setPromoCode(pending)
+        setShowPromo(true)
+        sessionStorage.removeItem('pendingPromoCode')
+      }
+    } catch {}
+  }, [])
+
   async function handleClick() {
     setError(null)
 
     if (!user) {
       const returnTo = next ?? '/pricing'
-      try { sessionStorage.setItem('authReturnTo', returnTo) } catch {}
+      try {
+        sessionStorage.setItem('authReturnTo', returnTo)
+        if (promoCode.trim()) {
+          sessionStorage.setItem('pendingPromoCode', promoCode.trim().toUpperCase())
+        }
+      } catch {}
       router.push(`/signin?next=${encodeURIComponent(returnTo)}`)
       return
     }
@@ -86,7 +102,7 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
           type="text"
           value={promoCode}
           onChange={e => setPromoCode(e.target.value)}
-          placeholder="Enter code (e.g. VIPSCOUTACCESS)"
+          placeholder="Enter promo code"
           autoFocus
           className="w-full border border-[#E8E5E1] rounded-lg px-3 py-2 text-xs text-[#1A1A2E] placeholder-[#9B9690] outline-none focus:border-[#5B9A6F] bg-white transition-colors uppercase tracking-widest"
         />
