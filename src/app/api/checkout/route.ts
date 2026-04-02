@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         ],
         ...(discounts ? { discounts } : {}),
         metadata: { userId: user.id, tier: 'premium' },
-        success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${appUrl}/schools?welcome=1`,
         cancel_url:  `${appUrl}/pricing`,
       })
     } else {
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
           metadata: { userId: user.id, tier: 'extended' },
         },
         metadata: { userId: user.id, tier: 'extended' },
-        success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${appUrl}/schools?welcome=1`,
         cancel_url:  `${appUrl}/pricing`,
       })
     }

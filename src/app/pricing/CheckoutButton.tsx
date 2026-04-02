@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { getBrowserClient } from '@/lib/supabase-browser'
+import InlineAuth from './InlineAuth'
 
 interface Props {
   tier: 'premium' | 'extended'
@@ -13,20 +13,25 @@ interface Props {
   next?: string
 }
 
-export default function CheckoutButton({ tier, label, className, loadingLabel = 'Loading...', next }: Props) {
+export default function CheckoutButton({
+  tier,
+  label,
+  className,
+  loadingLabel = 'Loading…',
+  next,
+}: Props) {
   const { user } = useAuth()
-  const router   = useRouter()
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-  const [showPromo, setShowPromo] = useState(false)
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState('')
 
+  // Read pendingPromoCode for the logged-in view.
+  // InlineAuth handles its own read for the not-logged-in view.
   useEffect(() => {
     try {
       const pending = sessionStorage.getItem('pendingPromoCode')
       if (pending) {
         setPromoCode(pending)
-        setShowPromo(true)
         sessionStorage.removeItem('pendingPromoCode')
       }
     } catch {}
@@ -34,19 +39,6 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
 
   async function handleClick() {
     setError(null)
-
-    if (!user) {
-      const returnTo = next ?? '/pricing'
-      try {
-        sessionStorage.setItem('authReturnTo', returnTo)
-        if (promoCode.trim()) {
-          sessionStorage.setItem('pendingPromoCode', promoCode.trim().toUpperCase())
-        }
-      } catch {}
-      router.push(`/signin?next=${encodeURIComponent(returnTo)}`)
-      return
-    }
-
     setLoading(true)
     try {
       const supabase = getBrowserClient()
@@ -68,19 +60,33 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
 
       if (data.url) {
         window.location.href = data.url
-        return // navigating away — keep loading state
+        return // navigating away — keep spinner
       }
 
-      setError(data.error ?? 'Something went wrong. Please try again.')
+      setError(data.error ?? 'Payment unavailable — please try again or contact hello@earlyscouts.com')
     } catch {
-      setError('Network error. Please check your connection and try again.')
+      setError('Payment unavailable — please try again or contact hello@earlyscouts.com')
     } finally {
       setLoading(false)
     }
   }
 
+  // ── Not logged in: show inline signup / sign-in form ─────────────────────
+  if (!user) {
+    return <InlineAuth tier={tier} next={next} dark={tier === 'premium'} />
+  }
+
+  // ── Logged in: promo code (always visible) + checkout button ──────────────
   return (
     <div className="flex flex-col gap-2">
+      <input
+        type="text"
+        value={promoCode}
+        onChange={e => setPromoCode(e.target.value.toUpperCase())}
+        placeholder="Promo code (optional)"
+        className="w-full border border-[#E8E5E1] rounded-lg px-3 py-2 text-xs text-[#1A1A2E] placeholder-[#9B9690] outline-none focus:border-[#5B9A6F] bg-white transition-colors uppercase tracking-widest"
+      />
+
       <button
         onClick={handleClick}
         disabled={loading}
@@ -89,27 +95,8 @@ export default function CheckoutButton({ tier, label, className, loadingLabel = 
         {loading ? loadingLabel : label}
       </button>
 
-      {!showPromo ? (
-        <button
-          type="button"
-          onClick={() => setShowPromo(true)}
-          className="text-xs text-center text-[#9B9690] hover:text-[#6E6A65] transition-colors"
-        >
-          Have a promo code?
-        </button>
-      ) : (
-        <input
-          type="text"
-          value={promoCode}
-          onChange={e => setPromoCode(e.target.value)}
-          placeholder="Enter promo code"
-          autoFocus
-          className="w-full border border-[#E8E5E1] rounded-lg px-3 py-2 text-xs text-[#1A1A2E] placeholder-[#9B9690] outline-none focus:border-[#5B9A6F] bg-white transition-colors uppercase tracking-widest"
-        />
-      )}
-
       {error && (
-        <p className="text-xs text-red-500 text-center">{error}</p>
+        <p className="text-xs text-red-400 text-center">{error}</p>
       )}
     </div>
   )

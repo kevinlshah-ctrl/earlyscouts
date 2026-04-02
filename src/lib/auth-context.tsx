@@ -47,6 +47,8 @@ interface AuthState {
   loading: boolean
   /** Send a magic-link to the given email. Returns error string or null. */
   signIn: (email: string) => Promise<{ error: string | null }>
+  /** Sign in with email + password. Returns error string or null. */
+  signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   /**
    * Toggle follow on a school slug.
@@ -187,6 +189,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [supabase]
   )
 
+  const signInWithPassword = useCallback(
+    async (email: string, password: string): Promise<{ error: string | null }> => {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+      return { error: error?.message ?? null }
+    },
+    [supabase]
+  )
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     setUser(null)
@@ -281,6 +294,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         signIn,
+        signInWithPassword,
         signOut,
         toggleFollow,
         isFollowing,
