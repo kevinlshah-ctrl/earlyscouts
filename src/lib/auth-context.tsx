@@ -211,9 +211,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const toggleFollow = useCallback(
     async (slug: string): Promise<boolean> => {
-      if (!user || !profile) return false
+      if (!user) return false
 
-      const current = profile.followed_schools
+      // Use followed_schools from profile if available; fall back to empty array
+      // so that clicks work even when the user_profiles row hasn't loaded yet.
+      const current = profile?.followed_schools ?? []
       const isCurrentlyFollowing = current.includes(slug)
 
       // Deduplicate on add; filter on remove

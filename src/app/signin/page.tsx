@@ -11,7 +11,7 @@ type Status = 'idle' | 'submitting' | 'sent' | 'error'
 
 export default function SignInPage() {
   const router = useRouter()
-  const { user, loading, signIn, signInWithPassword } = useAuth()
+  const { user, signIn, signInWithPassword } = useAuth()
 
   const [mode,     setMode]     = useState<Mode>('password')
   const [email,    setEmail]    = useState('')
@@ -22,10 +22,10 @@ export default function SignInPage() {
   // Forgot-password sub-state (only relevant in password mode)
   const [forgotSent, setForgotSent] = useState(false)
 
-  // If already signed in, redirect
+  // If already signed in, redirect (runs after form renders — does not block render)
   useEffect(() => {
-    if (!loading && user) router.replace('/profile')
-  }, [loading, user, router])
+    if (user) router.replace('/profile')
+  }, [user, router])
 
   // Persist ?next for post-auth redirect
   useEffect(() => {
@@ -96,16 +96,6 @@ export default function SignInPage() {
     } else {
       setStatus('sent')
     }
-  }
-
-  // ── Loading splash ────────────────────────────────────────────────────────
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-scout-green border-t-transparent animate-spin" />
-      </main>
-    )
   }
 
   // ── Magic-link sent confirmation ──────────────────────────────────────────

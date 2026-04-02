@@ -73,6 +73,14 @@ export default function ProfilePage() {
   const [activeTab,       setActiveTab]       = useState<TabId>('schools')
   const [followedSlugs,   setFollowedSlugs]   = useState<string[]>([])
   const [portalLoading,   setPortalLoading]   = useState(false)
+  // After 3s, stop showing the skeleton even if profile hasn't loaded —
+  // prevents infinite skeleton when user_profiles row is missing.
+  const [timedOut,        setTimedOut]        = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 3000)
+    return () => clearTimeout(t)
+  }, [])
 
   // Redirect to sign in when not authenticated
   useEffect(() => {
@@ -109,13 +117,33 @@ export default function ProfilePage() {
 
   // ── Guards ────────────────────────────────────────────────────────────────
 
-  // Show skeleton while auth is loading OR while profile row hasn't arrived yet
-  if (loading || !user || !profile) {
+  // Show skeleton only while auth initialises, or for up to 3s waiting for profile.
+  // After timeout we render with whatever we have to avoid infinite skeleton.
+  if ((loading || !user || !profile) && !timedOut) {
     return <PageSkeleton />
   }
 
-  const initials = profile.display_name
-    ? profile.display_name.slice(0, 2).toUpperCase()
+  // Auth finished but no user — redirect is in-flight, render nothing
+  if (!user) return null
+
+  // Build a safe fallback for when the user_profiles row is missing
+  const profile_ = profile ?? {
+    id:                  user.id,
+    email:               user.email ?? '',
+    display_name:        null,
+    followed_schools:    [] as string[],
+    onboarding_data:     null,
+    subscription_tier:   'free'  as const,
+    subscription_status: null,
+    access_expires_at:   null,
+    stripe_customer_id:  null,
+    preferences:         null,
+    created_at:          '',
+    updated_at:          '',
+  }
+
+  const initials = profile_.display_name
+    ? profile_.display_name.slice(0, 2).toUpperCase()
     : user.email?.slice(0, 2).toUpperCase() ?? '?'
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -133,7 +161,7 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-mono uppercase tracking-widest text-peach mb-0.5">My Account</p>
             <h1 className="font-serif text-2xl text-charcoal leading-tight">
-              {profile.display_name || user.email?.split('@')[0]}
+              {profile_.display_name || user.email?.split('@')[0]}
             </h1>
             <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
@@ -190,13 +218,13 @@ export default function ProfilePage() {
         {activeTab === 'preferences' && (
           <PreferencesTab
             userId={user.id}
-            initialPrefs={profile.preferences}
+            initialPrefs={profile_.preferences}
           />
         )}
 
         {activeTab === 'subscription' && (
           <SubscriptionSection
-            profile={profile}
+            profile={profile_}
             onPortalClick={handleStripePortal}
             portalLoading={portalLoading}
           />
@@ -205,7 +233,7 @@ export default function ProfilePage() {
         {activeTab === 'account' && (
           <AccountTab
             user={user}
-            profile={profile}
+            profile={profile_}
             onDeleteAccount={deleteAccount}
             onStripePortal={handleStripePortal}
             stripePortalLoading={portalLoading}
