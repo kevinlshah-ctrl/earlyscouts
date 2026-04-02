@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
+import { SiteGuardProvider } from '@/lib/site-guard'
 
 export const metadata: Metadata = {
   title: 'EarlyScouts - For parents who plan ahead.',
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-cream text-charcoal antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <SiteGuardProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </SiteGuardProvider>
       </body>
     </html>
   )
