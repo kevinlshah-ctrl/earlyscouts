@@ -2,12 +2,14 @@
 
 import { useState, useEffect, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useSiteAuth } from '@/lib/site-guard'
+
+const SITE_PASSWORD = 'VIPSCOUTACCESS'
+const COOKIE_NAME   = 'vipscout_auth'
+const STORAGE_KEY   = 'vipscout_auth'
 
 export default function SiteAuthPage() {
   const router       = useRouter()
   const searchParams = useSearchParams()
-  const { authenticate, isAuthenticated } = useSiteAuth()
 
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState(false)
@@ -15,22 +17,28 @@ export default function SiteAuthPage() {
 
   const from = searchParams.get('from') ?? '/'
 
-  // Already authenticated — skip straight through
+  // If already authenticated (session cookie present), skip through
   useEffect(() => {
-    if (isAuthenticated) router.replace(from)
-  }, [isAuthenticated, from, router])
+    try {
+      if (sessionStorage.getItem(STORAGE_KEY) === SITE_PASSWORD) {
+        router.replace(from)
+      }
+    } catch {}
+  }, [from, router])
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    const ok = authenticate(password)
-    if (ok) {
-      router.replace(from)
-    } else {
+    if (password !== SITE_PASSWORD) {
       setError(true)
       setShake(true)
       setPassword('')
       setTimeout(() => setShake(false), 500)
+      return
     }
+    // Set session cookie (no Max-Age = cleared when browser closes)
+    document.cookie = `${COOKIE_NAME}=${SITE_PASSWORD}; path=/; SameSite=Strict`
+    try { sessionStorage.setItem(STORAGE_KEY, SITE_PASSWORD) } catch {}
+    router.replace(from)
   }
 
   return (
