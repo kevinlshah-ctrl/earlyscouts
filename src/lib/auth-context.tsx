@@ -22,6 +22,7 @@ export interface UserProfile {
   /** UTC ISO timestamp when Premium 3-day access expires (null = never set) */
   access_expires_at: string | null
   stripe_customer_id: string | null
+  preferences: Record<string, unknown> | null
   created_at: string
   updated_at: string
 }
@@ -98,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         subscription_status: (row.subscription_status as UserProfile['subscription_status']) ?? null,
         access_expires_at: (row.access_expires_at as string | null) ?? null,
         stripe_customer_id: (row.stripe_customer_id as string | null) ?? null,
+        preferences: (row.preferences as Record<string, unknown> | null) ?? null,
         created_at: row.created_at as string,
         updated_at: row.updated_at as string,
       }

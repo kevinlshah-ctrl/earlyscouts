@@ -1,447 +1,218 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
 import { getBrowserClient } from '@/lib/supabase-browser'
-import type { School } from '@/lib/types'
-import { rowToSchool, type SchoolRow } from '@/lib/supabase'
+import SchoolsTab from './SchoolsTab'
+import PreferencesTab from './PreferencesTab'
+import SubscriptionSection from './SubscriptionSection'
+import AccountTab from './AccountTab'
 
-// ── Small card for a followed school ────────────────────────────────────────
-function FollowedSchoolCard({
-  school,
-  onUnfollow,
-}: {
-  school: School
-  onUnfollow: () => void
-}) {
-  const gs = school.ratings.greatSchools
-  const isGuide =
-    school.name.toLowerCase().includes('playbook') ||
-    school.name.toLowerCase().includes('blueprint')
-  const href = isGuide ? `/guides/${school.slug}` : `/schools/${school.slug}`
+// ── Tab definitions ───────────────────────────────────────────────────────────
 
+const TABS = [
+  { id: 'schools',      label: 'Your Schools'      },
+  { id: 'preferences',  label: 'Preferences'        },
+  { id: 'subscription', label: 'Subscription'       },
+  { id: 'account',      label: 'Account'            },
+] as const
+
+type TabId = typeof TABS[number]['id']
+
+// ── Loading skeleton ──────────────────────────────────────────────────────────
+
+function PageSkeleton() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-2">
-        <Link href={href} className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-charcoal leading-snug hover:text-scout-green transition-colors line-clamp-2">
-            {school.name}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            {school.district ? `${school.district} · ` : ''}
-            {school.grades || 'Grades N/A'}
-          </p>
-        </Link>
-        {gs !== null && gs > 0 && (
-          <span className={`text-xs font-bold px-1.5 py-0.5 rounded shrink-0 ${
-            gs >= 8 ? 'bg-scout-green/10 text-scout-green' :
-            gs >= 6 ? 'bg-honey/10 text-honey' :
-            'bg-peach/10 text-peach'
-          }`}>
-            {gs}/10
-          </span>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 justify-between mt-auto">
-        <Link
-          href={href}
-          className="text-xs font-semibold text-scout-green hover:underline"
-        >
-          View report →
-        </Link>
-        <button
-          onClick={onUnfollow}
-          className="text-xs text-gray-400 hover:text-red-400 transition-colors"
-        >
-          Remove
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ── Delete account confirmation modal ───────────────────────────────────────
-function DeleteModal({ onConfirm, onCancel, loading }: {
-  onConfirm: () => void
-  onCancel: () => void
-  loading: boolean
-}) {
-  const [typed, setTyped] = useState('')
-
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={onCancel} />
-      <div
-        role="dialog"
-        aria-modal="true"
-        className="fixed z-50 inset-0 flex items-center justify-center px-4"
-      >
-        <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-          <h3 className="font-serif text-xl text-charcoal mb-2">Delete account?</h3>
-          <p className="text-sm text-gray-500 leading-relaxed mb-4">
-            This permanently deletes your account, followed schools, and all
-            preferences. This action cannot be undone.
-          </p>
-          <p className="text-xs text-gray-400 mb-2">
-            Type <strong>DELETE</strong> to confirm:
-          </p>
-          <input
-            type="text"
-            value={typed}
-            onChange={e => setTyped(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-red-400 mb-4"
-            placeholder="DELETE"
-            autoFocus
-          />
-          <div className="flex gap-3">
-            <button
-              onClick={onCancel}
-              className="flex-1 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-charcoal hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              disabled={typed !== 'DELETE' || loading}
-              className="flex-1 py-2.5 rounded-full bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
-            >
-              {loading ? 'Deleting...' : 'Delete forever'}
-            </button>
+    <main className="min-h-screen bg-cream">
+      {/* Header skeleton */}
+      <div className="bg-white border-b border-gray-100 px-4 py-6">
+        <div className="max-w-3xl mx-auto flex items-center gap-4 animate-pulse">
+          <div className="w-12 h-12 rounded-full bg-gray-100 shrink-0" />
+          <div className="flex-1 flex flex-col gap-2">
+            <div className="h-3 bg-gray-100 rounded w-24" />
+            <div className="h-6 bg-gray-100 rounded w-40" />
+            <div className="h-3 bg-gray-100 rounded w-32" />
           </div>
         </div>
       </div>
-    </>
+      {/* Tab bar skeleton */}
+      <div className="bg-white border-b border-gray-100 px-4 py-0">
+        <div className="max-w-3xl mx-auto flex gap-0 animate-pulse">
+          {[120, 100, 110, 80].map((w, i) => (
+            <div key={i} className="px-5 py-4">
+              <div className="h-4 bg-gray-100 rounded" style={{ width: w }} />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Content skeleton */}
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 animate-pulse flex flex-col gap-3">
+              <div className="h-4 bg-gray-100 rounded w-4/5" />
+              <div className="h-3 bg-gray-100 rounded w-1/2" />
+              <div className="h-3 bg-gray-100 rounded w-1/3" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
   )
 }
 
-// ── Main profile page ────────────────────────────────────────────────────────
+// ── Profile page ──────────────────────────────────────────────────────────────
+
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, loading, signOut, toggleFollow, updateProfile, deleteAccount } = useAuth()
+  const { user, profile, loading, signOut, toggleFollow, deleteAccount } = useAuth()
 
-  const [followedSchools, setFollowedSchools] = useState<School[]>([])
-  const [schoolsLoading, setSchoolsLoading] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [displayNameEdit, setDisplayNameEdit] = useState('')
-  const [savingName, setSavingName] = useState(false)
-  const [stripeLoading, setStripeLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'schools' | 'preferences' | 'account'>('schools')
+  const [activeTab,       setActiveTab]       = useState<TabId>('schools')
+  const [followedSlugs,   setFollowedSlugs]   = useState<string[]>([])
+  const [portalLoading,   setPortalLoading]   = useState(false)
 
-  // Redirect if not logged in (after loading)
+  // Redirect to sign in when not authenticated
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/signin')
-    }
+    if (!loading && !user) router.replace('/signin')
   }, [loading, user, router])
 
-  // Set display name input when profile loads
+  // Sync followed slugs from profile
   useEffect(() => {
-    if (profile) setDisplayNameEdit(profile.display_name ?? '')
-  }, [profile])
-
-  // Fetch followed schools from Supabase
-  const loadFollowedSchools = useCallback(async () => {
-    if (!profile?.followed_schools.length) {
-      setFollowedSchools([])
-      return
-    }
-    setSchoolsLoading(true)
-    try {
-      const supabase = getBrowserClient()
-      const { data } = await supabase
-        .from('schools')
-        .select('*')
-        .in('slug', profile.followed_schools)
-      if (data) {
-        const ordered = profile.followed_schools
-          .map(slug => (data as SchoolRow[]).find((r) => r.slug === slug))
-          .filter((r): r is SchoolRow => r !== undefined)
-          .map((r) => rowToSchool(r))
-        setFollowedSchools(ordered)
-      }
-    } finally {
-      setSchoolsLoading(false)
-    }
+    if (profile) setFollowedSlugs(profile.followed_schools)
   }, [profile?.followed_schools]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (profile) loadFollowedSchools()
-  }, [profile, loadFollowedSchools])
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
-  // ── Handlers ────────────────────────────────────────────────────────────
   async function handleUnfollow(slug: string) {
+    // Optimistic: remove card immediately
+    setFollowedSlugs(prev => prev.filter(s => s !== slug))
     await toggleFollow(slug)
-    setFollowedSchools(prev => prev.filter(s => s.slug !== slug))
-  }
-
-  async function handleSaveName() {
-    if (displayNameEdit.trim() === (profile?.display_name ?? '')) return
-    setSavingName(true)
-    await updateProfile({ display_name: displayNameEdit.trim() || null })
-    setSavingName(false)
-  }
-
-  async function handleDeleteAccount() {
-    setDeleteLoading(true)
-    const { error } = await deleteAccount()
-    setDeleteLoading(false)
-    if (!error) {
-      router.replace('/')
-    }
   }
 
   async function handleStripePortal() {
-    setStripeLoading(true)
+    setPortalLoading(true)
     try {
       const { data: { session: s } } = await getBrowserClient().auth.getSession()
       const res = await fetch('/api/stripe/portal', {
-        method: 'POST',
+        method:  'POST',
         headers: { Authorization: `Bearer ${s?.access_token}` },
       })
-      const body = await res.json()
+      const body = await res.json() as { url?: string }
       if (body.url) window.location.href = body.url
     } finally {
-      setStripeLoading(false)
+      setPortalLoading(false)
     }
   }
 
-  // ── Guard ──────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-scout-green border-t-transparent animate-spin" />
-      </main>
-    )
+  // ── Guards ────────────────────────────────────────────────────────────────
+
+  // Show skeleton while auth is loading OR while profile row hasn't arrived yet
+  if (loading || !user || !profile) {
+    return <PageSkeleton />
   }
 
-  if (!user || !profile) return null
+  const initials = profile.display_name
+    ? profile.display_name.slice(0, 2).toUpperCase()
+    : user.email?.slice(0, 2).toUpperCase() ?? '?'
 
-  const onboarding: Record<string, unknown> = (profile.onboarding_data ?? {}) as Record<string, unknown>
-  const kids = Array.isArray((onboarding as any).kids) ? (onboarding as any).kids as Array<{ grade: string }> : []
-  const priorities = Array.isArray((onboarding as any).priorities) ? (onboarding as any).priorities as string[] : []
-  const tier = profile.subscription_tier
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <main className="min-h-screen bg-cream">
       <Nav />
 
-      {/* Header */}
+      {/* ── Profile header ── */}
       <section className="bg-white border-b border-gray-100 px-4 py-6">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div>
-            <p className="text-xs font-mono uppercase tracking-widest text-peach mb-1">My Account</p>
-            <h1 className="font-serif text-2xl text-charcoal">
+        <div className="max-w-3xl mx-auto flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-scout-green/15 flex items-center justify-center shrink-0">
+            <span className="text-scout-green font-bold text-sm tracking-wide">{initials}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-mono uppercase tracking-widest text-peach mb-0.5">My Account</p>
+            <h1 className="font-serif text-2xl text-charcoal leading-tight">
               {profile.display_name || user.email?.split('@')[0]}
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">{user.email}</p>
+            <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
           <button
             onClick={signOut}
-            className="text-xs text-gray-400 hover:text-charcoal transition-colors"
+            className="text-xs text-gray-400 hover:text-charcoal transition-colors shrink-0"
           >
             Sign out
           </button>
         </div>
       </section>
 
-      {/* Tabs */}
+      {/* ── Tab bar ── (sticky + horizontally scrollable on mobile) */}
       <div className="bg-white border-b border-gray-100 sticky top-16 z-10">
-        <div className="max-w-3xl mx-auto px-4 flex gap-0">
-          {([
-            { id: 'schools', label: `Saved Schools (${profile.followed_schools.length})` },
-            { id: 'preferences', label: 'Preferences' },
-            { id: 'account', label: 'Account' },
-          ] as { id: typeof activeTab; label: string }[]).map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`text-sm font-medium px-5 py-4 border-b-2 whitespace-nowrap transition-colors ${
-                activeTab === tab.id
-                  ? 'border-scout-green text-scout-green'
-                  : 'border-transparent text-gray-500 hover:text-charcoal'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="max-w-3xl mx-auto px-4 overflow-x-auto">
+          <div className="flex gap-0 min-w-max">
+            {TABS.map(tab => {
+              const badge = tab.id === 'schools' && followedSlugs.length > 0
+                ? followedSlugs.length
+                : null
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`text-sm font-medium px-5 py-4 border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-scout-green text-scout-green'
+                      : 'border-transparent text-gray-500 hover:text-charcoal'
+                  }`}
+                >
+                  {tab.label}
+                  {badge !== null && (
+                    <span className="ml-1.5 text-[11px] bg-scout-green/10 text-scout-green px-1.5 py-0.5 rounded-full font-mono">
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Content */}
+      {/* ── Tab content ── */}
       <div className="max-w-3xl mx-auto px-4 py-8">
 
-        {/* ── TAB: Saved Schools ── */}
         {activeTab === 'schools' && (
-          <div>
-            {schoolsLoading ? (
-              <div className="py-12 text-center text-gray-400 text-sm">Loading...</div>
-            ) : followedSchools.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-3xl mb-3">🔖</p>
-                <p className="text-base font-medium text-charcoal mb-1">No saved schools yet</p>
-                <p className="text-sm text-gray-500 mb-5">
-                  Click the bookmark icon on any school to save it here.
-                </p>
-                <Link
-                  href="/schools"
-                  className="inline-block bg-scout-green text-white text-sm font-semibold px-6 py-2.5 rounded-full"
-                >
-                  Browse Schools
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {followedSchools.map(school => (
-                  <FollowedSchoolCard
-                    key={school.slug}
-                    school={school}
-                    onUnfollow={() => handleUnfollow(school.slug)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <SchoolsTab
+            followedSlugs={followedSlugs}
+            onUnfollow={handleUnfollow}
+          />
         )}
 
-        {/* ── TAB: Preferences ── */}
         {activeTab === 'preferences' && (
-          <div className="flex flex-col gap-6">
-            {/* Kids */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h2 className="font-semibold text-charcoal mb-3">Kids</h2>
-              {kids.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {kids.map((k, i) => (
-                    <span key={i} className="text-xs font-mono bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
-                      Child {i + 1}: {k.grade}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400">No kids added yet.</p>
-              )}
-            </div>
-
-            {/* Priorities */}
-            {priorities.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-5">
-                <h2 className="font-semibold text-charcoal mb-3">Top Priorities</h2>
-                <div className="flex flex-wrap gap-2">
-                  {priorities.map((p: string) => (
-                    <span key={p} className="text-xs font-mono bg-scout-green/10 text-scout-green px-3 py-1 rounded-full">
-                      {p}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="text-center">
-              <Link
-                href="/onboarding"
-                className="inline-block border border-gray-200 text-sm font-medium text-charcoal px-6 py-2.5 rounded-full hover:border-scout-green hover:text-scout-green transition-colors"
-              >
-                Update Preferences in Onboarding →
-              </Link>
-            </div>
-          </div>
+          <PreferencesTab
+            userId={user.id}
+            initialPrefs={profile.preferences}
+          />
         )}
 
-        {/* ── TAB: Account ── */}
+        {activeTab === 'subscription' && (
+          <SubscriptionSection
+            profile={profile}
+            onPortalClick={handleStripePortal}
+            portalLoading={portalLoading}
+          />
+        )}
+
         {activeTab === 'account' && (
-          <div className="flex flex-col gap-6">
-
-            {/* Display name */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h2 className="font-semibold text-charcoal mb-3">Display Name</h2>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={displayNameEdit}
-                  onChange={e => setDisplayNameEdit(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-scout-green"
-                  placeholder="Your name"
-                />
-                <button
-                  onClick={handleSaveName}
-                  disabled={savingName}
-                  className="px-5 py-2.5 bg-scout-green text-white text-sm font-semibold rounded-xl disabled:opacity-50 hover:bg-scout-green-dark transition-colors"
-                >
-                  {savingName ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </div>
-
-            {/* Subscription */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="font-semibold text-charcoal">Subscription</h2>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                  tier === 'extended' ? 'bg-scout-green/10 text-scout-green' :
-                  tier === 'premium'  ? 'bg-sky/10 text-sky' :
-                  'bg-gray-100 text-gray-500'
-                }`}>
-                  {tier === 'extended' ? 'Extended' : tier === 'premium' ? 'Premium' : 'Free'}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 mb-4">
-                {tier === 'extended'
-                  ? 'Full access with monthly updates and priority support.'
-                  : tier === 'premium'
-                  ? 'Full access to all school reports and guides.'
-                  : 'Upgrade to unlock full deep-dive reports and transfer playbooks.'}
-              </p>
-
-              {tier === 'extended' || tier === 'premium' ? (
-                <button
-                  onClick={handleStripePortal}
-                  disabled={stripeLoading}
-                  className="w-full py-2.5 border border-gray-200 rounded-full text-sm font-medium text-charcoal hover:border-scout-green transition-colors disabled:opacity-50"
-                >
-                  {stripeLoading ? 'Opening portal...' : 'Manage Subscription →'}
-                </button>
-              ) : (
-                <Link
-                  href="/pricing"
-                  className="block w-full text-center py-2.5 bg-scout-green text-white text-sm font-semibold rounded-full hover:bg-scout-green-dark transition-colors"
-                >
-                  Upgrade for Full Access →
-                </Link>
-              )}
-            </div>
-
-            {/* Danger zone */}
-            <div className="bg-white rounded-2xl border border-red-100 p-5">
-              <h2 className="font-semibold text-charcoal mb-1">Danger Zone</h2>
-              <p className="text-xs text-gray-400 mb-4">
-                Permanently delete your account and all associated data.
-              </p>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="text-sm font-medium text-red-500 hover:text-red-700 transition-colors"
-              >
-                Delete my account
-              </button>
-            </div>
-
-          </div>
+          <AccountTab
+            user={user}
+            profile={profile}
+            onDeleteAccount={deleteAccount}
+            onStripePortal={handleStripePortal}
+            stripePortalLoading={portalLoading}
+          />
         )}
 
       </div>
-
-      {showDeleteModal && (
-        <DeleteModal
-          onConfirm={handleDeleteAccount}
-          onCancel={() => setShowDeleteModal(false)}
-          loading={deleteLoading}
-        />
-      )}
 
       <Footer />
     </main>
