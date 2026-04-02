@@ -114,11 +114,11 @@ export default function SchoolsTab({ followedSlugs, onUnfollow }: Props) {
       .from('schools')
       .select('*')
       .in('slug', followedSlugs)
-      .then(({ data }) => {
+      .then(({ data }: { data: SchoolRow[] | null }) => {
         if (data) {
           // Preserve the follow order
           const ordered = followedSlugs
-            .map(slug => (data as SchoolRow[]).find(r => r.slug === slug))
+            .map(slug => data.find(r => r.slug === slug))
             .filter((r): r is SchoolRow => r !== undefined)
             .map(r => rowToSchool(r))
           setSchools(ordered)
