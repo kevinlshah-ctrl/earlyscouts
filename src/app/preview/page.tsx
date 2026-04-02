@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { Suspense, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function PreviewPage() {
+function PreviewForm() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const from         = searchParams.get('from') ?? '/'
@@ -84,5 +84,13 @@ export default function PreviewPage() {
 
       </div>
     </main>
+  )
+}
+
+export default function PreviewPage() {
+  return (
+    <Suspense fallback={null}>
+      <PreviewForm />
+    </Suspense>
   )
 }
