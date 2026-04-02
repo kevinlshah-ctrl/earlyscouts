@@ -102,12 +102,14 @@ export async function POST(request: NextRequest) {
         customer: customerId,
         line_items: [
           { price: process.env.STRIPE_EXTENDED_MONTHLY_PRICE_ID!, quantity: 1 },
-          { price: process.env.STRIPE_EXTENDED_ONETIME_PRICE_ID!,  quantity: 1 },
         ],
         ...(discounts ? { discounts } : {}),
         subscription_data: {
           trial_period_days: 3,
           metadata: { userId: user.id, tier: 'extended' },
+          ...(process.env.STRIPE_EXTENDED_ONETIME_PRICE_ID
+            ? { add_invoice_items: [{ price: process.env.STRIPE_EXTENDED_ONETIME_PRICE_ID, quantity: 1 }] }
+            : {}),
         },
         metadata:    { userId: user.id, tier: 'extended' },
         success_url: `${appUrl}/schools?welcome=1`,
