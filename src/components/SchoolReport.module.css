@@ -1254,62 +1254,66 @@
   left: 0;
   right: 0;
   height: 140px;
-  background: linear-gradient(to bottom, transparent, #FFFAF6);
+  background: linear-gradient(to bottom, transparent, #1A1A2E);
   pointer-events: none;
 }
 
 /* Paywall upgrade card */
 .paywallCard {
-  background: white;
-  border: 1.5px solid #E8E5E1;
+  background: #1A1A2E;
+  border: none;
   border-radius: 20px;
-  padding: 36px 28px;
+  padding: 40px 32px;
   text-align: center;
-  box-shadow: 0 4px 28px rgba(26, 46, 38, 0.09);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.28);
   margin: 0 0 32px;
   position: relative;
   z-index: 1;
 }
 .paywallLock {
-  font-size: 30px;
-  margin-bottom: 14px;
+  font-size: 32px;
+  margin-bottom: 16px;
 }
 .paywallTitle {
   font-family: 'DM Serif Display', serif;
-  font-size: 22px;
-  color: #1A1A2E;
-  margin-bottom: 10px;
+  font-size: 24px;
+  color: #FFFFFF;
+  margin-bottom: 12px;
   font-weight: 400;
 }
 .paywallBody {
   font-size: 14px;
-  color: #6E6A65;
-  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.7;
   max-width: 360px;
-  margin: 0 auto 24px;
+  margin: 0 auto 28px;
 }
 .paywallCta {
   display: inline-block;
-  background: #5B9A6F;
-  color: white;
-  font-weight: 600;
+  background: #F2945C;
+  color: #FFFFFF;
+  font-weight: 700;
   font-size: 15px;
-  padding: 13px 36px;
+  padding: 14px 40px;
   border-radius: 100px;
   text-decoration: none;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.1s ease;
+  letter-spacing: 0.2px;
 }
-.paywallCta:hover { background: #4a8a5e; }
+.paywallCta:hover {
+  background: #e07d44;
+  transform: translateY(-1px);
+}
 .paywallNote {
   font-size: 11.5px;
-  color: #9B9690;
-  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 12px;
   font-family: 'DM Mono', monospace;
   letter-spacing: 0.3px;
 }
 
 @media (max-width: 640px) {
-  .paywallCard { padding: 28px 20px; }
-  .paywallTitle { font-size: 19px; }
+  .paywallCard { padding: 32px 20px; }
+  .paywallTitle { font-size: 21px; }
   .paywallBody { font-size: 13px; }
 }
