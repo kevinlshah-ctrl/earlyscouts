@@ -138,7 +138,7 @@ export default function PricingPage() {
           <div className="inline-flex items-center gap-2 bg-honey/10 text-charcoal px-5 py-2.5 rounded-full">
             <span>👨‍👩‍👧‍👦</span>
             <span className="text-sm font-medium">
-              Helping <strong>325+ families</strong> across LA's Westside make smarter school decisions
+              Helping <strong>400+ families</strong> across LA make smarter school decisions
             </span>
           </div>
         </div>

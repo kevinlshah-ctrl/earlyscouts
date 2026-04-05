@@ -1,7 +1,7 @@
 /**
  * Neighborhood-to-school mapping for EarlyScouts discovery page.
  * Source of truth: only schools with report_data in Supabase appear here.
- * Last updated: March 30, 2026 — 118 schools + 4 playbooks
+ * Last updated: April 5, 2026 — 136 schools + 5 playbooks (added Hollywood Hills)
  */
 
 export interface NeighborhoodConfig {
@@ -417,6 +417,50 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // HOLLYWOOD HILLS
+  // ═══════════════════════════════════════════════════════════════
+
+  'hollywood-hills': {
+    label: 'Hollywood Hills',
+    region: 'Hollywood Hills',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      // Ring 1 — Zoned
+      'cheremoya-avenue-elementary-los-angeles-ca',
+      'gardner-street-elementary-los-angeles-ca',
+      // Ring 2 — Elite targets (open enrollment / magnet)
+      'wonderland-avenue-elementary-los-angeles-ca',
+      'third-street-elementary-los-angeles-ca',
+      'hancock-park-elementary-los-angeles-ca',
+      // Ring 3 — Charters
+      'larchmont-charter-los-angeles-ca',
+      'cwc-hollywood-los-angeles-ca',
+      // Ring 4 — Over the hill (Valley options)
+      'carpenter-charter-studio-city-ca',
+      'colfax-charter-valley-village-ca',
+      // Escape valve
+      'laces-magnet-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'bancroft-middle-school-los-angeles-ca',
+      'le-conte-middle-school-los-angeles-ca',
+      'john-burroughs-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [
+      'hollywood-high-school-los-angeles-ca',
+      'fairfax-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'hollywood-hills-school-choice-playbook',
+      'lausd-school-choice-playbook',
+    ],
+    privateSlugs: [
+      'the-oaks-school-los-angeles-ca',
+      'hollywood-schoolhouse-los-angeles-ca',
     ],
   },
 

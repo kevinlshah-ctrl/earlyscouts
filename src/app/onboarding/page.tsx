@@ -151,7 +151,7 @@ function OnboardingHeader({ step }: { step: number }) {
       {step === 1 && (
         <div className="bg-[#FEF3E8] border border-[#F2C49A] rounded-full px-4 py-1.5 text-center">
           <span className="text-xs text-[#C97B3A] font-medium">
-            Helping <strong>325+</strong> families across LA make smarter school decisions
+            Helping <strong>400+</strong> families across LA make smarter school decisions
           </span>
         </div>
       )}
