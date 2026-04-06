@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const supabaseUrl      = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceKey       = process.env.SUPABASE_SERVICE_ROLE_KEY
     const stripeKey        = process.env.STRIPE_SECRET_KEY
-    const appUrl           = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const appUrl           = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? request.headers.get('origin') ?? 'https://earlyscouts.com'
     const premiumPriceId   = process.env.STRIPE_PRICE_PREMIUM
     const extMonthlyPriceId = process.env.STRIPE_PRICE_EXTENDED_MONTHLY
     const extOnetimePriceId = process.env.STRIPE_PRICE_EXTENDED_ONETIME

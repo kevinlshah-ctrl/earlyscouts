@@ -123,13 +123,8 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
               <div>
                 <p className="text-xs font-mono uppercase tracking-widest text-[#9B9690] mb-2">Premium Extended</p>
                 {/* Price — shown prominently */}
-                <div className="flex items-baseline gap-1">
-                  <span className="font-serif text-3xl text-[#1A1A2E]">$34.99</span>
-                </div>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-lg font-semibold text-[#5B9A6F]">+ $9.99<span className="text-sm font-normal">/month</span></span>
-                </div>
-                <p className="text-[10px] text-[#9B9690] mt-0.5 font-mono">Starting on day 4</p>
+                <p className="text-sm font-semibold text-[#1A1A2E] mt-1">Full access starts immediately — <span className="font-serif text-xl">$34.99</span></p>
+                <p className="text-xs text-[#5B9A6F] font-semibold mt-1">Then $9.99/month starting day 4</p>
                 <p className="text-xs text-[#6E6A65] mt-2 leading-relaxed">
                   Start with full Premium access, then stay connected as things change.
                 </p>
@@ -160,7 +155,7 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                   next={next}
                 />
                 <p className="text-[10px] text-[#9B9690] text-center">
-                  Starts with $34.99 for 3 days, then $9.99/mo
+                  $34.99 upfront · $9.99/month from day 4 · cancel anytime
                 </p>
               </div>
             </div>

@@ -22,6 +22,8 @@ const PLAYBOOK_DESCRIPTIONS: Record<string, string> = {
     'Magnets, permits, charters: the complete LAUSD selection timeline decoded.',
   'beach-cities-school-choice-blueprint':
     'How to navigate open enrollment across Manhattan Beach, El Segundo, Hermosa, and Redondo unified school districts.',
+  'hollywood-hills-school-choice-playbook':
+    'School options for Hollywood Hills families: LAUSD magnet pathways, local public schools, and nearby private alternatives.',
 }
 
 /** Guide slugs live at /guides/[slug], not /schools/[slug] */
@@ -38,31 +40,44 @@ function getRegionForNeighborhood(id: string): string | null {
   return NEIGHBORHOOD_SCHOOLS[id]?.region ?? null
 }
 
-/** Read neighborhood ID from the URL query param ?q= */
-function readNeighborhoodFromUrl(): string | null {
-  if (typeof window === 'undefined') return null
+/** Read neighborhood IDs from URL query param ?q= (comma-separated) */
+function readNeighborhoodsFromUrl(): string[] {
+  if (typeof window === 'undefined') return []
   const q = new URLSearchParams(window.location.search).get('q')
-  return q && getNeighborhoodById(q) ? q : null
+  if (!q) return []
+  return q.split(',').filter(id => getNeighborhoodById(id) != null)
 }
 
-/** Derive initial neighborhood: URL first, then localStorage, then 'mar-vista' */
-function getInitialNeighborhood(): string {
-  const fromUrl = readNeighborhoodFromUrl()
-  if (fromUrl) return fromUrl
+/** Derive initial neighborhood set: URL first, then localStorage, then 'mar-vista' */
+function getInitialNeighborhoods(): Set<string> {
+  const fromUrl = readNeighborhoodsFromUrl()
+  if (fromUrl.length > 0) return new Set(fromUrl)
   try {
     const stored = JSON.parse(localStorage.getItem('earlyscouts_onboarding') || '{}')
     if (stored.neighborhoodId && getNeighborhoodById(stored.neighborhoodId)) {
-      return stored.neighborhoodId
+      return new Set([stored.neighborhoodId])
     }
   } catch {}
-  return 'mar-vista'
+  return new Set(['mar-vista'])
+}
+
+/** Which regions contain at least one of the given neighborhood IDs */
+function getRegionsForNeighborhoods(ids: Set<string>): Set<string> {
+  const regions = new Set<string>()
+  ids.forEach(id => {
+    const r = getRegionForNeighborhood(id)
+    if (r) regions.add(r)
+  })
+  return regions
 }
 
 export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] }) {
   const router = useRouter()
 
-  // Initialize directly from URL — no flash, no stale 'mar-vista' default
-  const [activeNeighborhood, setActiveNeighborhood] = useState<string>(getInitialNeighborhood)
+  const [activeNeighborhoods, setActiveNeighborhoods] = useState<Set<string>>(getInitialNeighborhoods)
+  const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() =>
+    getRegionsForNeighborhoods(getInitialNeighborhoods())
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<School[]>([])
 
@@ -85,18 +100,25 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   // Keep state in sync with browser back/forward navigation
   useEffect(() => {
     function onPopState() {
-      const fromUrl = readNeighborhoodFromUrl()
-      if (fromUrl) setActiveNeighborhood(fromUrl)
+      const ids = readNeighborhoodsFromUrl()
+      if (ids.length > 0) {
+        const newSet = new Set(ids)
+        setActiveNeighborhoods(newSet)
+        setExpandedRegions(prev => new Set([...prev, ...getRegionsForNeighborhoods(newSet)]))
+      }
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  // Scroll active chip into view
+  // Scroll first active chip into view
   useEffect(() => {
-    const el = chipRefs.current[activeNeighborhood]
-    if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
-  }, [activeNeighborhood])
+    const firstId = Array.from(activeNeighborhoods)[0]
+    if (firstId) {
+      const el = chipRefs.current[firstId]
+      if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+    }
+  }, [activeNeighborhoods])
 
   // Check chip row scroll state on mount
   useEffect(() => {
@@ -118,23 +140,54 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     )
   }, [searchQuery, allSchools])
 
-  function handleNeighborhoodChange(id: string) {
-    setActiveNeighborhood(id)
-    window.history.pushState({}, '', `/schools?q=${id}`)
+  function toggleNeighborhood(id: string) {
+    setActiveNeighborhoods(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        if (next.size === 1) return prev // keep at least one selected
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      window.history.pushState({}, '', `/schools?q=${Array.from(next).join(',')}`)
+      return next
+    })
   }
 
-  const hood = getNeighborhoodById(activeNeighborhood)
-  const allHoodSlugs = hood
-    ? [...hood.elementarySlugs, ...hood.middleSlugs, ...hood.highSlugs]
-    : []
+  function toggleRegion(region: string) {
+    setExpandedRegions(prev => {
+      const next = new Set(prev)
+      if (next.has(region)) next.delete(region)
+      else next.add(region)
+      return next
+    })
+  }
+
+  // Combine schools from all active neighborhoods
+  const activeHoods = Array.from(activeNeighborhoods)
+    .map(id => getNeighborhoodById(id))
+    .filter((h): h is NonNullable<typeof h> => h != null)
+
+  const allHoodSlugs = [...new Set(activeHoods.flatMap(h => [
+    ...h.elementarySlugs, ...h.middleSlugs, ...h.highSlugs,
+  ]))]
   const bracketSchools = allSchools.filter(s => allHoodSlugs.includes(s.slug))
-  const playbookSchools = hood ? allSchools.filter(s => hood.playbookSlugs.includes(s.slug)) : []
-  const privateSchools = hood?.privateSlugs?.length
-    ? allSchools.filter(s => hood.privateSlugs!.includes(s.slug))
+
+  const allPlaybookSlugs = [...new Set(activeHoods.flatMap(h => h.playbookSlugs))]
+  const playbookSchools = allSchools.filter(s => allPlaybookSlugs.includes(s.slug))
+
+  const allPrivateSlugs = [...new Set(activeHoods.flatMap(h => h.privateSlugs ?? []))]
+  const privateSchools = allPrivateSlugs.length
+    ? allSchools.filter(s => allPrivateSlugs.includes(s.slug))
     : []
 
+  const firstHood = activeHoods[0] ?? null
+  const headerLabel = activeNeighborhoods.size === 1
+    ? firstHood?.label ?? 'Schools'
+    : `${activeNeighborhoods.size} neighborhoods`
+
+  const activeRegions = getRegionsForNeighborhoods(activeNeighborhoods)
   const regions = getRegions()
-  const activeRegion = getRegionForNeighborhood(activeNeighborhood)
 
   return (
     <main className="min-h-screen bg-[#FFFAF6]">
@@ -144,7 +197,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
       <section className="bg-[#FFFAF6] px-4 pt-8 pb-3">
         <div className="max-w-5xl mx-auto">
           <h1 className="font-serif text-3xl text-[#1A1A2E]">
-            {hood?.label ?? 'Schools'}
+            {headerLabel}
           </h1>
           <p className="text-sm text-[#6E6A65] mt-1">
             Deep-dive reports from our research team. Tap any school for a preview.
@@ -182,7 +235,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
             )}
           </div>
 
-          {/* Region-grouped chips */}
+          {/* Region-grouped chips — collapsed by default, expand on click */}
           <div className="group relative">
             {/* Left arrow */}
             {canChipScrollLeft && (
@@ -219,18 +272,31 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
                   key={region}
                   className={`flex items-center gap-1.5 flex-shrink-0 ${ri > 0 ? 'ml-3 pl-3 border-l border-[#E8E5E1]' : ''}`}
                 >
-                  <span className={`text-[10px] font-mono uppercase tracking-widest mr-1 whitespace-nowrap ${
-                    activeRegion === region ? 'text-[#5B9A6F] font-bold' : 'text-[#B0AAA4]'
-                  }`}>
+                  {/* Region toggle button */}
+                  <button
+                    onClick={() => toggleRegion(region)}
+                    className={`flex items-center gap-0.5 text-[10px] font-mono uppercase tracking-widest mr-1 whitespace-nowrap transition-colors ${
+                      activeRegions.has(region) ? 'text-[#5B9A6F] font-bold' : 'text-[#B0AAA4] hover:text-[#6E6A65]'
+                    }`}
+                  >
                     {region}
-                  </span>
-                  {getNeighborhoodsByRegion(region).map(n => (
+                    <svg
+                      width="8" height="8" viewBox="0 0 10 10" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      className="ml-0.5 transition-transform"
+                      style={{ transform: expandedRegions.has(region) ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                    >
+                      <polyline points="2 3 5 7 8 3" />
+                    </svg>
+                  </button>
+                  {/* Neighborhood chips — only visible when region is expanded */}
+                  {expandedRegions.has(region) && getNeighborhoodsByRegion(region).map(n => (
                     <button
                       key={n.id}
                       ref={el => { chipRefs.current[n.id] = el }}
-                      onClick={() => handleNeighborhoodChange(n.id)}
+                      onClick={() => toggleNeighborhood(n.id)}
                       className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                        activeNeighborhood === n.id
+                        activeNeighborhoods.has(n.id)
                           ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
                           : 'bg-white border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
                       }`}
@@ -254,7 +320,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
           {bracketSchools.length > 0 ? (
             <SchoolBracket
               schools={bracketSchools}
-              locationLabel={hood?.label ?? 'Your area'}
+              locationLabel={headerLabel}
             />
           ) : (
             <div className="text-center py-16 text-[#9B9690]">
