@@ -5,10 +5,15 @@ import Stripe from 'stripe'
 export async function POST(request: NextRequest) {
   try {
     // ── Env validation ────────────────────────────────────────────────────────
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY
-    const stripeKey   = process.env.STRIPE_SECRET_KEY
-    const appUrl      = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const supabaseUrl      = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey       = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const stripeKey        = process.env.STRIPE_SECRET_KEY
+    const appUrl           = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const premiumPriceId   = process.env.STRIPE_PRICE_PREMIUM
+    const extMonthlyPriceId = process.env.STRIPE_PRICE_EXTENDED_MONTHLY
+    const extOnetimePriceId = process.env.STRIPE_PRICE_EXTENDED_ONETIME
+
+    console.log('[checkout] price IDs:', premiumPriceId, extOnetimePriceId, extMonthlyPriceId)
 
     if (!supabaseUrl || !serviceKey) {
       console.error('[checkout] Missing Supabase env vars')
@@ -17,6 +22,10 @@ export async function POST(request: NextRequest) {
     if (!stripeKey) {
       console.error('[checkout] Missing STRIPE_SECRET_KEY')
       return NextResponse.json({ error: 'Payment system not configured' }, { status: 500 })
+    }
+    if (!premiumPriceId || !extMonthlyPriceId) {
+      console.error('[checkout] Missing Stripe price ID env vars — STRIPE_PRICE_PREMIUM:', premiumPriceId, 'STRIPE_PRICE_EXTENDED_MONTHLY:', extMonthlyPriceId)
+      return NextResponse.json({ error: 'Payment system not configured — missing price IDs' }, { status: 500 })
     }
 
     // ── Auth ──────────────────────────────────────────────────────────────────
@@ -112,7 +121,7 @@ export async function POST(request: NextRequest) {
       session = await stripe.checkout.sessions.create({
         mode:     'payment',
         customer: customerId,
-        line_items: [{ price: process.env.STRIPE_PREMIUM_PRICE_ID!, quantity: 1 }],
+        line_items: [{ price: premiumPriceId, quantity: 1 }],
         // allow_promotion_codes and discounts are mutually exclusive in Stripe:
         // use pre-applied discount if provided, otherwise let the Checkout UI accept codes.
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
@@ -125,14 +134,14 @@ export async function POST(request: NextRequest) {
         mode:     'subscription',
         customer: customerId,
         line_items: [
-          { price: process.env.STRIPE_EXTENDED_MONTHLY_PRICE_ID!, quantity: 1 },
+          { price: extMonthlyPriceId, quantity: 1 },
         ],
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         subscription_data: {
           trial_period_days: 3,
           metadata: { userId: user.id, tier: 'extended' },
-          ...(process.env.STRIPE_EXTENDED_ONETIME_PRICE_ID
-            ? { add_invoice_items: [{ price: process.env.STRIPE_EXTENDED_ONETIME_PRICE_ID, quantity: 1 }] }
+          ...(extOnetimePriceId
+            ? { add_invoice_items: [{ price: extOnetimePriceId, quantity: 1 }] }
             : {}),
         },
         metadata:    { userId: user.id, tier: 'extended' },
