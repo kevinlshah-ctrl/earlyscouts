@@ -91,7 +91,9 @@ export async function POST(request: NextRequest) {
         mode:     'payment',
         customer: customerId,
         line_items: [{ price: process.env.STRIPE_PREMIUM_PRICE_ID!, quantity: 1 }],
-        ...(discounts ? { discounts } : {}),
+        // allow_promotion_codes and discounts are mutually exclusive in Stripe:
+        // use pre-applied discount if provided, otherwise let the Checkout UI accept codes.
+        ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         metadata:    { userId: user.id, tier: 'premium' },
         success_url: `${appUrl}/schools?welcome=1`,
         cancel_url:  `${appUrl}/pricing`,
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
         line_items: [
           { price: process.env.STRIPE_EXTENDED_MONTHLY_PRICE_ID!, quantity: 1 },
         ],
-        ...(discounts ? { discounts } : {}),
+        ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         subscription_data: {
           trial_period_days: 3,
           metadata: { userId: user.id, tier: 'extended' },

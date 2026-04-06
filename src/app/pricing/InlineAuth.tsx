@@ -139,7 +139,7 @@ export default function InlineAuth({ tier, next, dark = false }: Props) {
     setLoading(true)
 
     const supabase = getBrowserClient()
-    const { error: signInErr } = await supabase.auth.signInWithPassword({
+    const { data, error: signInErr } = await supabase.auth.signInWithPassword({
       email:    email.trim().toLowerCase(),
       password,
     })
@@ -150,8 +150,15 @@ export default function InlineAuth({ tier, next, dark = false }: Props) {
       return
     }
 
-    const destination = next ?? searchParams?.get('next') ?? '/schools'
-    router.push(destination.startsWith('/') ? destination : '/schools')
+    if (!data.session) {
+      setError('Sign-in succeeded but no session — please try again.')
+      setLoading(false)
+      return
+    }
+
+    // Go straight to checkout — InlineAuth only renders on the pricing page
+    // when the user's intent is to purchase, so sign-in should complete that flow.
+    await goToCheckout(data.session.access_token)
   }
 
   // ── Forgot password ───────────────────────────────────────────────────────
