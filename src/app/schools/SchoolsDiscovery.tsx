@@ -104,7 +104,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
       if (ids.length > 0) {
         const newSet = new Set(ids)
         setActiveNeighborhoods(newSet)
-        setExpandedRegions(prev => new Set([...prev, ...getRegionsForNeighborhoods(newSet)]))
+        setExpandedRegions(prev => new Set([...Array.from(prev), ...Array.from(getRegionsForNeighborhoods(newSet))]))
       }
     }
     window.addEventListener('popstate', onPopState)
@@ -168,15 +168,15 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     .map(id => getNeighborhoodById(id))
     .filter((h): h is NonNullable<typeof h> => h != null)
 
-  const allHoodSlugs = [...new Set(activeHoods.flatMap(h => [
+  const allHoodSlugs = Array.from(new Set(activeHoods.flatMap(h => [
     ...h.elementarySlugs, ...h.middleSlugs, ...h.highSlugs,
-  ]))]
+  ])))
   const bracketSchools = allSchools.filter(s => allHoodSlugs.includes(s.slug))
 
-  const allPlaybookSlugs = [...new Set(activeHoods.flatMap(h => h.playbookSlugs))]
+  const allPlaybookSlugs = Array.from(new Set(activeHoods.flatMap(h => h.playbookSlugs)))
   const playbookSchools = allSchools.filter(s => allPlaybookSlugs.includes(s.slug))
 
-  const allPrivateSlugs = [...new Set(activeHoods.flatMap(h => h.privateSlugs ?? []))]
+  const allPrivateSlugs = Array.from(new Set(activeHoods.flatMap(h => h.privateSlugs ?? [])))
   const privateSchools = allPrivateSlugs.length
     ? allSchools.filter(s => allPrivateSlugs.includes(s.slug))
     : []
