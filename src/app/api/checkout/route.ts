@@ -135,14 +135,12 @@ export async function POST(request: NextRequest) {
         customer: customerId,
         line_items: [
           { price: extMonthlyPriceId, quantity: 1 },
+          ...(extOnetimePriceId ? [{ price: extOnetimePriceId, quantity: 1 }] : []),
         ],
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         subscription_data: {
           trial_period_days: 3,
           metadata: { userId: user.id, tier: 'extended' },
-          ...(extOnetimePriceId
-            ? { add_invoice_items: [{ price: extOnetimePriceId, quantity: 1 }] }
-            : {}),
         },
         metadata:    { userId: user.id, tier: 'extended' },
         success_url: `${appUrl}/schools?welcome=1`,
