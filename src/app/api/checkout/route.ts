@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
 
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token)
     if (authErr || !user) {
+      console.error('[checkout] Auth error:', authErr?.message ?? 'No user returned')
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
       ? body.couponCode.trim().toUpperCase()
       : null
 
+    console.log(`[checkout] user=${user.id} tier=${tier} coupon=${couponCode ?? 'none'}`)
+
     // ── Profile & Stripe customer ─────────────────────────────────────────────
     const { data: profile } = await supabase
       .from('user_profiles')
@@ -50,6 +53,13 @@ export async function POST(request: NextRequest) {
 
     const row       = profile as { email: string; stripe_customer_id: string | null } | null
     const email     = row?.email ?? user.email ?? ''
+
+    // Validate Stripe key format before initialising — catches invalid key early
+    if (!stripeKey.startsWith('sk_')) {
+      console.error('[checkout] STRIPE_SECRET_KEY has invalid format (must start with sk_test_ or sk_live_). Current prefix:', stripeKey.slice(0, 7))
+      return NextResponse.json({ error: 'Payment system not configured correctly' }, { status: 500 })
+    }
+
     const stripe    = new Stripe(stripeKey)
 
     let customerId = row?.stripe_customer_id ?? null
@@ -123,7 +133,7 @@ export async function POST(request: NextRequest) {
 
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('[checkout] Unhandled error:', msg)
+    console.error('[checkout] Unhandled error:', msg, err instanceof Error ? err.stack : '')
     return NextResponse.json(
       { error: 'Payment unavailable — please try again or contact hello@earlyscouts.com' },
       { status: 500 }

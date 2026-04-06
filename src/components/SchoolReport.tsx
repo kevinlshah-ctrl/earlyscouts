@@ -724,17 +724,19 @@ export default function SchoolReport({
               <div className={styles.paywallPreviewFade} />
             </div>
           )}
-          <div className={styles.paywallCard}>
+          {/* Tailwind bg-charcoal is a belt-and-suspenders fallback in case the
+              CSS module background fails to apply (white text would be invisible). */}
+          <div className={`${styles.paywallCard} bg-charcoal`}>
             <div className={styles.paywallLock}>🔒</div>
-            <h3 className={styles.paywallTitle}>Unlock the Full Report</h3>
-            <p className={styles.paywallBody}>
+            <h3 className={`${styles.paywallTitle} text-white`}>Unlock the Full Report</h3>
+            <p className={`${styles.paywallBody} text-white`}>
               Get all {sections.length} sections — comparison tables, parent review
               synthesis, tour questions, enrollment details, and the Scout&apos;s Verdict.
             </p>
             <a href={`/pricing?next=/schools/${school.slug}`} className={styles.paywallCta}>
               Get Premium for $34.99
             </a>
-            <p className={styles.paywallNote}>
+            <p className={`${styles.paywallNote} text-white`}>
               3 days of full access. No subscription required.
             </p>
           </div>

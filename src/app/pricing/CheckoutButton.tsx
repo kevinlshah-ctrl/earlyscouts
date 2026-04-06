@@ -96,7 +96,11 @@ export default function CheckoutButton({
       </button>
 
       {error && (
-        <p className="text-xs text-red-400 text-center">{error}</p>
+        // Premium tier renders inside a dark card — use red-300 (light enough to be visible).
+        // Extended tier renders inside a light card — use red-500 (dark enough to be visible).
+        <p className={`text-xs text-center ${tier === 'premium' ? 'text-red-300' : 'text-red-500'}`}>
+          {error}
+        </p>
       )}
     </div>
   )
