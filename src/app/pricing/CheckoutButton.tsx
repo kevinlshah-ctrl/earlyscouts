@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { getBrowserClient } from '@/lib/supabase-browser'
 import InlineAuth from './InlineAuth'
 
 interface Props {
@@ -20,7 +19,7 @@ export default function CheckoutButton({
   loadingLabel = 'Loading…',
   next,
 }: Props) {
-  const { user } = useAuth()
+  const { user, session } = useAuth()
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState('')
@@ -41,9 +40,6 @@ export default function CheckoutButton({
     setError(null)
     setLoading(true)
     try {
-      const supabase = getBrowserClient()
-      const { data: { session } } = await supabase.auth.getSession()
-
       const res = await fetch('/api/checkout', {
         method:  'POST',
         headers: {
