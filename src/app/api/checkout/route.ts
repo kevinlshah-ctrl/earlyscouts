@@ -54,6 +54,18 @@ export async function POST(request: NextRequest) {
     const row       = profile as { email: string; stripe_customer_id: string | null } | null
     const email     = row?.email ?? user.email ?? ''
 
+    // If the profile row doesn't exist yet (DB trigger didn't fire, or the
+    // client-side upsert lost a race), create it now using the service-role
+    // client so that the stripe_customer_id write later in this request lands.
+    if (!row) {
+      await supabase
+        .from('user_profiles')
+        .upsert(
+          { id: user.id, email, subscription_tier: 'free' },
+          { onConflict: 'id' }
+        )
+    }
+
     // Validate Stripe key format before initialising — catches invalid key early
     if (!stripeKey.startsWith('sk_')) {
       console.error('[checkout] STRIPE_SECRET_KEY has invalid format (must start with sk_test_ or sk_live_). Current prefix:', stripeKey.slice(0, 7))
