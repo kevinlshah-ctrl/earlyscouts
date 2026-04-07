@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import Link from 'next/link'
 import type { School } from '@/lib/types'
-import SchoolPreviewModal from './SchoolPreviewModal'
 
 /* ── Level classification ── */
 function getLevel(school: School): 'elementary' | 'middle-high' | 'guide' {
@@ -87,7 +87,7 @@ const LEVEL_CONFIG = {
 }
 
 /* ── School Card ── */
-function BracketCard({ school, onClick }: { school: School; onClick: () => void }) {
+function BracketCard({ school }: { school: School }) {
   const tag = getTag(school)
   const feedsTo = getLevel(school) === 'elementary' ? getFeedsTo(school) : null
   const rating = school.ratings.greatSchools
@@ -95,9 +95,9 @@ function BracketCard({ school, onClick }: { school: School; onClick: () => void 
 
   return (
     <div className="relative flex-shrink-0 w-[210px] snap-start">
-      <button
-        onClick={onClick}
-        className="w-full bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-scout-green/50 hover:shadow-sm transition-all"
+      <Link
+        href={`/schools/${school.slug}`}
+        className="block bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-scout-green/50 hover:shadow-sm transition-all"
       >
         <div className="flex items-start gap-2 mb-2">
           <h3 className="text-sm font-semibold text-charcoal leading-snug line-clamp-2 flex-1">
@@ -125,7 +125,7 @@ function BracketCard({ school, onClick }: { school: School; onClick: () => void 
         {feedsTo && (
           <p className="text-[10px] text-gray-400 mt-2">Feeds → {feedsTo}</p>
         )}
-      </button>
+      </Link>
 
     </div>
   )
@@ -168,14 +168,13 @@ function ScrollArrow({
 
 /* ── Horizontal scroll row with desktop arrow nav ── */
 function LevelRow({
-  icon, label, color, count, schools, onSelectSchool,
+  icon, label, color, count, schools,
 }: {
   icon: string
   label: string
   color: string
   count: number
   schools: School[]
-  onSelectSchool: (s: School) => void
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -217,7 +216,7 @@ function LevelRow({
           style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
         >
           {schools.map((s) => (
-            <BracketCard key={s.id} school={s} onClick={() => onSelectSchool(s)} />
+            <BracketCard key={s.id} school={s} />
           ))}
           {/* Trailing spacer keeps last card clear of the right fade */}
           <div className="w-10 shrink-0" aria-hidden />
@@ -249,8 +248,6 @@ export default function SchoolBracket({
   schools,
   locationLabel = 'Your area',
 }: SchoolBracketProps) {
-  const [previewSchool, setPreviewSchool] = useState<School | null>(null)
-
   const elementary: School[] = []
   const middleHigh: School[] = []
   const guides: School[] = []
@@ -287,7 +284,7 @@ export default function SchoolBracket({
     <div>
       <div className="mb-4">
         <p className="text-sm text-gray-500">
-          {locationLabel} &middot; click any school for a preview
+          {locationLabel}
         </p>
         <p className="text-xs text-gray-400 mt-0.5">
           Only showing schools with analyst-written deep-dive reports
@@ -301,7 +298,6 @@ export default function SchoolBracket({
           color={LEVEL_CONFIG.elementary.color}
           count={neighborhoodElementary.length}
           schools={neighborhoodElementary}
-          onSelectSchool={setPreviewSchool}
         />
       )}
 
@@ -314,7 +310,6 @@ export default function SchoolBracket({
           color={LEVEL_CONFIG['middle-high'].color}
           count={middleHigh.length}
           schools={middleHigh}
-          onSelectSchool={setPreviewSchool}
         />
       )}
 
@@ -326,8 +321,7 @@ export default function SchoolBracket({
             color={LEVEL_CONFIG.permits.color}
             count={permitSchools.length}
             schools={permitSchools}
-            onSelectSchool={setPreviewSchool}
-          />
+            />
         </div>
       )}
 
@@ -339,12 +333,10 @@ export default function SchoolBracket({
             color={LEVEL_CONFIG.guide.color}
             count={guides.length}
             schools={guides}
-            onSelectSchool={setPreviewSchool}
-          />
+            />
         </div>
       )}
 
-      <SchoolPreviewModal school={previewSchool} onClose={() => setPreviewSchool(null)} />
     </div>
   )
 }
