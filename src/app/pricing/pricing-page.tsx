@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Pricing | SchoolScout by EarlyScouts',
-  description: 'Deep-dive school research reports and transfer playbooks. Starting at $34.99.',
+  description: 'Deep-dive school research reports and transfer playbooks. Starting at $59.99.',
 }
 
 export default function PricingPage() {
@@ -29,7 +29,7 @@ export default function PricingPage() {
           <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col">
             <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-2">Quick Research</p>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="font-serif text-4xl text-charcoal">$34.99</span>
+              <span className="font-serif text-4xl text-charcoal">$59.99</span>
             </div>
             <p className="text-sm text-gray-400 mb-6">3-day full access</p>
 
@@ -160,7 +160,7 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 {[
-                  ['Cost', '$34.99 – $49.99', '$500 – $2,000', 'Free (your time)'],
+                  ['Cost', '$59.99 – $49.99', '$500 – $2,000', 'Free (your time)'],
                   ['Time investment', '20 min per school', '1–2 hours meeting', '5–10 hrs per school'],
                   ['Transfer playbooks', '✓ Step-by-step', 'Sometimes', '✗ You piece it together'],
                   ['Schools covered', '40+ with deep dives', '5–10 per engagement', 'However many you research'],

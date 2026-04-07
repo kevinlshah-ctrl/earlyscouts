@@ -19,7 +19,7 @@ export interface UserProfile {
   onboarding_data: Record<string, unknown> | null
   subscription_tier: 'free' | 'premium' | 'extended'
   subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled' | null
-  /** UTC ISO timestamp when Premium 3-day access expires (null = never set) */
+  /** UTC ISO timestamp when Premium 30-day access expires (null = never set) */
   access_expires_at: string | null
   stripe_customer_id: string | null
   preferences: Record<string, unknown> | null
@@ -114,17 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, fetchProfile])
 
   // ── Bootstrap session ──────────────────────────────────────────────────────
+  // Use onAuthStateChange exclusively — it fires INITIAL_SESSION immediately on
+  // registration with the current cookies-based session, eliminating the race
+  // condition that occurred when getSession() and onAuthStateChange both ran on
+  // mount and getSession() occasionally resolved first with a stale null value,
+  // causing loading to be set false before the user was populated.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }: { data: { session: Session | null } }) => {
-      setSession(s)
-      setUser(s?.user ?? null)
-      if (s?.user) {
-        fetchProfile(s.user.id).finally(() => setLoading(false))
-      } else {
-        setLoading(false)
-      }
-    })
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, s: Session | null) => {
@@ -138,7 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const pending = localStorage.getItem('pendingFollow')
             if (pending) {
               localStorage.removeItem('pendingFollow')
-              // Use the freshly fetched profile to toggle
               setProfile((prev) => {
                 if (!prev || !s?.user) return prev
                 const current = prev.followed_schools
@@ -156,6 +150,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setProfile(null)
+      }
+      // INITIAL_SESSION is the first event fired — marks the end of bootstrap.
+      // Only set loading=false here so the nav never renders in an indeterminate state.
+      if (event === 'INITIAL_SESSION') {
+        setLoading(false)
       }
     })
 

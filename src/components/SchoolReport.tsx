@@ -494,12 +494,10 @@ export default function SchoolReport({
   const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? 'AIzaSyCkqvCW3lrcveaWyD7MgNNYlucMzFH-C3s'
   const heroTyped = hero as import('@/lib/types').ReportHero
   const svQuery  = heroTyped.street_view_query || school.address || `${school.city}, CA`
-  const svHeading = heroTyped.heading ?? 0
-  const svFov     = heroTyped.fov ?? 90
-  // Guides don't have real addresses — skip the Street View fetch to avoid a black hero.
+  // Guides don't have real addresses — skip the satellite fetch to avoid a black hero.
   // The heroArea CSS gradient provides a clean fallback for guide pages.
   const heroImageUrl = !isGuide
-    ? `https://maps.googleapis.com/maps/api/streetview?size=900x400&location=${encodeURIComponent(svQuery)}&heading=${svHeading}&fov=${svFov}&key=${mapsKey}`
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(svQuery)}&zoom=18&size=900x400&maptype=satellite&scale=2&key=${mapsKey}`
     : null
 
   // Accent stats go in the hero meta pills; all 4 stats go in the strip
@@ -508,13 +506,37 @@ export default function SchoolReport({
   const schoolType = school.type || 'public'
   const typeLabel = schoolType.charAt(0).toUpperCase() + schoolType.slice(1)
 
-  const { profile } = useAuth()
+  const { profile, user, signOut } = useAuth()
   // forcePaywall=true overrides even isGuide — used by server-gated guide pages
   // that have already stripped sections before sending to the client.
   const isPaid = !forcePaywall && (isGuide || hasActiveAccess(profile))
 
   const [scrolled, setScrolled] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(false)
+  const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false)
+  const headerDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!headerDropdownOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (headerDropdownRef.current && !headerDropdownRef.current.contains(e.target as Node)) {
+        setHeaderDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [headerDropdownOpen])
+
+  const initials = (() => {
+    const name = profile?.display_name ?? user?.email ?? ''
+    if (profile?.display_name) {
+      const parts = profile.display_name.trim().split(/\s+/)
+      return parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : parts[0].slice(0, 2).toUpperCase()
+    }
+    return name.slice(0, 2).toUpperCase()
+  })()
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -546,7 +568,7 @@ export default function SchoolReport({
         {!isPaid && !bannerDismissed && (
           <div className={styles.previewBanner}>
             <span className={styles.previewBannerText}>
-              Unlock all schools &amp; guides
+              Unlock all schools &amp; guides · $59.99
             </span>
             <Link href="/pricing" className={styles.previewBannerBtn}>
               Get Access
@@ -573,8 +595,39 @@ export default function SchoolReport({
             <Link href="/about" className={styles.siteHeaderLink}>About</Link>
           </nav>
           <div className={styles.siteHeaderCtas}>
-            <Link href="/signin" className={styles.siteHeaderSignIn}>Sign In</Link>
-            <Link href="/onboarding" className={styles.siteHeaderGetStarted}>Get Started</Link>
+            {user ? (
+              <div className={styles.headerAvatarWrap} ref={headerDropdownRef}>
+                <button
+                  onClick={() => setHeaderDropdownOpen(o => !o)}
+                  className={styles.headerAvatar}
+                  aria-label="Account menu"
+                >
+                  {initials}
+                </button>
+                {headerDropdownOpen && (
+                  <div className={styles.headerDropdown}>
+                    <Link
+                      href="/profile"
+                      className={styles.headerDropdownItem}
+                      onClick={() => setHeaderDropdownOpen(false)}
+                    >
+                      My Profile
+                    </Link>
+                    <button
+                      onClick={() => { setHeaderDropdownOpen(false); signOut() }}
+                      className={styles.headerDropdownItem}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/signin" className={styles.siteHeaderSignIn}>Sign In</Link>
+                <Link href="/onboarding" className={styles.siteHeaderGetStarted}>Get Started</Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -731,8 +784,9 @@ export default function SchoolReport({
               Access every school report and transfer guide.
             </p>
             <Link href="/pricing" className={styles.freePreviewCta}>
-              Get Full Access · $34.99
+              Get Full Access · $59.99
             </Link>
+            <p className={styles.freePreviewSubtext}>30 days of full access · one-time payment</p>
           </div>
 
           {/* Locked sections — blurred preview with fade */}

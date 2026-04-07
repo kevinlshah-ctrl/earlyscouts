@@ -173,7 +173,7 @@ export default function HomePage() {
             Start exploring schools.
           </h2>
           <p className="text-[#A09A94] text-sm">
-            Start with 3 days of full access for $34.99. Stay connected for $9.99/month.
+            30 days of full access · $59.99
           </p>
           <Link
             href="/schools"

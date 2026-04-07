@@ -9,11 +9,10 @@ export const metadata = {
 }
 
 const COMPARE = [
-  { label: 'School reports',           us: '100+',              consultant: '3–5',       diy: 'Scattered' },
-  { label: 'Transfer playbooks',       us: '✓',                 consultant: '✓',         diy: '✗'         },
-  { label: 'Time required',            us: '~30 min',           consultant: '5+ hrs',    diy: '20+ hrs'   },
-  { label: 'Premium (one-time)',        us: '$34.99',            consultant: '$200–$500', diy: 'Free'      },
-  { label: 'Extended (stay connected)', us: '+$9.99/mo after',  consultant: '—',         diy: '—'         },
+  { label: 'School reports',     us: '100+',    consultant: '3–5',       diy: 'Scattered' },
+  { label: 'Transfer playbooks', us: '✓',       consultant: '✓',         diy: '✗'         },
+  { label: 'Time required',      us: '~30 min', consultant: '5+ hrs',    diy: '20+ hrs'   },
+  { label: 'Premium (one-time)', us: '$59.99',  consultant: '$200–$500', diy: 'Free'      },
 ]
 
 export default function PricingPage({ searchParams }: { searchParams?: { next?: string } }) {
@@ -37,14 +36,14 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
 
       {/* Pricing cards — desktop: 3 in a row. Mobile: Premium first, Extended second, Free last */}
       <section className="px-4 pb-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-3xl mx-auto">
 
-          {/* Mobile order: Premium → Extended → Free via order classes */}
+          {/* Mobile order: Premium first, Free second */}
           <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
 
-            {/* ── Card 1: Free ── (mobile: order-3, desktop: order-1) */}
-            <div className="order-3 lg:order-1 flex-1 bg-white border border-[#E8E5E1] rounded-2xl p-6 flex flex-col gap-5 shadow-sm">
-              <div>
+            {/* ── Card 1: Free ── (mobile: order-2, desktop: order-1) */}
+            <div className="order-2 lg:order-1 flex-1 bg-white border border-[#E8E5E1] rounded-2xl p-6 flex flex-col shadow-sm">
+              <div className="mb-5">
                 <p className="text-xs font-mono uppercase tracking-widest text-[#9B9690] mb-2">Basic</p>
                 <div className="flex items-baseline gap-1">
                   <span className="font-serif text-4xl text-[#1A1A2E]">Free</span>
@@ -66,16 +65,18 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                 ))}
               </ul>
 
-              <Link
-                href="/schools"
-                className="block w-full text-center border-2 border-[#5B9A6F] text-[#5B9A6F] hover:bg-[#5B9A6F] hover:text-white font-semibold text-sm py-3 rounded-xl transition-colors"
-              >
-                Start Browsing
-              </Link>
+              <div className="mt-auto pt-5">
+                <Link
+                  href="/schools"
+                  className="block w-full text-center border-2 border-[#5B9A6F] text-[#5B9A6F] hover:bg-[#5B9A6F] hover:text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+                >
+                  Start Browsing
+                </Link>
+              </div>
             </div>
 
             {/* ── Card 2: Premium (HERO) ── (mobile: order-1, desktop: order-2) */}
-            <div className="order-1 lg:order-2 flex-1 bg-[#1A1A2E] rounded-2xl p-6 flex flex-col gap-5 shadow-lg relative lg:-mt-3 lg:-mb-3 lg:py-9">
+            <div className="order-1 lg:order-2 flex-1 bg-[#1A1A2E] rounded-2xl p-6 flex flex-col shadow-lg relative">
               {/* Badge */}
               <div className="absolute top-4 right-4">
                 <span className="bg-[#E8B84B] text-[#1A1A2E] text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
@@ -83,14 +84,14 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                 </span>
               </div>
 
-              <div>
+              <div className="mb-5">
                 <p className="text-xs font-mono uppercase tracking-widest text-[#6B8080] mb-2">Premium</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="font-serif text-4xl text-white">$34.99</span>
+                  <span className="font-serif text-4xl text-white">$59.99</span>
                 </div>
-                <p className="text-xs text-[#9B9690] mt-1.5">3 days of full access</p>
+                <p className="text-xs text-[#9B9690] mt-1.5">30 days of full access</p>
                 <p className="text-xs text-[#9B9690] mt-2 leading-relaxed">
-                  Everything you need for a focused research sprint. Read every report, every playbook, every comparison.
+                  Everything you need for a thorough research season. Read every report, every playbook, every comparison.
                 </p>
               </div>
 
@@ -99,7 +100,6 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                   'All 100+ deep-dive school reports',
                   'Transfer playbooks with every deadline',
                   'Side-by-side comparison tables',
-                  'Tour questions based on real parent feedback',
                   'Parent review analysis from 30+ sources',
                   'Full enrollment details and logistics',
                 ].map(item => (
@@ -110,54 +110,14 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                 ))}
               </ul>
 
-              <CheckoutButton
-                tier="premium"
-                label="Get Premium for $34.99"
-                loadingLabel="Setting up checkout..."
-                className="block w-full text-center bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
-                next={next}
-              />
-            </div>
-
-            {/* ── Card 3: Premium Extended ── (mobile: order-2, desktop: order-3) */}
-            <div className="order-2 lg:order-3 flex-1 bg-white border-2 border-[#5B9A6F] rounded-2xl p-6 flex flex-col gap-5 shadow-sm">
-              <div>
-                <p className="text-xs font-mono uppercase tracking-widest text-[#9B9690] mb-2">Premium Extended</p>
-                {/* Price — shown prominently */}
-                <p className="text-sm font-semibold text-[#1A1A2E] mt-1">Full access starts immediately — <span className="font-serif text-xl">$34.99</span></p>
-                <p className="text-xs text-[#5B9A6F] font-semibold mt-1">Then $9.99/month starting day 4</p>
-                <p className="text-xs text-[#6E6A65] mt-2 leading-relaxed">
-                  Start with full Premium access, then stay connected as things change.
-                </p>
-              </div>
-
-              <ul className="flex flex-col gap-2.5 flex-1">
-                {[
-                  'Everything in Premium',
-                  'Continued full access after 3 days',
-                  'Follow up to 10 schools',
-                  'Monthly personalized update emails',
-                  'District news and deadline reminders',
-                  'Cancel the monthly anytime',
-                ].map(item => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-[#3D3A36]">
-                    <span className="text-[#5B9A6F] font-bold mt-0.5 shrink-0">✓</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="flex flex-col gap-1.5">
+              <div className="mt-auto pt-5">
                 <CheckoutButton
-                  tier="extended"
-                  label="Get Premium Extended"
+                  tier="premium"
+                  label="Get Premium for $59.99"
                   loadingLabel="Setting up checkout..."
-                  className="block w-full text-center border-2 border-[#5B9A6F] text-[#5B9A6F] hover:bg-[#5B9A6F] hover:text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+                  className="block w-full text-center bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
                   next={next}
                 />
-                <p className="text-[10px] text-[#9B9690] text-center">
-                  $34.99 upfront · $9.99/month from day 4 · cancel anytime
-                </p>
               </div>
             </div>
 
@@ -226,8 +186,8 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                 a: 'Every school has a full analyst-written report covering test scores in context, parent review synthesis, a comparison table, a feeder pipeline map, and enrollment details.',
               },
               {
-                q: 'When does billing start for Premium Extended?',
-                a: 'You pay $34.99 today for 3 days of full access. On day 4, it continues at $9.99/month unless you cancel before then. No hidden fees.',
+                q: 'How long does Premium access last?',
+                a: 'You pay $59.99 once and get 30 days of full access. No subscription, no recurring charges.',
               },
               {
                 q: 'What are transfer playbooks?',

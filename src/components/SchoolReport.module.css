@@ -72,6 +72,60 @@
 .siteHeaderGetStarted:hover {
   background: #245c43;
 }
+.headerAvatarWrap {
+  position: relative;
+}
+.headerAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2D6A4F;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+}
+.headerAvatar:hover {
+  background: #245c43;
+}
+.headerDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #E8E5E1;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  min-width: 140px;
+  z-index: 300;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.headerDropdownItem {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3D3A36;
+  text-decoration: none;
+  padding: 10px 16px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.headerDropdownItem:hover {
+  background: #F5F2EE;
+  color: #2D6A4F;
+}
 
 /* ─── Breadcrumb ─── */
 .breadcrumb {
@@ -1406,6 +1460,11 @@
 .freePreviewCta:hover {
   background: #4a8a5e;
   transform: translateY(-1px);
+}
+.freePreviewSubtext {
+  font-size: 11px;
+  color: #9B9690;
+  margin-top: 10px;
 }
 
 /* ── Locked sections ────────────────────────────────────────────────────── */

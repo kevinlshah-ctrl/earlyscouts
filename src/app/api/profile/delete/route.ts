@@ -26,9 +26,21 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
   }
 
-  // user_profiles is deleted by CASCADE when auth.users row is removed
+  // Explicitly delete user_profiles row first — CASCADE may not be configured
+  const { error: profileErr } = await supabaseAdmin
+    .from('user_profiles')
+    .delete()
+    .eq('id', user.id)
+
+  if (profileErr) {
+    console.warn('[delete-account] user_profiles delete warning:', profileErr.message)
+    // Non-fatal: row may not exist; continue to auth deletion
+  }
+
+  // Delete the auth user
   const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
   if (error) {
+    console.error('[delete-account] deleteUser failed:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 

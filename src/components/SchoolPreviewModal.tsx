@@ -125,7 +125,7 @@ export default function SchoolPreviewModal({ school, onClose }: SchoolPreviewMod
           </Link>
           {!isGuide && (
             <p className="text-xs text-gray-400 text-center mb-1">
-              First 2 sections free · Full access $34.99
+              First 2 sections free · Full access $59.99
             </p>
           )}
         </div>

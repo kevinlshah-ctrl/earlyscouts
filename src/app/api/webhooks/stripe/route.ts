@@ -95,8 +95,8 @@ export async function POST(request: NextRequest) {
         }
 
         if (tier === 'premium') {
-          // One-time payment: grant 3-day access window
-          const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+          // One-time payment: grant 30-day access window
+          const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
           console.log(`[webhook] Granting premium access to userId=${userId} expires=${expiresAt}`)
           await updateByUserId(supabase, userId, {
             plan_type:   'premium',

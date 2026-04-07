@@ -85,14 +85,14 @@ export default function SubscriptionSection({ profile, onPortalClick, portalLoad
             href="/pricing"
             className="block w-full text-center py-3 bg-scout-green text-white text-sm font-semibold rounded-full hover:bg-scout-green-dark transition-colors"
           >
-            Upgrade to Premium for $34.99 →
+            Upgrade to Premium for $59.99 →
           </Link>
         </div>
       </div>
     )
   }
 
-  // ── Premium (one-time 3-day access) ──────────────────────────────────────
+  // ── Premium (one-time 30-day access) ─────────────────────────────────────
   if (tier === 'premium') {
     const expired = expiresAt ? new Date(expiresAt) < new Date() : false
 
@@ -167,7 +167,7 @@ export default function SubscriptionSection({ profile, onPortalClick, portalLoad
       <div className="bg-white border border-gray-100 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-serif text-xl text-charcoal">Your Plan</h2>
-          <StatusBadge green>Premium Extended</StatusBadge>
+          <StatusBadge green>Premium</StatusBadge>
         </div>
 
         <div className="flex items-center gap-2 mb-4">

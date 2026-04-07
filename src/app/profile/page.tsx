@@ -175,13 +175,21 @@ export default function ProfilePage() {
   async function handleDeleteConfirm() {
     setDeleteLoading(true)
     setDeleteError(null)
-    const { error } = await deleteAccount()
-    if (error) {
-      setDeleteError(error)
+
+    const timeout = new Promise<{ error: string }>(resolve =>
+      setTimeout(() => resolve({ error: 'Request timed out — please try again.' }), 10_000)
+    )
+
+    const result = await Promise.race([deleteAccount(), timeout])
+
+    if (result.error) {
+      setDeleteError(result.error)
       setDeleteLoading(false)
       return
     }
-    // deleteAccount signs out + clears state → useEffect above redirects to /signin
+
+    // deleteAccount signs out + clears auth state; redirect to home
+    router.replace('/')
   }
 
   // ── Guards ────────────────────────────────────────────────────────────────
