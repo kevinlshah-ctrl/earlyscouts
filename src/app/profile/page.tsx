@@ -36,20 +36,38 @@ function DeleteModal({
   onConfirm,
   onCancel,
   loading,
+  error,
 }: {
   onConfirm: () => void
   onCancel: () => void
   loading: boolean
+  error?: string | null
 }) {
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={onCancel} />
-      <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+      {/* Backdrop — z-[200] so it sits above the sticky nav (z-50) */}
+      <div
+        className="fixed inset-0 bg-black/50 z-[200]"
+        onClick={onCancel}
+      />
+      {/* Dialog — z-[201] so it's unambiguously above the backdrop on all browsers */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="fixed inset-0 z-[201] flex items-center justify-center px-4"
+      >
+        {/* stopPropagation prevents the backdrop's onClick from firing when the card is tapped */}
+        <div
+          className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+          onClick={e => e.stopPropagation()}
+        >
           <h3 className="font-serif text-xl text-charcoal mb-2">Delete your account?</h3>
           <p className="text-sm text-gray-500 leading-relaxed mb-5">
             This will permanently delete your account and all data. This cannot be undone.
           </p>
+          {error && (
+            <p className="text-xs text-red-500 mb-3">{error}</p>
+          )}
           <div className="flex gap-3">
             <button
               onClick={onCancel}
@@ -150,13 +168,19 @@ export default function ProfilePage() {
   }
 
   // ── Delete account ────────────────────────────────────────────────────────
-  const [showDelete,   setShowDelete]   = useState(false)
+  const [showDelete,    setShowDelete]    = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError,   setDeleteError]   = useState<string | null>(null)
 
   async function handleDeleteConfirm() {
     setDeleteLoading(true)
-    await deleteAccount()
-    setDeleteLoading(false)
+    setDeleteError(null)
+    const { error } = await deleteAccount()
+    if (error) {
+      setDeleteError(error)
+      setDeleteLoading(false)
+      return
+    }
     // deleteAccount signs out + clears state → useEffect above redirects to /signin
   }
 
@@ -284,7 +308,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setShowDelete(true)}
-              className="text-xs text-red-400 hover:text-red-600 transition-colors font-medium"
+              className="text-xs text-red-400 hover:text-red-600 transition-colors font-medium px-3 py-2 -my-2 rounded-lg"
             >
               Delete my account
             </button>
@@ -296,8 +320,9 @@ export default function ProfilePage() {
       {showDelete && (
         <DeleteModal
           onConfirm={handleDeleteConfirm}
-          onCancel={() => setShowDelete(false)}
+          onCancel={() => { setShowDelete(false); setDeleteError(null) }}
           loading={deleteLoading}
+          error={deleteError}
         />
       )}
 
