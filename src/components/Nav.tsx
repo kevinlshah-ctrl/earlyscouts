@@ -12,6 +12,15 @@ export default function Nav() {
   const dropdownRef                         = useRef<HTMLDivElement>(null)
   const { user, profile, loading, signOut } = useAuth()
 
+  // Cap loading skeleton at 500ms — after that, render the logged-out state rather
+  // than leave the nav blank while fetchProfile is still in-flight (e.g. after
+  // a Stripe redirect where the profile re-fetch can take several hundred ms).
+  const [skeletonVisible, setSkeletonVisible] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setSkeletonVisible(false), 500)
+    return () => clearTimeout(t)
+  }, [])
+
   const initials = profile?.display_name
     ? profile.display_name.slice(0, 2).toUpperCase()
     : user?.email?.slice(0, 2).toUpperCase() ?? '?'
@@ -55,8 +64,8 @@ export default function Nav() {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            {!loading && user ? (
-              // Logged-in: avatar button with dropdown
+            {user ? (
+              // Logged-in: show avatar as soon as user is known, don't wait for profile
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(o => !o)}
@@ -91,8 +100,11 @@ export default function Nav() {
                   </div>
                 )}
               </div>
-            ) : !loading ? (
-              // Logged-out
+            ) : loading && skeletonVisible ? (
+              // Loading skeleton — shown for at most 500ms
+              <div className="w-24 h-8 rounded-full bg-gray-100 animate-pulse" />
+            ) : (
+              // Logged-out (or loading timed out)
               <>
                 <Link
                   href="/signin"
@@ -107,9 +119,6 @@ export default function Nav() {
                   Browse Schools
                 </Link>
               </>
-            ) : (
-              // Loading skeleton
-              <div className="w-24 h-8 rounded-full bg-gray-100 animate-pulse" />
             )}
           </div>
 

@@ -31,7 +31,14 @@ async function runCheckout(tier: 'premium' | 'extended', token: string): Promise
   }
 }
 
-// ── Auth modal (email + password only) ───────────────────────────────────────
+// ── Password requirements ─────────────────────────────────────────────────────
+const PWD_REQS = [
+  { label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
+  { label: '1 uppercase letter',    test: (p: string) => /[A-Z]/.test(p) },
+  { label: '1 lowercase letter',    test: (p: string) => /[a-z]/.test(p) },
+]
+
+// ── Auth modal (email + password + confirm) ───────────────────────────────────
 function AuthModal({
   tier,
   onClose,
@@ -39,19 +46,30 @@ function AuthModal({
   tier: 'premium' | 'extended'
   onClose: () => void
 }) {
-  const [mode,       setMode]       = useState<'signup' | 'signin'>('signup')
-  const [email,      setEmail]      = useState('')
-  const [password,   setPassword]   = useState('')
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState<string | null>(null)
-  const [forgotSent, setForgotSent] = useState(false)
+  const [mode,            setMode]            = useState<'signup' | 'signin'>('signup')
+  const [email,           setEmail]           = useState('')
+  const [password,        setPassword]        = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading,         setLoading]         = useState(false)
+  const [error,           setError]           = useState<string | null>(null)
+  const [forgotSent,      setForgotSent]      = useState(false)
+  // Only show requirements after the user starts typing
+  const [pwdTouched, setPwdTouched] = useState(false)
 
   const inputCls =
     'w-full border border-[#E8E5E1] rounded-xl px-3 py-2.5 text-sm text-[#1A1A2E] ' +
     'placeholder-[#9B9690] bg-white outline-none focus:border-[#5B9A6F] transition-colors'
 
+  const pwdChecks   = PWD_REQS.map(r => ({ ...r, met: r.test(password) }))
+  const allPwdMet   = pwdChecks.every(c => c.met)
+  const confirmMatch = password === confirmPassword && confirmPassword.length > 0
+  const canSubmit   = mode === 'signin'
+    ? email.trim().length > 0 && password.length > 0
+    : email.trim().length > 0 && allPwdMet && confirmMatch
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!canSubmit) return
     setError(null)
     setLoading(true)
 
@@ -105,6 +123,9 @@ function AuthModal({
     setMode(next)
     setError(null)
     setForgotSent(false)
+    setPassword('')
+    setConfirmPassword('')
+    setPwdTouched(false)
   }
 
   return (
@@ -143,21 +164,53 @@ function AuthModal({
               autoFocus
               className={inputCls}
             />
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-              className={inputCls}
-            />
+
+            <div className="flex flex-col gap-1.5">
+              <input
+                type="password"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setPwdTouched(true) }}
+                placeholder="Password"
+                required
+                className={inputCls}
+              />
+
+              {/* Requirements checklist — signup mode only, shown after first keystroke */}
+              {mode === 'signup' && pwdTouched && (
+                <ul className="flex flex-col gap-1 pl-0.5">
+                  {pwdChecks.map(({ label, met }) => (
+                    <li key={label} className={`flex items-center gap-1.5 text-[11px] transition-colors ${met ? 'text-[#5B9A6F]' : 'text-[#9B9690]'}`}>
+                      <span className="text-[10px]">{met ? '✓' : '○'}</span>
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Confirm password — signup only */}
+            {mode === 'signup' && (
+              <div className="flex flex-col gap-1">
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm password"
+                  required
+                  className={`${inputCls} ${confirmPassword.length > 0 && !confirmMatch ? 'border-red-300 focus:border-red-400' : ''}`}
+                />
+                {confirmPassword.length > 0 && !confirmMatch && (
+                  <p className="text-[11px] text-red-400 pl-0.5">Passwords don&apos;t match</p>
+                )}
+              </div>
+            )}
 
             {error      && <p className="text-xs text-red-500">{error}</p>}
             {forgotSent && <p className="text-xs text-[#5B9A6F]">Check your email for a reset link.</p>}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !canSubmit}
               className="w-full bg-[#5B9A6F] hover:bg-[#4a8a5e] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm py-3 rounded-xl transition-colors"
             >
               {loading
