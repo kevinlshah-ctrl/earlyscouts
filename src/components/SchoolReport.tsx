@@ -546,9 +546,9 @@ export default function SchoolReport({
         {!isPaid && !bannerDismissed && (
           <div className={styles.previewBanner}>
             <span className={styles.previewBannerText}>
-              <strong>Unlock full access</strong>
+              <strong>Unlock full access to all schools &amp; guides</strong>
               <span className={styles.previewBannerDot}>·</span>
-              {sections.length} sections for $34.99
+              $34.99 · one-time payment
             </span>
             <Link href="/pricing" className={styles.previewBannerBtn}>
               Get Access
@@ -730,10 +730,10 @@ export default function SchoolReport({
             <p className={styles.freePreviewLabel}>Free Preview</p>
             <h3 className={styles.freePreviewTitle}>You&apos;re reading the free preview</h3>
             <p className={styles.freePreviewBody}>
-              Get all {sections.length} sections including comparisons, reviews &amp; enrollment info.
+              Access every school report and transfer guide.
             </p>
             <Link href="/pricing" className={styles.freePreviewCta}>
-              Get Full Access for $34.99
+              Get Full Access · $34.99
             </Link>
           </div>
 
