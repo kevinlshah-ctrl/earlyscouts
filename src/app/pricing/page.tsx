@@ -172,27 +172,33 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
             How it compares
           </p>
           <div className="bg-white border border-[#E8E5E1] rounded-2xl overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#F0EDE8]">
-                  <th className="text-left px-5 py-3 text-[#9B9690] font-mono text-xs uppercase tracking-wider"></th>
-                  <th className="text-center px-3 py-3 text-[#5B9A6F] font-semibold text-sm">EarlyScouts</th>
-                  <th className="text-center px-3 py-3 text-[#9B9690] font-mono text-xs uppercase tracking-wider">Consultant</th>
-                  <th className="text-center px-3 py-3 text-[#9B9690] font-mono text-xs uppercase tracking-wider">DIY</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARE.map((row, i) => (
-                  <tr key={row.label} className={`border-b border-[#F0EDE8] last:border-0 ${i % 2 !== 0 ? 'bg-[#FFFAF6]' : ''}`}>
-                    <td className="px-5 py-3 text-[#3D3A36] font-medium text-sm">{row.label}</td>
-                    <td className="px-3 py-3 text-center text-[#5B9A6F] font-semibold text-sm">{row.us}</td>
-                    <td className="px-3 py-3 text-center text-[#9B9690] text-sm">{row.consultant}</td>
-                    <td className="px-3 py-3 text-center text-[#9B9690] text-sm">{row.diy}</td>
+            {/* overflow-x-auto on inner wrapper; outer overflow-hidden keeps rounded corners */}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px] text-sm">
+                <thead>
+                  <tr className="border-b border-[#F0EDE8]">
+                    <th className="text-left px-5 py-3 text-[#9B9690] font-mono text-xs uppercase tracking-wider min-w-[140px]"></th>
+                    <th className="text-center px-3 py-3 text-[#5B9A6F] font-semibold text-sm min-w-[110px]">EarlyScouts</th>
+                    <th className="text-center px-3 py-3 text-[#9B9690] font-mono text-xs uppercase tracking-wider min-w-[110px]">Consultant</th>
+                    <th className="text-center px-3 py-3 text-[#9B9690] font-mono text-xs uppercase tracking-wider min-w-[80px]">DIY</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {COMPARE.map((row, i) => (
+                    <tr key={row.label} className={`border-b border-[#F0EDE8] last:border-0 ${i % 2 !== 0 ? 'bg-[#FFFAF6]' : ''}`}>
+                      <td className="px-5 py-3 text-[#3D3A36] font-medium text-sm">{row.label}</td>
+                      <td className="px-3 py-3 text-center text-[#5B9A6F] font-semibold text-sm">{row.us}</td>
+                      <td className="px-3 py-3 text-center text-[#9B9690] text-sm">{row.consultant}</td>
+                      <td className="px-3 py-3 text-center text-[#9B9690] text-sm">{row.diy}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+          <p className="lg:hidden text-center text-[10px] text-[#B0AAA4] mt-2 font-mono tracking-wide">
+            scroll to see more →
+          </p>
         </div>
       </section>
 
