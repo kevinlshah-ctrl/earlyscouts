@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
           const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
           console.log(`[webhook] Granting premium access to userId=${userId} expires=${expiresAt}`)
           await updateByUserId(supabase, userId, {
-            subscription_tier:   'premium',
+            plan_type:   'premium',
             access_expires_at:   expiresAt,
             stripe_customer_id:  customerId,
             updated_at:          new Date().toISOString(),
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
           // Extended subscription: Stripe trial period covers days 1-3, active on day 4+
           console.log(`[webhook] Granting extended/trialing access to userId=${userId}`)
           await updateByUserId(supabase, userId, {
-            subscription_tier:   'extended',
+            plan_type:   'extended',
             subscription_status: 'trialing',
             stripe_customer_id:  customerId,
             updated_at:          new Date().toISOString(),
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`[webhook] customer.subscription.deleted: customerId=${customerId} → tier=free canceled`)
         await updateByCustomerId(supabase, customerId, {
-          subscription_tier:   'free',
+          plan_type:   'free',
           subscription_status: 'canceled',
           updated_at:          new Date().toISOString(),
         })

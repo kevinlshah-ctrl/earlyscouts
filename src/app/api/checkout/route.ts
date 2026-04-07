@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('user_profiles')
         .upsert(
-          { id: user.id, email, subscription_tier: 'free' },
+          { id: user.id, email, plan_type: 'free' },
           { onConflict: 'id' }
         )
     }

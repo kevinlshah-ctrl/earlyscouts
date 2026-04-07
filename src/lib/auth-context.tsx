@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? (row.followed_schools as string[])
           : [],
         onboarding_data: (row.onboarding_data as Record<string, unknown> | null) ?? null,
-        subscription_tier: (row.subscription_tier as UserProfile['subscription_tier']) ?? 'free',
+        subscription_tier: (row.plan_type as UserProfile['subscription_tier']) ?? 'free',
         subscription_status: (row.subscription_status as UserProfile['subscription_status']) ?? null,
         access_expires_at: (row.access_expires_at as string | null) ?? null,
         stripe_customer_id: (row.stripe_customer_id as string | null) ?? null,

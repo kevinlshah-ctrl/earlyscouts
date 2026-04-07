@@ -59,20 +59,20 @@ export default async function GuidePage({ params }: { params: { slug: string } }
   if (user) {
     const { data: profileRow } = await serviceClient
       .from('user_profiles')
-      .select('subscription_tier, subscription_status, access_expires_at')
+      .select('plan_type, subscription_status, access_expires_at')
       .eq('id', user.id)
       .maybeSingle()
 
     const p = profileRow as {
-      subscription_tier: string | null
+      plan_type: string | null
       subscription_status: string | null
       access_expires_at: string | null
     } | null
 
     if (p) {
-      if (p.subscription_tier === 'extended') {
+      if (p.plan_type === 'extended') {
         hasAccess = p.subscription_status === 'active' || p.subscription_status === 'trialing'
-      } else if (p.subscription_tier === 'premium') {
+      } else if (p.plan_type === 'premium') {
         // No expiry set means the row was just created — treat as active.
         hasAccess = !p.access_expires_at || new Date(p.access_expires_at) > new Date()
       }

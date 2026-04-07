@@ -125,7 +125,7 @@ export default function InlineAuth({ tier, next, dark = false }: Props) {
       .upsert({
         id:                data.user.id,
         email:             data.user.email ?? email.trim().toLowerCase(),
-        subscription_tier: 'free',
+        plan_type: 'free',
       })
 
     await goToCheckout(data.session.access_token)
