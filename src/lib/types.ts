@@ -131,6 +131,7 @@ export interface School {
 export interface ReportHero {
   street_view_query: string
   heading?: number
+  fov?: number
 }
 
 export interface ReportQuickStat {

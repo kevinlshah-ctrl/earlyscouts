@@ -285,7 +285,7 @@
   position: relative;
   min-height: 310px;
 }
-/* Satellite aerial filtered to near-invisible watermark; color wash creates duotone */
+/* Street View photo — grayscale + luminosity blend; color wash creates duotone tint */
 .heroImage {
   position: absolute;
   top: 0;

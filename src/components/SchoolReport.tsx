@@ -491,12 +491,15 @@ export default function SchoolReport({
   const isGuide = school.slug.includes('playbook') || school.slug.includes('blueprint') ||
     school.name.toLowerCase().includes('blueprint') || school.name.toLowerCase().includes('playbook')
 
-  const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
-  const heroCenter = (hero as import('@/lib/types').ReportHero).street_view_query || school.address || `${school.city}, CA`
-  // Guides don't have real addresses — skip the satellite fetch to avoid a solid-black hero.
-  // The heroArea CSS gradient provides a clean fallback background for guide pages.
-  const satelliteUrl = (!isGuide && mapsKey)
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(heroCenter)}&zoom=18&size=900x400&maptype=satellite&key=${mapsKey}`
+  const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? 'AIzaSyCkqvCW3lrcveaWyD7MgNNYlucMzFH-C3s'
+  const heroTyped = hero as import('@/lib/types').ReportHero
+  const svQuery  = heroTyped.street_view_query || school.address || `${school.city}, CA`
+  const svHeading = heroTyped.heading ?? 0
+  const svFov     = heroTyped.fov ?? 90
+  // Guides don't have real addresses — skip the Street View fetch to avoid a black hero.
+  // The heroArea CSS gradient provides a clean fallback for guide pages.
+  const heroImageUrl = !isGuide
+    ? `https://maps.googleapis.com/maps/api/streetview?size=900x400&location=${encodeURIComponent(svQuery)}&heading=${svHeading}&fov=${svFov}&key=${mapsKey}`
     : null
 
   // Accent stats go in the hero meta pills; all 4 stats go in the strip
@@ -634,10 +637,10 @@ export default function SchoolReport({
 
       {/* ── Hero ── */}
       <div className={styles.heroArea}>
-        {satelliteUrl && (
+        {heroImageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={satelliteUrl}
+            src={heroImageUrl}
             alt=""
             className={styles.heroImage}
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
