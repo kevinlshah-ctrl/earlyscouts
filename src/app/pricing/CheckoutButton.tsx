@@ -20,21 +20,8 @@ export default function CheckoutButton({
   next,
 }: Props) {
   const { user, session } = useAuth()
-  const [loading,   setLoading]   = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
-  const [promoCode, setPromoCode] = useState('')
-
-  // Read pendingPromoCode for the logged-in view.
-  // InlineAuth handles its own read for the not-logged-in view.
-  useEffect(() => {
-    try {
-      const pending = sessionStorage.getItem('pendingPromoCode')
-      if (pending) {
-        setPromoCode(pending)
-        sessionStorage.removeItem('pendingPromoCode')
-      }
-    } catch {}
-  }, [])
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState<string | null>(null)
 
   async function handleClick() {
     setError(null)
@@ -46,10 +33,7 @@ export default function CheckoutButton({
           'Content-Type':  'application/json',
           'Authorization': `Bearer ${session?.access_token ?? ''}`,
         },
-        body: JSON.stringify({
-          tier,
-          couponCode: promoCode.trim().toUpperCase() || undefined,
-        }),
+        body: JSON.stringify({ tier }),
       })
 
       const data: { url?: string; error?: string } = await res.json()
@@ -72,17 +56,9 @@ export default function CheckoutButton({
     return <InlineAuth tier={tier} next={next} dark={tier === 'premium'} />
   }
 
-  // ── Logged in: promo code (always visible) + checkout button ──────────────
+  // ── Logged in: checkout button ───────────────────────────────────────────
   return (
     <div className="flex flex-col gap-2">
-      <input
-        type="text"
-        value={promoCode}
-        onChange={e => setPromoCode(e.target.value.toUpperCase())}
-        placeholder="Promo code (optional)"
-        className="w-full border border-[#E8E5E1] rounded-lg px-3 py-2 text-xs text-[#1A1A2E] placeholder-[#9B9690] outline-none focus:border-[#5B9A6F] bg-white transition-colors uppercase tracking-widest"
-      />
-
       <button
         onClick={handleClick}
         disabled={loading}
@@ -92,8 +68,6 @@ export default function CheckoutButton({
       </button>
 
       {error && (
-        // Premium tier renders inside a dark card — use red-300 (light enough to be visible).
-        // Extended tier renders inside a light card — use red-500 (dark enough to be visible).
         <p className={`text-xs text-center ${tier === 'premium' ? 'text-red-300' : 'text-red-500'}`}>
           {error}
         </p>

@@ -30,14 +30,6 @@ export default function InlineAuth({ tier, next, dark = false }: Props) {
   const [password,        setPassword]        = useState('')
   // Signup-only fields
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [promoCode, setPromoCode] = useState<string>(() => {
-    // Read synchronously so the field is pre-populated on first render
-    try {
-      const v = sessionStorage.getItem('pendingPromoCode')
-      if (v) { sessionStorage.removeItem('pendingPromoCode'); return v }
-    } catch {}
-    return ''
-  })
   const [phone, setPhone] = useState('')
 
   const [loading,    setLoading]    = useState(false)
@@ -58,10 +50,7 @@ export default function InlineAuth({ tier, next, dark = false }: Props) {
           'Content-Type':  'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          tier,
-          couponCode: promoCode.trim().toUpperCase() || undefined,
-        }),
+        body: JSON.stringify({ tier }),
       })
 
       const data: { url?: string; error?: string } = await res.json()
@@ -236,15 +225,6 @@ export default function InlineAuth({ tier, next, dark = false }: Props) {
           placeholder="Confirm password"
           required
           className={inputCls}
-        />
-
-        {/* Promo code — always visible */}
-        <input
-          type="text"
-          value={promoCode}
-          onChange={e => setPromoCode(e.target.value.toUpperCase())}
-          placeholder="Promo code (optional)"
-          className={`${inputCls} uppercase tracking-widest`}
         />
 
         {/* Phone — optional */}
