@@ -206,16 +206,20 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
           </div>
 
           {/* Region-grouped chips — collapsed by default, expand on click */}
-          <div className="flex flex-wrap items-center gap-y-2 gap-x-0">
+          {/* Mobile: each region stacks vertically; chips scroll horizontally */}
+          {/* Desktop (lg+): all regions inline, chips wrap */}
+          <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center lg:gap-y-2">
             {regions.map((region, ri) => (
               <div
                 key={region}
-                className={`flex flex-wrap items-center gap-1.5 ${ri > 0 ? 'ml-3 pl-3 border-l border-[#E8E5E1]' : ''}`}
+                className={`flex flex-col lg:flex-row lg:flex-wrap lg:items-center lg:gap-1.5 ${
+                  ri > 0 ? 'mt-2 lg:mt-0 lg:ml-3 lg:pl-3 lg:border-l lg:border-[#E8E5E1]' : ''
+                }`}
               >
                 {/* Region toggle button */}
                 <button
                   onClick={() => toggleRegion(region)}
-                  className={`flex items-center gap-0.5 text-[10px] font-mono uppercase tracking-widest mr-1 whitespace-nowrap transition-colors ${
+                  className={`self-start flex items-center gap-0.5 text-[10px] font-mono uppercase tracking-widest lg:mr-1 whitespace-nowrap transition-colors ${
                     activeRegions.has(region) ? 'text-[#5B9A6F] font-bold' : 'text-[#B0AAA4] hover:text-[#6E6A65]'
                   }`}
                 >
@@ -230,19 +234,24 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
                   </svg>
                 </button>
                 {/* Neighborhood chips — only visible when region is expanded */}
-                {expandedRegions.has(region) && getNeighborhoodsByRegion(region).map(n => (
-                  <button
-                    key={n.id}
-                    onClick={() => toggleNeighborhood(n.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                      activeNeighborhoods.has(n.id)
-                        ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
-                        : 'bg-white border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
-                    }`}
-                  >
-                    {n.label}
-                  </button>
-                ))}
+                {/* Mobile: single scrollable row; Desktop: wrapping inline */}
+                {expandedRegions.has(region) && (
+                  <div className="flex flex-nowrap overflow-x-auto scrollbar-hide gap-1.5 pb-0.5 mt-1.5 lg:mt-0 lg:flex-wrap lg:overflow-visible lg:pb-0">
+                    {getNeighborhoodsByRegion(region).map(n => (
+                      <button
+                        key={n.id}
+                        onClick={() => toggleNeighborhood(n.id)}
+                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                          activeNeighborhoods.has(n.id)
+                            ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
+                            : 'bg-white border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
+                        }`}
+                      >
+                        {n.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
