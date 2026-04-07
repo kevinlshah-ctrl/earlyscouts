@@ -75,9 +75,13 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   const router = useRouter()
 
   const [activeNeighborhoods, setActiveNeighborhoods] = useState<Set<string>>(getInitialNeighborhoods)
-  const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() =>
-    getRegionsForNeighborhoods(getInitialNeighborhoods())
-  )
+  const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() => {
+    // Only expand regions when neighborhoods are explicitly set via URL param.
+    // Default fallback (mar-vista) should not auto-expand Westside on fresh load.
+    const fromUrl = readNeighborhoodsFromUrl()
+    if (fromUrl.length > 0) return getRegionsForNeighborhoods(new Set(fromUrl))
+    return new Set()
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<School[]>([])
 

@@ -272,6 +272,9 @@ export interface ReportData {
   verdict: ReportVerdict
   alerts?: AlertItem[]
   related_schools?: RelatedSchoolItem[]
+  /** Set server-side on gated guide pages to preserve the real chapter count
+   *  after sections are stripped to slice(0,1) for unauthenticated visitors. */
+  total_sections?: number
 }
 
 export interface TourDate {

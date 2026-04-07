@@ -639,8 +639,8 @@ export default function SchoolReport({
             {isGuide && <span className={styles.metaPill}>{school.district}</span>}
             {!isGuide && <span className={styles.metaPill}>Grades {school.grades}</span>}
             {!isGuide && <span className={styles.metaPill}>~{(school.enrollment ?? 0).toLocaleString()} Students</span>}
-            {isGuide && <span className={styles.metaPill}>Comprehensive guide · {sections.length} chapters</span>}
-            {isGuide && <span className={styles.metaPill}>Updated {new Date(data.generated_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>}
+            {isGuide && <span className={styles.metaPill}>Comprehensive guide · {data.total_sections ?? sections.length} chapters</span>}
+            {isGuide && <span className={styles.metaPill}>Updated {new Date(data.generated_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}</span>}
             {!isGuide && accentStats.map((s, i) => (
               <span key={i} className={`${styles.metaPill} ${styles.metaPillAccent}`}>{s.label} {s.value}</span>
             ))}
@@ -768,7 +768,7 @@ export default function SchoolReport({
         <div className={styles.reportFooterBrand}>EarlyScouts</div>
         <p className={styles.reportFooterText}>
           For parents who plan ahead.<br />
-          Generated {new Date(data.generated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          Generated {new Date(data.generated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
         </p>
       </div>
 

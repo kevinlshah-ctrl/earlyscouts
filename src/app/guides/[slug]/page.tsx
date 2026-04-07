@@ -61,7 +61,7 @@ export default async function GuidePage({ params }: { params: { slug: string } }
       .from('user_profiles')
       .select('subscription_tier, subscription_status, access_expires_at')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     const p = profileRow as {
       subscription_tier: string | null
@@ -94,6 +94,9 @@ export default async function GuidePage({ params }: { params: { slug: string } }
     reportData: school.reportData
       ? {
           ...school.reportData,
+          // Preserve real chapter count before stripping so the hero pill shows
+          // the correct "N chapters" instead of "1 chapters".
+          total_sections: sections.length,
           sections: sections.slice(0, 1),
           // Clear the verdict so it never reaches the client unauthenticated.
           verdict: { paragraphs: [], best_for: '', consider_alternatives: '' },
