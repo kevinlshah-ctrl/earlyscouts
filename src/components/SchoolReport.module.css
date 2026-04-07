@@ -1317,3 +1317,150 @@
   .paywallTitle { font-size: 21px; }
   .paywallBody { font-size: 13px; }
 }
+
+/* ── Free preview sticky banner (inside sticky header) ─────────────────── */
+.previewBanner {
+  background: #1A1A2E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 9px 16px;
+  position: relative;
+  flex-wrap: wrap;
+}
+.previewBannerText {
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.previewBannerText strong {
+  color: #fff;
+  font-weight: 600;
+}
+.previewBannerDot {
+  color: rgba(255,255,255,0.35);
+}
+.previewBannerBtn {
+  background: #F2945C;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 100px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.previewBannerBtn:hover { background: #e07d44; }
+.previewBannerDismiss {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.previewBannerDismiss:hover { color: rgba(255,255,255,0.8); }
+
+/* ── Mid-content free preview CTA card ─────────────────────────────────── */
+.freePreviewCard {
+  background: #fff;
+  border: 1.5px solid #E8E5E1;
+  border-radius: 20px;
+  padding: 36px 32px;
+  text-align: center;
+  margin: 0 0 32px;
+}
+.freePreviewLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #F2945C;
+  margin-bottom: 10px;
+}
+.freePreviewTitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: #1A1A2E;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+.freePreviewBody {
+  font-size: 14px;
+  color: #6E6A65;
+  line-height: 1.65;
+  max-width: 340px;
+  margin: 0 auto 24px;
+}
+.freePreviewCta {
+  display: inline-block;
+  background: #5B9A6F;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14.5px;
+  padding: 13px 36px;
+  border-radius: 100px;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.freePreviewCta:hover {
+  background: #4a8a5e;
+  transform: translateY(-1px);
+}
+
+/* ── Locked sections ────────────────────────────────────────────────────── */
+.lockedSection {
+  margin-bottom: 24px;
+}
+.lockedSectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 8px;
+  border-top: 1px solid #E8E5E1;
+}
+.lockedSectionLock {
+  font-size: 13px;
+  opacity: 0.6;
+}
+.lockedSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9B9690;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.lockedSectionPreview {
+  position: relative;
+  max-height: 160px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+.lockedSectionContent {
+  filter: blur(4px);
+  opacity: 0.35;
+}
+.lockedSectionFade {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, transparent, #FFFAF6);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .freePreviewCard { padding: 28px 20px; }
+  .freePreviewTitle { font-size: 19px; }
+  .previewBannerText { font-size: 11.5px; }
+}

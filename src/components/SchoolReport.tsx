@@ -511,6 +511,7 @@ export default function SchoolReport({
   const isPaid = !forcePaywall && (isGuide || hasActiveAccess(profile))
 
   const [scrolled, setScrolled] = useState(false)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -537,6 +538,27 @@ export default function SchoolReport({
     <>
       {/* ── Sticky Header ── */}
       <div className={`${styles.stickyHeader} ${scrolled ? styles.stickyHeaderScrolled : ''}`}>
+
+        {/* Free preview banner — only for non-paid users on school pages */}
+        {!isPaid && !bannerDismissed && (
+          <div className={styles.previewBanner}>
+            <span className={styles.previewBannerText}>
+              <strong>Unlock full access</strong>
+              <span className={styles.previewBannerDot}>·</span>
+              {sections.length} sections for $34.99
+            </span>
+            <Link href="/pricing" className={styles.previewBannerBtn}>
+              Get Access
+            </Link>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className={styles.previewBannerDismiss}
+              aria-label="Dismiss banner"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* Site Header */}
         <div className={styles.siteHeader}>
@@ -687,21 +709,6 @@ export default function SchoolReport({
         <AlertsCard alerts={data.alerts} />
       )}
 
-      {/* ── Table of Contents ── */}
-      <div className={styles.toc}>
-        <div className={styles.tocHeader}>
-          <div className={styles.tocHeaderLabel}>What&apos;s Inside</div>
-          <div className={styles.tocLine} />
-        </div>
-        <ol className={styles.tocList}>
-          {sections.map(s => (
-            <li key={s.id} className={styles.tocItem}>
-              <a href={`#${s.id}`} className={styles.tocLink}>{s.title}</a>
-            </li>
-          ))}
-        </ol>
-      </div>
-
       {/* ── Sections ── */}
       {isPaid ? (
         // Full access — first section eager, rest lazy-rendered via IntersectionObserver
@@ -709,39 +716,39 @@ export default function SchoolReport({
           <LazySection key={section.id} section={section} eager={i === 0} />
         ))
       ) : (
-        // Free access — first section visible, second section blurred preview, then paywall
+        // Free preview — first two sections visible, CTA card, then locked sections
         <>
-          {sections.slice(0, 1).map(section => (
+          {sections.slice(0, 2).map(section => (
             <ReportSectionComp key={section.id} section={section} />
           ))}
-          {sections.length > 1 && (
-            <div className={styles.paywallPreview} aria-hidden="true">
-              <div className={styles.paywallPreviewInner}>
-                <ReportSectionComp section={sections[1]} />
-              </div>
-              <div className={styles.paywallPreviewFade} />
-            </div>
-          )}
-          {/* Tailwind bg-charcoal is a belt-and-suspenders fallback in case the
-              CSS module background fails to apply (white text would be invisible). */}
-          <div className={`${styles.paywallCard} bg-charcoal`}>
-            <div className={styles.paywallLock}>🔒</div>
-            <h3 className={`${styles.paywallTitle} text-white`}>Unlock the Full Report</h3>
-            <p className={`${styles.paywallBody} text-white`}>
-              Get all {sections.length} sections — comparison tables, parent review
-              synthesis, tour questions, enrollment details, and the Scout&apos;s Verdict.
+
+          {/* Mid-content CTA card */}
+          <div className={styles.freePreviewCard}>
+            <p className={styles.freePreviewLabel}>Free Preview</p>
+            <h3 className={styles.freePreviewTitle}>You&apos;re reading the free preview</h3>
+            <p className={styles.freePreviewBody}>
+              Get all {sections.length} sections including comparisons, reviews &amp; enrollment info.
             </p>
-            <CheckoutButton
-              tier="premium"
-              label="Get Premium for $34.99"
-              loadingLabel="Setting up checkout…"
-              className={styles.paywallCta}
-              next={isGuide ? `/guides/${school.slug}` : `/schools/${school.slug}`}
-            />
-            <p className={`${styles.paywallNote} text-white`}>
-              3 days of full access. No subscription required.
-            </p>
+            <Link href="/pricing" className={styles.freePreviewCta}>
+              Get Full Access for $34.99
+            </Link>
           </div>
+
+          {/* Locked sections — blurred preview with fade */}
+          {sections.slice(2).map(section => (
+            <div key={section.id} className={styles.lockedSection}>
+              <div className={styles.lockedSectionLabel}>
+                <span className={styles.lockedSectionLock}>🔒</span>
+                <span className={styles.lockedSectionTitle}>{section.title}</span>
+              </div>
+              <div className={styles.lockedSectionPreview} aria-hidden="true">
+                <div className={styles.lockedSectionContent}>
+                  <ReportSectionComp section={section} />
+                </div>
+                <div className={styles.lockedSectionFade} />
+              </div>
+            </div>
+          ))}
         </>
       )}
 
