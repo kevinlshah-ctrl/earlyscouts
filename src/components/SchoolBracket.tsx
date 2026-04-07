@@ -3,7 +3,6 @@
 import { useRef, useState, useEffect } from 'react'
 import type { School } from '@/lib/types'
 import SchoolPreviewModal from './SchoolPreviewModal'
-import FollowButton from './FollowButton'
 
 /* ── Level classification ── */
 function getLevel(school: School): 'elementary' | 'middle-high' | 'guide' {
@@ -95,13 +94,12 @@ function BracketCard({ school, onClick }: { school: School; onClick: () => void 
   const isGuide = getLevel(school) === 'guide'
 
   return (
-    // Wrapper div allows FollowButton to live outside the <button> (no nested buttons)
     <div className="relative flex-shrink-0 w-[210px] snap-start">
       <button
         onClick={onClick}
         className="w-full bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-scout-green/50 hover:shadow-sm transition-all"
       >
-        <div className="flex items-start gap-2 mb-2 pr-7">
+        <div className="flex items-start gap-2 mb-2">
           <h3 className="text-sm font-semibold text-charcoal leading-snug line-clamp-2 flex-1">
             {school.name}
           </h3>
@@ -129,12 +127,6 @@ function BracketCard({ school, onClick }: { school: School; onClick: () => void 
         )}
       </button>
 
-      {/* Follow button — outside the card button to avoid nested buttons */}
-      {!isGuide && (
-        <div className="absolute top-3 right-3 z-10">
-          <FollowButton slug={school.slug} schoolName={school.name} compact />
-        </div>
-      )}
     </div>
   )
 }

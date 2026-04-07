@@ -21,7 +21,6 @@ import type {
 } from '@/lib/types'
 import styles from './SchoolReport.module.css'
 import Footer from './Footer'
-import FollowButton from './FollowButton'
 import { useAuth, hasActiveAccess } from '@/lib/auth-context'
 import CheckoutButton from '@/app/pricing/CheckoutButton'
 
@@ -623,12 +622,6 @@ export default function SchoolReport({
           />
         )}
         <div className={styles.heroColorWash} />
-        {/* Follow button — top-right, above the color wash */}
-        {!isGuide && (
-          <div className={styles.heroFollowBtn}>
-            <FollowButton slug={school.slug} schoolName={school.name} variant="dark" />
-          </div>
-        )}
         <div className={styles.heroOverlay}>
           <div className={styles.heroBadge}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -429,25 +429,14 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     region: 'Hollywood Hills',
     districts: ['LAUSD'],
     elementarySlugs: [
-      // Ring 1 — Zoned
       'cheremoya-avenue-elementary-los-angeles-ca',
-      'gardner-street-elementary-los-angeles-ca',
-      // Ring 2 — Elite targets (open enrollment / magnet)
       'wonderland-avenue-elementary-los-angeles-ca',
-      'third-street-elementary-los-angeles-ca',
-      'hancock-park-elementary-los-angeles-ca',
-      // Ring 3 — Charters
-      'larchmont-charter-los-angeles-ca',
+      'gardner-street-elementary-los-angeles-ca',
       'cwc-hollywood-los-angeles-ca',
-      // Ring 4 — Over the hill (Valley options)
-      'carpenter-charter-studio-city-ca',
-      'colfax-charter-valley-village-ca',
-      // Escape valve
-      'laces-magnet-los-angeles-ca',
+      'larchmont-charter-los-angeles-ca',
     ],
     middleSlugs: [
       'bancroft-middle-school-los-angeles-ca',
-      'le-conte-middle-school-los-angeles-ca',
       'john-burroughs-middle-school-los-angeles-ca',
     ],
     highSlugs: [
@@ -461,6 +450,45 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     privateSlugs: [
       'the-oaks-school-los-angeles-ca',
       'hollywood-schoolhouse-los-angeles-ca',
+    ],
+  },
+
+  'studio-city': {
+    label: 'Studio City',
+    region: 'Hollywood Hills',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'carpenter-charter-studio-city-ca',
+      'colfax-charter-valley-village-ca',
+      'wonderland-avenue-elementary-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'john-burroughs-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
+  'hancock-park': {
+    label: 'Hancock Park',
+    region: 'Hollywood Hills',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'hancock-park-elementary-los-angeles-ca',
+      'third-street-elementary-los-angeles-ca',
+      'laces-magnet-los-angeles-ca',
+      'larchmont-charter-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'le-conte-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [
+      'fairfax-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
     ],
   },
 

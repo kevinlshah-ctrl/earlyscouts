@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
@@ -79,22 +79,6 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<School[]>([])
 
-  const chipRefs = useRef<Record<string, HTMLButtonElement | null>>({})
-  const chipScrollRef = useRef<HTMLDivElement>(null)
-  const [canChipScrollLeft, setCanChipScrollLeft] = useState(false)
-  const [canChipScrollRight, setCanChipScrollRight] = useState(false)
-
-  function updateChipArrows() {
-    const el = chipScrollRef.current
-    if (!el) return
-    setCanChipScrollLeft(el.scrollLeft > 8)
-    setCanChipScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8)
-  }
-
-  function scrollChips(delta: number) {
-    chipScrollRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
-  }
-
   // Keep state in sync with browser back/forward navigation
   useEffect(() => {
     function onPopState() {
@@ -107,20 +91,6 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
-  }, [])
-
-  // Scroll first active chip into view
-  useEffect(() => {
-    const firstId = Array.from(activeNeighborhoods)[0]
-    if (firstId) {
-      const el = chipRefs.current[firstId]
-      if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
-    }
-  }, [activeNeighborhoods])
-
-  // Check chip row scroll state on mount
-  useEffect(() => {
-    updateChipArrows()
   }, [])
 
   // Client-side search
@@ -236,79 +206,45 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
           </div>
 
           {/* Region-grouped chips — collapsed by default, expand on click */}
-          <div className="group relative">
-            {/* Left arrow */}
-            {canChipScrollLeft && (
-              <button
-                onClick={() => scrollChips(-320)}
-                aria-label="Scroll left"
-                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 items-center justify-center bg-white border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-[#1A1A2E] hover:border-gray-300 hover:shadow-lg transition-all duration-150 opacity-0 group-hover:opacity-100"
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-0">
+            {regions.map((region, ri) => (
+              <div
+                key={region}
+                className={`flex flex-wrap items-center gap-1.5 ${ri > 0 ? 'ml-3 pl-3 border-l border-[#E8E5E1]' : ''}`}
               >
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 11 5 7 9 3" />
-                </svg>
-              </button>
-            )}
-            {/* Right arrow */}
-            {canChipScrollRight && (
-              <button
-                onClick={() => scrollChips(320)}
-                aria-label="Scroll right"
-                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 items-center justify-center bg-white border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-[#1A1A2E] hover:border-gray-300 hover:shadow-lg transition-all duration-150 opacity-0 group-hover:opacity-100"
-              >
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="5 3 9 7 5 11" />
-                </svg>
-              </button>
-            )}
-            <div
-              ref={chipScrollRef}
-              onScroll={updateChipArrows}
-              className="flex items-center gap-0 overflow-x-auto pb-0.5 scrollbar-hide"
-              style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-            >
-              {regions.map((region, ri) => (
-                <div
-                  key={region}
-                  className={`flex items-center gap-1.5 flex-shrink-0 ${ri > 0 ? 'ml-3 pl-3 border-l border-[#E8E5E1]' : ''}`}
+                {/* Region toggle button */}
+                <button
+                  onClick={() => toggleRegion(region)}
+                  className={`flex items-center gap-0.5 text-[10px] font-mono uppercase tracking-widest mr-1 whitespace-nowrap transition-colors ${
+                    activeRegions.has(region) ? 'text-[#5B9A6F] font-bold' : 'text-[#B0AAA4] hover:text-[#6E6A65]'
+                  }`}
                 >
-                  {/* Region toggle button */}
+                  {region}
+                  <svg
+                    width="8" height="8" viewBox="0 0 10 10" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className="ml-0.5 transition-transform"
+                    style={{ transform: expandedRegions.has(region) ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  >
+                    <polyline points="2 3 5 7 8 3" />
+                  </svg>
+                </button>
+                {/* Neighborhood chips — only visible when region is expanded */}
+                {expandedRegions.has(region) && getNeighborhoodsByRegion(region).map(n => (
                   <button
-                    onClick={() => toggleRegion(region)}
-                    className={`flex items-center gap-0.5 text-[10px] font-mono uppercase tracking-widest mr-1 whitespace-nowrap transition-colors ${
-                      activeRegions.has(region) ? 'text-[#5B9A6F] font-bold' : 'text-[#B0AAA4] hover:text-[#6E6A65]'
+                    key={n.id}
+                    onClick={() => toggleNeighborhood(n.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                      activeNeighborhoods.has(n.id)
+                        ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
+                        : 'bg-white border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
                     }`}
                   >
-                    {region}
-                    <svg
-                      width="8" height="8" viewBox="0 0 10 10" fill="none"
-                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      className="ml-0.5 transition-transform"
-                      style={{ transform: expandedRegions.has(region) ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                    >
-                      <polyline points="2 3 5 7 8 3" />
-                    </svg>
+                    {n.label}
                   </button>
-                  {/* Neighborhood chips — only visible when region is expanded */}
-                  {expandedRegions.has(region) && getNeighborhoodsByRegion(region).map(n => (
-                    <button
-                      key={n.id}
-                      ref={el => { chipRefs.current[n.id] = el }}
-                      onClick={() => toggleNeighborhood(n.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                        activeNeighborhoods.has(n.id)
-                          ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
-                          : 'bg-white border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
-                      }`}
-                    >
-                      {n.label}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-            {/* Right-edge fade to indicate overflow */}
-            <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[#FFFAF6] to-transparent pointer-events-none" />
+                ))}
+              </div>
+            ))}
           </div>
 
         </div>
