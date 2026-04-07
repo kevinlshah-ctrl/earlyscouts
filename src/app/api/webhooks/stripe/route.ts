@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
   const secret  = process.env.STRIPE_WEBHOOK_SECRET
 
   if (!sig || !secret) {
+    console.error('[webhook] Missing stripe-signature header or STRIPE_WEBHOOK_SECRET env var')
     return NextResponse.json({ error: 'Missing signature or secret' }, { status: 400 })
   }
 
@@ -61,6 +62,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Webhook error: ${msg}` }, { status: 400 })
   }
 
+  console.log(`[webhook] Received event: ${event.type} id=${event.id}`)
+
   const supabase = getAdminClient()
 
   // ── Event dispatch ────────────────────────────────────────────────────────
@@ -68,35 +71,50 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
 
       // ── checkout.session.completed ─────────────────────────────────────
-      // Fires when a user completes checkout (payment OR subscription first-time).
+      // Fires when a user completes checkout (payment OR $0 promo code).
+      // payment_status is 'paid' for both real payments and $0 promo codes.
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        const userId   = session.metadata?.userId
-        const tier     = session.metadata?.tier as 'premium' | 'extended' | undefined
+        const session    = event.data.object as Stripe.Checkout.Session
+        const userId     = session.metadata?.userId
+        const tier       = session.metadata?.tier as 'premium' | 'extended' | undefined
         const customerId = typeof session.customer === 'string' ? session.customer : null
+        const payStatus  = session.payment_status // 'paid' | 'unpaid' | 'no_payment_required'
+
+        console.log(`[webhook] checkout.session.completed: session=${session.id} userId=${userId} tier=${tier} customerId=${customerId} payment_status=${payStatus}`)
 
         if (!userId || !tier) {
-          console.warn('[webhook] checkout.session.completed: missing metadata', session.id)
+          console.warn('[webhook] checkout.session.completed: missing metadata — no profile update')
+          break
+        }
+
+        // Guard: only grant access for sessions that actually succeeded.
+        // 'no_payment_required' covers $0 promo codes — treat same as 'paid'.
+        if (payStatus === 'unpaid') {
+          console.warn(`[webhook] checkout.session.completed: payment_status=unpaid, skipping access grant for userId=${userId}`)
           break
         }
 
         if (tier === 'premium') {
-          // One-time: grant 3-day access window
+          // One-time payment: grant 3-day access window
           const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+          console.log(`[webhook] Granting premium access to userId=${userId} expires=${expiresAt}`)
           await updateByUserId(supabase, userId, {
-            subscription_tier: 'premium',
-            access_expires_at: expiresAt,
-            stripe_customer_id: customerId,
-            updated_at: new Date().toISOString(),
+            subscription_tier:   'premium',
+            access_expires_at:   expiresAt,
+            stripe_customer_id:  customerId,
+            updated_at:          new Date().toISOString(),
           })
+          console.log(`[webhook] premium access granted userId=${userId}`)
         } else {
-          // Extended subscription: in trial period until day 4
+          // Extended subscription: Stripe trial period covers days 1-3, active on day 4+
+          console.log(`[webhook] Granting extended/trialing access to userId=${userId}`)
           await updateByUserId(supabase, userId, {
-            subscription_tier: 'extended',
+            subscription_tier:   'extended',
             subscription_status: 'trialing',
-            stripe_customer_id: customerId,
-            updated_at: new Date().toISOString(),
+            stripe_customer_id:  customerId,
+            updated_at:          new Date().toISOString(),
           })
+          console.log(`[webhook] extended/trialing access granted userId=${userId}`)
         }
         break
       }
@@ -106,8 +124,9 @@ export async function POST(request: NextRequest) {
       case 'invoice.paid': {
         const invoice    = event.data.object as Stripe.Invoice
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : null
-        if (!customerId) break
+        if (!customerId) { console.warn('[webhook] invoice.paid: no customerId'); break }
 
+        console.log(`[webhook] invoice.paid: customerId=${customerId} → subscription_status=active`)
         // Only update subscription status; tier was already set on checkout.session.completed
         await updateByCustomerId(supabase, customerId, {
           subscription_status: 'active',
@@ -120,8 +139,9 @@ export async function POST(request: NextRequest) {
       case 'invoice.payment_failed': {
         const invoice    = event.data.object as Stripe.Invoice
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : null
-        if (!customerId) break
+        if (!customerId) { console.warn('[webhook] invoice.payment_failed: no customerId'); break }
 
+        console.log(`[webhook] invoice.payment_failed: customerId=${customerId} → subscription_status=past_due`)
         await updateByCustomerId(supabase, customerId, {
           subscription_status: 'past_due',
           updated_at: new Date().toISOString(),
@@ -134,7 +154,7 @@ export async function POST(request: NextRequest) {
       case 'customer.subscription.updated': {
         const sub        = event.data.object as Stripe.Subscription
         const customerId = typeof sub.customer === 'string' ? sub.customer : null
-        if (!customerId) break
+        if (!customerId) { console.warn('[webhook] customer.subscription.updated: no customerId'); break }
 
         const statusMap: Record<string, string> = {
           trialing: 'trialing',
@@ -145,6 +165,7 @@ export async function POST(request: NextRequest) {
           paused:   'past_due',
         }
         const newStatus = statusMap[sub.status] ?? 'active'
+        console.log(`[webhook] customer.subscription.updated: customerId=${customerId} sub.status=${sub.status} → ${newStatus}`)
 
         await updateByCustomerId(supabase, customerId, {
           subscription_status: newStatus,
@@ -158,24 +179,25 @@ export async function POST(request: NextRequest) {
       case 'customer.subscription.deleted': {
         const sub        = event.data.object as Stripe.Subscription
         const customerId = typeof sub.customer === 'string' ? sub.customer : null
-        if (!customerId) break
+        if (!customerId) { console.warn('[webhook] customer.subscription.deleted: no customerId'); break }
 
+        console.log(`[webhook] customer.subscription.deleted: customerId=${customerId} → tier=free canceled`)
         await updateByCustomerId(supabase, customerId, {
-          subscription_tier: 'free',
+          subscription_tier:   'free',
           subscription_status: 'canceled',
-          updated_at: new Date().toISOString(),
+          updated_at:          new Date().toISOString(),
         })
         break
       }
 
       default:
-        // All other events — no action needed
+        console.log(`[webhook] Unhandled event type: ${event.type} — no action needed`)
         break
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown handler error'
-    console.error(`[webhook] Error handling ${event.type}:`, msg)
-    // Return 200 so Stripe doesn't retry — log the error and investigate manually
+    console.error(`[webhook] Unhandled error processing ${event.type}:`, msg)
+    // Return 200 so Stripe doesn't retry — the error is logged, investigate in Vercel logs
   }
 
   return NextResponse.json({ received: true })

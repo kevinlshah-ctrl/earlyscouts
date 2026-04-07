@@ -40,7 +40,9 @@ export async function POST(request: NextRequest) {
   }
 
   const stripe = new Stripe(stripeKey)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const proto   = request.headers.get('x-forwarded-proto') ?? 'https'
+  const reqHost = request.headers.get('host') ?? 'www.earlyscouts.com'
+  const appUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${reqHost}`
 
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: profile.stripe_customer_id,

@@ -8,7 +8,12 @@ export async function POST(request: NextRequest) {
     const supabaseUrl      = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceKey       = process.env.SUPABASE_SERVICE_ROLE_KEY
     const stripeKey        = process.env.STRIPE_SECRET_KEY
-    const appUrl           = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? request.headers.get('origin') ?? 'https://earlyscouts.com'
+    // Derive the base URL from the actual request host so we never embed
+    // localhost:3000 into Stripe session URLs even if env vars are stale.
+    // NEXT_PUBLIC_SITE_URL can override (e.g. "https://www.earlyscouts.com").
+    const proto   = request.headers.get('x-forwarded-proto') ?? 'https'
+    const reqHost = request.headers.get('host') ?? 'www.earlyscouts.com'
+    const appUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${reqHost}`
     const premiumPriceId   = process.env.STRIPE_PRICE_PREMIUM
     const extMonthlyPriceId = process.env.STRIPE_PRICE_EXTENDED_MONTHLY
     const extOnetimePriceId = process.env.STRIPE_PRICE_EXTENDED_ONETIME
