@@ -12,7 +12,10 @@ export async function POST(request: NextRequest) {
     // localhost:3000 into Stripe session URLs even if env vars are stale.
     // NEXT_PUBLIC_SITE_URL can override (e.g. "https://www.earlyscouts.com").
     const proto   = request.headers.get('x-forwarded-proto') ?? 'https'
-    const reqHost = request.headers.get('host') ?? 'www.earlyscouts.com'
+    // Strip www so success_url always points to the apex domain — avoids the
+    // 308 redirect (www → apex) that can drop the Supabase session cookie.
+    const rawHost = request.headers.get('host') ?? 'earlyscouts.com'
+    const reqHost = rawHost.replace(/^www\./, '')
     const appUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${reqHost}`
     const premiumPriceId   = process.env.STRIPE_PRICE_PREMIUM
     const extMonthlyPriceId = process.env.STRIPE_PRICE_EXTENDED_MONTHLY
