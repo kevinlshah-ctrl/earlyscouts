@@ -546,9 +546,7 @@ export default function SchoolReport({
         {!isPaid && !bannerDismissed && (
           <div className={styles.previewBanner}>
             <span className={styles.previewBannerText}>
-              <strong>Unlock full access to all schools &amp; guides</strong>
-              <span className={styles.previewBannerDot}>·</span>
-              $34.99 · one-time payment
+              Unlock all schools &amp; guides
             </span>
             <Link href="/pricing" className={styles.previewBannerBtn}>
               Get Access
