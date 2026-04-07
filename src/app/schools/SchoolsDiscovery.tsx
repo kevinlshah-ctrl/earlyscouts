@@ -48,17 +48,11 @@ function readNeighborhoodsFromUrl(): string[] {
   return q.split(',').filter(id => getNeighborhoodById(id) != null)
 }
 
-/** Derive initial neighborhood set: URL first, then localStorage, then 'mar-vista' */
+/** Derive initial neighborhood set: URL first, then empty */
 function getInitialNeighborhoods(): Set<string> {
   const fromUrl = readNeighborhoodsFromUrl()
   if (fromUrl.length > 0) return new Set(fromUrl)
-  try {
-    const stored = JSON.parse(localStorage.getItem('earlyscouts_onboarding') || '{}')
-    if (stored.neighborhoodId && getNeighborhoodById(stored.neighborhoodId)) {
-      return new Set([stored.neighborhoodId])
-    }
-  } catch {}
-  return new Set(['mar-vista'])
+  return new Set<string>()
 }
 
 /** Which regions contain at least one of the given neighborhood IDs */
@@ -148,12 +142,12 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     setActiveNeighborhoods(prev => {
       const next = new Set(prev)
       if (next.has(id)) {
-        if (next.size === 1) return prev // keep at least one selected
         next.delete(id)
       } else {
         next.add(id)
       }
-      window.history.pushState({}, '', `/schools?q=${Array.from(next).join(',')}`)
+      const qStr = next.size > 0 ? `/schools?q=${Array.from(next).join(',')}` : '/schools'
+      window.history.pushState({}, '', qStr)
       return next
     })
   }
@@ -186,7 +180,9 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     : []
 
   const firstHood = activeHoods[0] ?? null
-  const headerLabel = activeNeighborhoods.size === 1
+  const headerLabel = activeNeighborhoods.size === 0
+    ? 'Schools'
+    : activeNeighborhoods.size === 1
     ? firstHood?.label ?? 'Schools'
     : `${activeNeighborhoods.size} neighborhoods`
 
@@ -318,14 +314,40 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
         </div>
       </div>
 
+      {/* Selected neighborhood pills with X to deselect */}
+      {activeNeighborhoods.size > 0 && (
+        <div className="px-4 pt-4 pb-1">
+          <div className="max-w-5xl mx-auto flex flex-wrap gap-2 items-center">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#9B9690] mr-1">Showing:</span>
+            {Array.from(activeNeighborhoods).map(id => {
+              const hood = getNeighborhoodById(id)
+              if (!hood) return null
+              return (
+                <button
+                  key={id}
+                  onClick={() => toggleNeighborhood(id)}
+                  className="flex items-center gap-1 bg-[#5B9A6F] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#4a8a5e] transition-colors"
+                >
+                  {hood.label}
+                  <span className="ml-0.5 opacity-70 text-sm leading-none">×</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* School bracket */}
       <section className="px-4 py-6">
         <div className="max-w-5xl mx-auto">
-          {bracketSchools.length > 0 ? (
-            <SchoolBracket
-              schools={bracketSchools}
-              locationLabel={headerLabel}
-            />
+          {activeNeighborhoods.size === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-3xl mb-4">🗺️</p>
+              <p className="font-serif text-xl text-[#1A1A2E] mb-2">Select a neighborhood above</p>
+              <p className="text-sm text-[#9B9690]">Choose a region to see schools with analyst-written deep-dive reports.</p>
+            </div>
+          ) : bracketSchools.length > 0 ? (
+            <SchoolBracket schools={bracketSchools} locationLabel={headerLabel} />
           ) : (
             <div className="text-center py-16 text-[#9B9690]">
               <p className="text-base">No deep-dive schools mapped to this neighborhood yet.</p>

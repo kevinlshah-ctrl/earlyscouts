@@ -6,61 +6,69 @@ import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
 import { getBrowserClient } from '@/lib/supabase-browser'
-import SchoolsTab from './SchoolsTab'
-import PreferencesTab from './PreferencesTab'
 import SubscriptionSection from './SubscriptionSection'
-import AccountTab from './AccountTab'
 
-// ── Tab definitions ───────────────────────────────────────────────────────────
+// ── Password requirements ─────────────────────────────────────────────────────
 
-const TABS = [
-  { id: 'schools',      label: 'Your Schools'      },
-  { id: 'preferences',  label: 'Preferences'        },
-  { id: 'subscription', label: 'Subscription'       },
-  { id: 'account',      label: 'Account'            },
-] as const
+const PWD_REQS = [
+  { label: 'At least 8 characters',  test: (p: string) => p.length >= 8 },
+  { label: '1 uppercase letter',      test: (p: string) => /[A-Z]/.test(p) },
+  { label: '1 lowercase letter',      test: (p: string) => /[a-z]/.test(p) },
+  { label: '1 number',                test: (p: string) => /[0-9]/.test(p) },
+  { label: '1 special character',     test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+]
 
-type TabId = typeof TABS[number]['id']
-
-// ── Loading skeleton ──────────────────────────────────────────────────────────
-
-function PageSkeleton() {
+function Card({ children, danger }: { children: React.ReactNode; danger?: boolean }) {
   return (
-    <main className="min-h-screen bg-cream">
-      {/* Header skeleton */}
-      <div className="bg-white border-b border-gray-100 px-4 py-6">
-        <div className="max-w-3xl mx-auto flex items-center gap-4 animate-pulse">
-          <div className="w-12 h-12 rounded-full bg-gray-100 shrink-0" />
-          <div className="flex-1 flex flex-col gap-2">
-            <div className="h-3 bg-gray-100 rounded w-24" />
-            <div className="h-6 bg-gray-100 rounded w-40" />
-            <div className="h-3 bg-gray-100 rounded w-32" />
+    <div className={`bg-white rounded-2xl p-5 border ${danger ? 'border-red-100' : 'border-gray-100'}`}>
+      {children}
+    </div>
+  )
+}
+
+const inputCls =
+  'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-charcoal ' +
+  'outline-none focus:border-scout-green transition-colors bg-white'
+
+// ── Delete modal ──────────────────────────────────────────────────────────────
+
+function DeleteModal({
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={onCancel} />
+      <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+          <h3 className="font-serif text-xl text-charcoal mb-2">Delete your account?</h3>
+          <p className="text-sm text-gray-500 leading-relaxed mb-5">
+            This will permanently delete your account and all data. This cannot be undone.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={onCancel}
+              className="flex-1 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-charcoal hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className="flex-1 py-2.5 rounded-full bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              {loading && <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />}
+              {loading ? 'Deleting…' : 'Yes, delete'}
+            </button>
           </div>
         </div>
       </div>
-      {/* Tab bar skeleton */}
-      <div className="bg-white border-b border-gray-100 px-4 py-0">
-        <div className="max-w-3xl mx-auto flex gap-0 animate-pulse">
-          {[120, 100, 110, 80].map((w, i) => (
-            <div key={i} className="px-5 py-4">
-              <div className="h-4 bg-gray-100 rounded" style={{ width: w }} />
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Content skeleton */}
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 animate-pulse flex flex-col gap-3">
-              <div className="h-4 bg-gray-100 rounded w-4/5" />
-              <div className="h-3 bg-gray-100 rounded w-1/2" />
-              <div className="h-3 bg-gray-100 rounded w-1/3" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </main>
+    </>
   )
 }
 
@@ -68,44 +76,26 @@ function PageSkeleton() {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, loading, signOut, toggleFollow, deleteAccount } = useAuth()
+  const { user, profile, loading, signOut, deleteAccount } = useAuth()
 
-  const [activeTab,       setActiveTab]       = useState<TabId>('schools')
-  const [followedSlugs,   setFollowedSlugs]   = useState<string[]>([])
-  const [portalLoading,   setPortalLoading]   = useState(false)
-  // After 3s, stop showing the skeleton even if profile hasn't loaded —
-  // prevents infinite skeleton when user_profiles row is missing.
-  const [timedOut,        setTimedOut]        = useState(false)
-
+  const [timedOut, setTimedOut] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setTimedOut(true), 3000)
     return () => clearTimeout(t)
   }, [])
 
-  // Redirect to sign in when not authenticated
   useEffect(() => {
     if (!loading && !user) router.replace('/signin')
   }, [loading, user, router])
 
-  // Sync followed slugs from profile
-  useEffect(() => {
-    if (profile) setFollowedSlugs(profile.followed_schools)
-  }, [profile?.followed_schools]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Handlers ─────────────────────────────────────────────────────────────
-
-  async function handleUnfollow(slug: string) {
-    // Optimistic: remove card immediately
-    setFollowedSlugs(prev => prev.filter(s => s !== slug))
-    await toggleFollow(slug)
-  }
-
+  // ── Stripe portal ─────────────────────────────────────────────────────────
+  const [portalLoading, setPortalLoading] = useState(false)
   async function handleStripePortal() {
     setPortalLoading(true)
     try {
       const { data: { session: s } } = await getBrowserClient().auth.getSession()
       const res = await fetch('/api/stripe/portal', {
-        method:  'POST',
+        method: 'POST',
         headers: { Authorization: `Bearer ${s?.access_token}` },
       })
       const body = await res.json() as { url?: string }
@@ -115,46 +105,94 @@ export default function ProfilePage() {
     }
   }
 
-  // ── Guards ────────────────────────────────────────────────────────────────
+  // ── Change password ───────────────────────────────────────────────────────
+  const [currentPwd, setCurrentPwd] = useState('')
+  const [newPwd,     setNewPwd]     = useState('')
+  const [confirmPwd, setConfirmPwd] = useState('')
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdSuccess, setPwdSuccess] = useState(false)
+  const [pwdError,   setPwdError]   = useState<string | null>(null)
 
-  // Show skeleton only while auth initialises, or for up to 3s waiting for profile.
-  // After timeout we render with whatever we have to avoid infinite skeleton.
-  if ((loading || !user || !profile) && !timedOut) {
-    return <PageSkeleton />
+  const pwdChecks = PWD_REQS.map(r => ({ ...r, met: r.test(newPwd) }))
+  const allPwdMet = pwdChecks.every(c => c.met)
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+    setPwdError(null)
+    setPwdSuccess(false)
+    if (!allPwdMet) { setPwdError('New password does not meet all requirements.'); return }
+    if (newPwd !== confirmPwd) { setPwdError('Passwords do not match.'); return }
+
+    setPwdLoading(true)
+    const supabase = getBrowserClient()
+
+    // Verify current password first
+    const { error: reAuthErr } = await supabase.auth.signInWithPassword({
+      email: user?.email ?? '',
+      password: currentPwd,
+    })
+    if (reAuthErr) {
+      setPwdError('Current password is incorrect.')
+      setPwdLoading(false)
+      return
+    }
+
+    const { error: updateErr } = await supabase.auth.updateUser({ password: newPwd })
+    if (updateErr) {
+      setPwdError('Could not update password. Please try again.')
+    } else {
+      setPwdSuccess(true)
+      setCurrentPwd('')
+      setNewPwd('')
+      setConfirmPwd('')
+    }
+    setPwdLoading(false)
   }
 
-  // Auth finished but no user — redirect is in-flight, render nothing
+  // ── Delete account ────────────────────────────────────────────────────────
+  const [showDelete,   setShowDelete]   = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  async function handleDeleteConfirm() {
+    setDeleteLoading(true)
+    await deleteAccount()
+    setDeleteLoading(false)
+    // deleteAccount signs out + clears state → useEffect above redirects to /signin
+  }
+
+  // ── Guards ────────────────────────────────────────────────────────────────
+  if ((loading || !user || !profile) && !timedOut) {
+    return (
+      <main className="min-h-screen bg-cream animate-pulse">
+        <div className="h-16 bg-white border-b border-gray-100" />
+        <div className="max-w-2xl mx-auto px-4 py-10 flex flex-col gap-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white rounded-2xl border border-gray-100" />)}
+        </div>
+      </main>
+    )
+  }
   if (!user) return null
 
-  // Build a safe fallback for when the user_profiles row is missing
   const profile_ = profile ?? {
-    id:                  user.id,
-    email:               user.email ?? '',
-    display_name:        null,
-    followed_schools:    [] as string[],
-    onboarding_data:     null,
-    subscription_tier:   'free'  as const,
-    subscription_status: null,
-    access_expires_at:   null,
-    stripe_customer_id:  null,
-    preferences:         null,
-    created_at:          '',
-    updated_at:          '',
+    id: user.id, email: user.email ?? '',
+    display_name: null, followed_schools: [],
+    onboarding_data: null, subscription_tier: 'free' as const,
+    subscription_status: null, access_expires_at: null,
+    stripe_customer_id: null, preferences: null,
+    created_at: '', updated_at: '',
   }
 
   const initials = profile_.display_name
     ? profile_.display_name.slice(0, 2).toUpperCase()
     : user.email?.slice(0, 2).toUpperCase() ?? '?'
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
     <main className="min-h-screen bg-cream">
       <Nav />
 
-      {/* ── Profile header ── */}
+      {/* Header */}
       <section className="bg-white border-b border-gray-100 px-4 py-6">
-        <div className="max-w-3xl mx-auto flex items-center gap-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-scout-green/15 flex items-center justify-center shrink-0">
             <span className="text-scout-green font-bold text-sm tracking-wide">{initials}</span>
           </div>
@@ -174,73 +212,94 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* ── Tab bar ── (sticky + horizontally scrollable on mobile) */}
-      <div className="bg-white border-b border-gray-100 sticky top-16 z-10">
-        <div className="max-w-3xl mx-auto px-4 overflow-x-auto">
-          <div className="flex gap-0 min-w-max">
-            {TABS.map(tab => {
-              const badge = tab.id === 'schools' && followedSlugs.length > 0
-                ? followedSlugs.length
-                : null
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`text-sm font-medium px-5 py-4 border-b-2 whitespace-nowrap transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-scout-green text-scout-green'
-                      : 'border-transparent text-gray-500 hover:text-charcoal'
-                  }`}
-                >
-                  {tab.label}
-                  {badge !== null && (
-                    <span className="ml-1.5 text-[11px] bg-scout-green/10 text-scout-green px-1.5 py-0.5 rounded-full font-mono">
-                      {badge}
-                    </span>
-                  )}
-                </button>
-              )
-            })}
+      {/* Content */}
+      <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
+
+        {/* Plan */}
+        <SubscriptionSection
+          profile={profile_}
+          onPortalClick={handleStripePortal}
+          portalLoading={portalLoading}
+        />
+
+        {/* Change password */}
+        <Card>
+          <h2 className="font-semibold text-charcoal mb-4">Change Password</h2>
+          <form onSubmit={handlePasswordChange} className="flex flex-col gap-3">
+            <input
+              type="password"
+              value={currentPwd}
+              onChange={e => setCurrentPwd(e.target.value)}
+              placeholder="Current password"
+              required
+              className={inputCls}
+            />
+            <div className="flex flex-col gap-1.5">
+              <input
+                type="password"
+                value={newPwd}
+                onChange={e => setNewPwd(e.target.value)}
+                placeholder="New password"
+                required
+                className={inputCls}
+              />
+              {newPwd.length > 0 && (
+                <ul className="flex flex-col gap-0.5 pl-0.5">
+                  {pwdChecks.map(c => (
+                    <li key={c.label} className={`text-xs flex items-center gap-1.5 transition-colors ${c.met ? 'text-scout-green' : 'text-gray-400'}`}>
+                      <span className="w-3 text-center shrink-0">{c.met ? '✓' : '○'}</span>
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <input
+              type="password"
+              value={confirmPwd}
+              onChange={e => setConfirmPwd(e.target.value)}
+              placeholder="Confirm new password"
+              required
+              className={inputCls}
+            />
+            {pwdError   && <p className="text-xs text-red-500">{pwdError}</p>}
+            {pwdSuccess && <p className="text-xs text-scout-green">Password updated successfully.</p>}
+            <button
+              type="submit"
+              disabled={pwdLoading || !currentPwd || !newPwd || !confirmPwd}
+              className="py-2.5 bg-scout-green text-white text-sm font-semibold rounded-full disabled:opacity-50 hover:bg-scout-green-dark transition-colors flex items-center justify-center gap-2"
+            >
+              {pwdLoading && <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />}
+              {pwdLoading ? 'Updating…' : 'Update Password'}
+            </button>
+          </form>
+        </Card>
+
+        {/* Delete account */}
+        <Card danger>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-charcoal mb-0.5">Delete Account</h2>
+              <p className="text-xs text-gray-400">Permanently remove your account and all data.</p>
+            </div>
+            <button
+              onClick={() => setShowDelete(true)}
+              className="text-xs text-red-400 hover:text-red-600 transition-colors font-medium"
+            >
+              Delete my account
+            </button>
           </div>
-        </div>
-      </div>
-
-      {/* ── Tab content ── */}
-      <div className="max-w-3xl mx-auto px-4 py-8">
-
-        {activeTab === 'schools' && (
-          <SchoolsTab
-            followedSlugs={followedSlugs}
-            onUnfollow={handleUnfollow}
-          />
-        )}
-
-        {activeTab === 'preferences' && (
-          <PreferencesTab
-            userId={user.id}
-            initialPrefs={profile_.preferences}
-          />
-        )}
-
-        {activeTab === 'subscription' && (
-          <SubscriptionSection
-            profile={profile_}
-            onPortalClick={handleStripePortal}
-            portalLoading={portalLoading}
-          />
-        )}
-
-        {activeTab === 'account' && (
-          <AccountTab
-            user={user}
-            profile={profile_}
-            onDeleteAccount={deleteAccount}
-            onStripePortal={handleStripePortal}
-            stripePortalLoading={portalLoading}
-          />
-        )}
+        </Card>
 
       </div>
+
+      {showDelete && (
+        <DeleteModal
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setShowDelete(false)}
+          loading={deleteLoading}
+        />
+      )}
 
       <Footer />
     </main>

@@ -101,10 +101,10 @@ export default function Nav() {
                   Sign In
                 </Link>
                 <Link
-                  href="/onboarding"
+                  href="/schools"
                   className="text-sm font-medium text-cream bg-scout-green hover:bg-scout-green-dark transition-colors px-4 py-2 rounded-full"
                 >
-                  Get Started
+                  Browse Schools
                 </Link>
               </>
             ) : (
@@ -153,7 +153,7 @@ export default function Nav() {
               ) : (
                 <>
                   <Link href="/signin"     className="text-sm font-medium text-charcoal text-center py-2 border border-gray-200 rounded-full" onClick={() => setMobileOpen(false)}>Sign In</Link>
-                  <Link href="/onboarding" className="text-sm font-medium text-cream bg-scout-green text-center py-2 rounded-full"              onClick={() => setMobileOpen(false)}>Get Started</Link>
+                  <Link href="/schools" className="text-sm font-medium text-cream bg-scout-green text-center py-2 rounded-full"              onClick={() => setMobileOpen(false)}>Browse Schools</Link>
                 </>
               )}
             </div>

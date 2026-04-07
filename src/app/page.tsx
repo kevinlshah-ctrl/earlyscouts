@@ -46,7 +46,7 @@ export default function HomePage() {
           </div>
 
           <Link
-            href="/onboarding"
+            href="/schools"
             className="inline-block bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-base px-8 py-3.5 rounded-full transition-colors shadow-sm mt-1"
           >
             Find Schools Near You
@@ -176,7 +176,7 @@ export default function HomePage() {
             Start with 3 days of full access for $34.99. Stay connected for $9.99/month.
           </p>
           <Link
-            href="/onboarding"
+            href="/schools"
             className="inline-block bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-base px-8 py-3.5 rounded-full transition-colors"
           >
             Find Schools Near You
