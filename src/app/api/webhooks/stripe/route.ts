@@ -13,30 +13,100 @@ function getAdminClient() {
   )
 }
 
+type AdminClient = ReturnType<typeof getAdminClient>
+
 // ── Profile helpers ───────────────────────────────────────────────────────────
 
+/**
+ * Update user_profiles by auth user UUID.
+ * Returns the number of rows actually updated (0 = row not found).
+ */
 async function updateByUserId(
-  supabase: ReturnType<typeof getAdminClient>,
+  supabase: AdminClient,
   userId: string,
   values: Record<string, unknown>
-) {
-  const { error } = await supabase
+): Promise<number> {
+  const { data, error } = await supabase
     .from('user_profiles')
     .update(values as never)
     .eq('id', userId)
-  if (error) console.error('[webhook] updateByUserId error:', error.message)
+    .select('id')
+
+  if (error) {
+    console.error('[webhook] updateByUserId error:', error.message, '| code:', error.code)
+    return 0
+  }
+  const count = data?.length ?? 0
+  console.log(`[webhook] updateByUserId userId=${userId} rows_updated=${count}`)
+  return count
 }
 
+/**
+ * Update user_profiles by stripe_customer_id.
+ * Returns the number of rows actually updated.
+ */
 async function updateByCustomerId(
-  supabase: ReturnType<typeof getAdminClient>,
+  supabase: AdminClient,
   customerId: string,
   values: Record<string, unknown>
-) {
-  const { error } = await supabase
+): Promise<number> {
+  const { data, error } = await supabase
     .from('user_profiles')
     .update(values as never)
     .eq('stripe_customer_id', customerId)
-  if (error) console.error('[webhook] updateByCustomerId error:', error.message)
+    .select('id')
+
+  if (error) {
+    console.error('[webhook] updateByCustomerId error:', error.message, '| code:', error.code)
+    return 0
+  }
+  const count = data?.length ?? 0
+  console.log(`[webhook] updateByCustomerId customerId=${customerId} rows_updated=${count}`)
+  return count
+}
+
+/**
+ * Update user_profiles by email (last-resort fallback).
+ * Returns the number of rows actually updated.
+ */
+async function updateByEmail(
+  supabase: AdminClient,
+  email: string,
+  values: Record<string, unknown>
+): Promise<number> {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update(values as never)
+    .eq('email', email)
+    .select('id')
+
+  if (error) {
+    console.error('[webhook] updateByEmail error:', error.message, '| code:', error.code)
+    return 0
+  }
+  const count = data?.length ?? 0
+  console.log(`[webhook] updateByEmail email=${email} rows_updated=${count}`)
+  return count
+}
+
+/**
+ * Upsert a user_profiles row when all lookups return 0 rows.
+ * Uses the userId as the primary key — safe to call even if the row exists.
+ */
+async function upsertProfile(
+  supabase: AdminClient,
+  userId: string,
+  values: Record<string, unknown>
+): Promise<void> {
+  const { error } = await supabase
+    .from('user_profiles')
+    .upsert({ id: userId, ...values } as never, { onConflict: 'id' })
+
+  if (error) {
+    console.error('[webhook] upsertProfile error:', error.message, '| code:', error.code)
+  } else {
+    console.log(`[webhook] upsertProfile userId=${userId} — row created/updated`)
+  }
 }
 
 // ── Webhook handler ───────────────────────────────────────────────────────────
@@ -72,62 +142,118 @@ export async function POST(request: NextRequest) {
 
       // ── checkout.session.completed ─────────────────────────────────────
       // Fires when a user completes checkout (payment OR $0 promo code).
-      // payment_status is 'paid' for both real payments and $0 promo codes.
       case 'checkout.session.completed': {
-        const session    = event.data.object as Stripe.Checkout.Session
-        const userId     = session.metadata?.userId
-        const tier       = session.metadata?.tier as 'premium' | 'extended' | undefined
-        const customerId = typeof session.customer === 'string' ? session.customer : null
-        const payStatus  = session.payment_status // 'paid' | 'unpaid' | 'no_payment_required'
+        const session = event.data.object as Stripe.Checkout.Session
 
-        console.log(`[webhook] checkout.session.completed: session=${session.id} userId=${userId} tier=${tier} customerId=${customerId} payment_status=${payStatus}`)
+        // ── Full diagnostic log ──────────────────────────────────────────
+        console.log('[webhook] checkout.session.completed raw fields:', JSON.stringify({
+          id:                   session.id,
+          payment_status:       session.payment_status,
+          status:               session.status,
+          customer:             session.customer,
+          customer_email:       session.customer_email,
+          client_reference_id:  session.client_reference_id,
+          metadata:             session.metadata,
+          customer_details:     session.customer_details,
+        }))
 
-        if (!userId || !tier) {
-          console.warn('[webhook] checkout.session.completed: missing metadata — no profile update')
+        const metaUserId    = session.metadata?.userId
+        const clientRefId   = session.client_reference_id  // set by /api/checkout as user.id
+        const tier          = session.metadata?.tier as 'premium' | 'extended' | undefined
+        const customerId    = typeof session.customer === 'string' ? session.customer : null
+        const customerEmail =
+          session.customer_details?.email ??
+          session.customer_email ??
+          null
+        const payStatus     = session.payment_status
+
+        console.log(`[webhook] checkout.session.completed: session=${session.id} metaUserId=${metaUserId} clientRefId=${clientRefId} tier=${tier} customerId=${customerId} customerEmail=${customerEmail} payment_status=${payStatus}`)
+
+        if (!tier) {
+          console.warn('[webhook] checkout.session.completed: missing tier in metadata — cannot determine plan. Skipping.')
           break
         }
 
         // Guard: only grant access for sessions that actually succeeded.
-        // 'no_payment_required' covers $0 promo codes — treat same as 'paid'.
         if (payStatus === 'unpaid') {
-          console.warn(`[webhook] checkout.session.completed: payment_status=unpaid, skipping access grant for userId=${userId}`)
+          console.warn(`[webhook] checkout.session.completed: payment_status=unpaid, skipping`)
           break
         }
 
-        if (tier === 'premium') {
-          // One-time payment: grant 30-day access window
-          const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          console.log(`[webhook] Granting premium access to userId=${userId} expires=${expiresAt}`)
-          await updateByUserId(supabase, userId, {
-            plan_type:   'premium',
-            access_expires_at:   expiresAt,
-            stripe_customer_id:  customerId,
-            updated_at:          new Date().toISOString(),
-          })
-          console.log(`[webhook] premium access granted userId=${userId}`)
-        } else {
-          // Extended subscription: Stripe trial period covers days 1-3, active on day 4+
-          console.log(`[webhook] Granting extended/trialing access to userId=${userId}`)
-          await updateByUserId(supabase, userId, {
-            plan_type:   'extended',
-            subscription_status: 'trialing',
-            stripe_customer_id:  customerId,
-            updated_at:          new Date().toISOString(),
-          })
-          console.log(`[webhook] extended/trialing access granted userId=${userId}`)
+        // ── Build the update payload ─────────────────────────────────────
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
+        const premiumUpdate: Record<string, unknown> = {
+          plan_type:         'premium',
+          access_expires_at: expiresAt,
+          stripe_customer_id: customerId,
+          updated_at:        new Date().toISOString(),
         }
+        const extendedUpdate: Record<string, unknown> = {
+          plan_type:           'extended',
+          subscription_status: 'trialing',
+          stripe_customer_id:  customerId,
+          updated_at:          new Date().toISOString(),
+        }
+        const updatePayload = tier === 'premium' ? premiumUpdate : extendedUpdate
+
+        console.log(`[webhook] Will apply update:`, JSON.stringify(updatePayload))
+
+        // ── Attempt 1: metadata.userId ───────────────────────────────────
+        let rowsUpdated = 0
+        const lookupUserId = metaUserId ?? clientRefId
+
+        if (lookupUserId) {
+          console.log(`[webhook] Attempt 1: updateByUserId id=${lookupUserId}`)
+          rowsUpdated = await updateByUserId(supabase, lookupUserId, updatePayload)
+        } else {
+          console.warn('[webhook] Attempt 1 skipped: no userId in metadata or client_reference_id')
+        }
+
+        // ── Attempt 2: client_reference_id (if different from metadata) ──
+        if (rowsUpdated === 0 && clientRefId && clientRefId !== metaUserId) {
+          console.log(`[webhook] Attempt 2: updateByUserId clientRefId=${clientRefId}`)
+          rowsUpdated = await updateByUserId(supabase, clientRefId, updatePayload)
+        }
+
+        // ── Attempt 3: stripe_customer_id ────────────────────────────────
+        if (rowsUpdated === 0 && customerId) {
+          console.log(`[webhook] Attempt 3: updateByCustomerId customerId=${customerId}`)
+          rowsUpdated = await updateByCustomerId(supabase, customerId, updatePayload)
+        }
+
+        // ── Attempt 4: customer email ────────────────────────────────────
+        if (rowsUpdated === 0 && customerEmail) {
+          console.log(`[webhook] Attempt 4: updateByEmail email=${customerEmail}`)
+          rowsUpdated = await updateByEmail(supabase, customerEmail, updatePayload)
+        }
+
+        // ── Attempt 5: upsert using best available userId ────────────────
+        if (rowsUpdated === 0) {
+          const upsertId = lookupUserId ?? clientRefId
+          if (upsertId) {
+            console.warn(`[webhook] All lookups returned 0 rows — upserting new row for userId=${upsertId}`)
+            const email = customerEmail ?? undefined
+            await upsertProfile(supabase, upsertId, {
+              ...updatePayload,
+              ...(email ? { email } : {}),
+            })
+          } else {
+            console.error('[webhook] FATAL: no userId available for any lookup — cannot update profile. session.id=', session.id)
+          }
+        }
+
+        console.log(`[webhook] checkout.session.completed complete: tier=${tier} rowsUpdated=${rowsUpdated}`)
         break
       }
 
       // ── invoice.paid ───────────────────────────────────────────────────
-      // Fires on every successful subscription charge (after trial, and monthly).
       case 'invoice.paid': {
         const invoice    = event.data.object as Stripe.Invoice
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : null
         if (!customerId) { console.warn('[webhook] invoice.paid: no customerId'); break }
 
         console.log(`[webhook] invoice.paid: customerId=${customerId} → subscription_status=active`)
-        // Only update subscription status; tier was already set on checkout.session.completed
         await updateByCustomerId(supabase, customerId, {
           subscription_status: 'active',
           updated_at: new Date().toISOString(),
@@ -150,7 +276,6 @@ export async function POST(request: NextRequest) {
       }
 
       // ── customer.subscription.updated ─────────────────────────────────
-      // Fires when the subscription transitions between states (trial → active, etc.)
       case 'customer.subscription.updated': {
         const sub        = event.data.object as Stripe.Subscription
         const customerId = typeof sub.customer === 'string' ? sub.customer : null
@@ -175,7 +300,6 @@ export async function POST(request: NextRequest) {
       }
 
       // ── customer.subscription.deleted ─────────────────────────────────
-      // Fires when a subscription is fully canceled.
       case 'customer.subscription.deleted': {
         const sub        = event.data.object as Stripe.Subscription
         const customerId = typeof sub.customer === 'string' ? sub.customer : null
@@ -183,7 +307,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`[webhook] customer.subscription.deleted: customerId=${customerId} → tier=free canceled`)
         await updateByCustomerId(supabase, customerId, {
-          plan_type:   'free',
+          plan_type:           'free',
           subscription_status: 'canceled',
           updated_at:          new Date().toISOString(),
         })
@@ -196,7 +320,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown handler error'
-    console.error(`[webhook] Unhandled error processing ${event.type}:`, msg)
+    console.error(`[webhook] Unhandled error processing ${event.type}:`, msg, err instanceof Error ? err.stack : '')
     // Return 200 so Stripe doesn't retry — the error is logged, investigate in Vercel logs
   }
 

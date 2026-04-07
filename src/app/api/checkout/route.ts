@@ -126,6 +126,9 @@ export async function POST(request: NextRequest) {
       session = await stripe.checkout.sessions.create({
         mode:     'payment',
         customer: customerId,
+        // client_reference_id is a top-level Stripe field (not metadata) — more reliable
+        // for webhook lookup because it persists even when metadata is trimmed.
+        client_reference_id: user.id,
         line_items: [{ price: premiumPriceId, quantity: 1 }],
         // allow_promotion_codes and discounts are mutually exclusive in Stripe:
         // use pre-applied discount if provided, otherwise let the Checkout UI accept codes.
@@ -138,6 +141,7 @@ export async function POST(request: NextRequest) {
       session = await stripe.checkout.sessions.create({
         mode:     'subscription',
         customer: customerId,
+        client_reference_id: user.id,
         line_items: [
           { price: extMonthlyPriceId, quantity: 1 },
           ...(extOnetimePriceId ? [{ price: extOnetimePriceId, quantity: 1 }] : []),
