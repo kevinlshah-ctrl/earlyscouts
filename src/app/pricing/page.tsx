@@ -9,10 +9,11 @@ export const metadata = {
 }
 
 const COMPARE = [
-  { label: 'School reports',     us: '100+',               consultant: '3–5',       diy: 'Scattered' },
-  { label: 'Transfer playbooks', us: '✓',                  consultant: '✓',         diy: '✗'         },
-  { label: 'Time required',      us: '~30 min',            consultant: '5+ hrs',    diy: '20+ hrs'   },
-  { label: 'Cost',               us: '$34.99 + $9.99/mo',  consultant: '$200–$500', diy: 'Free'      },
+  { label: 'School reports',           us: '100+',              consultant: '3–5',       diy: 'Scattered' },
+  { label: 'Transfer playbooks',       us: '✓',                 consultant: '✓',         diy: '✗'         },
+  { label: 'Time required',            us: '~30 min',           consultant: '5+ hrs',    diy: '20+ hrs'   },
+  { label: 'Premium (one-time)',        us: '$34.99',            consultant: '$200–$500', diy: 'Free'      },
+  { label: 'Extended (stay connected)', us: '+$9.99/mo after',  consultant: '—',         diy: '—'         },
 ]
 
 export default function PricingPage({ searchParams }: { searchParams?: { next?: string } }) {

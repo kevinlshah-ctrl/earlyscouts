@@ -82,6 +82,17 @@ const GEO_CLUSTERS = [
     ],
     comingSoon: false,
   },
+  {
+    id: 'hollywood-hills',
+    name: 'Hollywood Hills',
+    subtitle: 'Beachwood Canyon, Laurel Canyon, Los Feliz foothills',
+    bg: 'bg-[#E8B84B]/5',
+    border: 'border-[#E8B84B]/20',
+    activeBg: 'bg-[#E8B84B]/10',
+    activeBorder: 'border-[#E8B84B]/40',
+    neighborhoods: ['Hollywood Hills'],
+    comingSoon: false,
+  },
 ]
 
 const GRADES = ['Not school age yet', 'TK', 'Kindergarten', '1st–2nd', '3rd–5th', 'Middle School', 'High School']

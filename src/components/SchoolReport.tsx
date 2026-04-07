@@ -23,6 +23,7 @@ import styles from './SchoolReport.module.css'
 import Footer from './Footer'
 import FollowButton from './FollowButton'
 import { useAuth, hasActiveAccess } from '@/lib/auth-context'
+import CheckoutButton from '@/app/pricing/CheckoutButton'
 
 // ── Slug resolution — maps short/legacy slugs to actual database IDs ─────────
 
@@ -487,9 +488,15 @@ export default function SchoolReport({
   const sections = data.sections ?? []
   const verdict = data.verdict ?? { paragraphs: [], best_for: '', consider_alternatives: '' }
 
+  // isGuide must be computed first — used to skip satellite image for playbooks/blueprints
+  const isGuide = school.slug.includes('playbook') || school.slug.includes('blueprint') ||
+    school.name.toLowerCase().includes('blueprint') || school.name.toLowerCase().includes('playbook')
+
   const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
   const heroCenter = (hero as import('@/lib/types').ReportHero).street_view_query || school.address || `${school.city}, CA`
-  const satelliteUrl = mapsKey
+  // Guides don't have real addresses — skip the satellite fetch to avoid a solid-black hero.
+  // The heroArea CSS gradient provides a clean fallback background for guide pages.
+  const satelliteUrl = (!isGuide && mapsKey)
     ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(heroCenter)}&zoom=18&size=900x400&maptype=satellite&key=${mapsKey}`
     : null
 
@@ -498,8 +505,6 @@ export default function SchoolReport({
 
   const schoolType = school.type || 'public'
   const typeLabel = schoolType.charAt(0).toUpperCase() + schoolType.slice(1)
-  const isGuide = school.slug.includes('playbook') || school.slug.includes('blueprint') ||
-    school.name.toLowerCase().includes('blueprint') || school.name.toLowerCase().includes('playbook')
 
   const { profile } = useAuth()
   // forcePaywall=true overrides even isGuide — used by server-gated guide pages
@@ -733,9 +738,13 @@ export default function SchoolReport({
               Get all {sections.length} sections — comparison tables, parent review
               synthesis, tour questions, enrollment details, and the Scout&apos;s Verdict.
             </p>
-            <a href={`/pricing?next=/schools/${school.slug}`} className={styles.paywallCta}>
-              Get Premium for $34.99
-            </a>
+            <CheckoutButton
+              tier="premium"
+              label="Get Premium for $34.99"
+              loadingLabel="Setting up checkout…"
+              className={styles.paywallCta}
+              next={isGuide ? `/guides/${school.slug}` : `/schools/${school.slug}`}
+            />
             <p className={`${styles.paywallNote} text-white`}>
               3 days of full access. No subscription required.
             </p>
