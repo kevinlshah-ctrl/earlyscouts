@@ -513,6 +513,18 @@ export default function SchoolReport({
   // treat as paid to prevent the paywall from flashing before the DB update lands.
   const isPaid = !forcePaywall && (isGuide || hasActiveAccess(profile) || isConfirmingAccess)
 
+  // ── Debug: log access state whenever it changes ───────────────────────────
+  useEffect(() => {
+    console.log('[SchoolReport] access state:', {
+      slug:               school.slug,
+      plan_type:          profile?.subscription_tier ?? 'none',
+      access_expires_at:  profile?.access_expires_at ?? 'none',
+      isConfirmingAccess,
+      isPaid,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.subscription_tier, profile?.access_expires_at, isConfirmingAccess, isPaid])
+
   const [scrolled, setScrolled] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false)

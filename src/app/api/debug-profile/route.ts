@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
   }
 
-  // Fetch the raw profile row (all columns, no mapping)
+  // Direct DB query — bypasses any client-side caching; service role key bypasses RLS
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
@@ -42,15 +42,37 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   if (error) {
+    console.error('[debug-profile] DB error:', error.message, 'for userId:', user.id)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // Also do a targeted select of the access columns so they're easy to spot
+  const { data: accessRow } = await supabase
+    .from('user_profiles')
+    .select('plan_type, access_expires_at, subscription_status, stripe_customer_id, updated_at')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  const now = new Date().toISOString()
+  const expiresAt = accessRow?.access_expires_at ? new Date(accessRow.access_expires_at) : null
+  const isExpired = expiresAt ? expiresAt < new Date() : null
+
   return NextResponse.json({
+    fetched_at:   now,
     auth_user_id: user.id,
     auth_email:   user.email,
-    profile:      data ?? null,
-    _note:        data === null
-      ? 'No user_profiles row found for this auth user ID'
-      : 'Row found — check plan_type and access_expires_at',
+    access: {
+      plan_type:          accessRow?.plan_type ?? 'NOT FOUND',
+      access_expires_at:  accessRow?.access_expires_at ?? null,
+      expires_in_ms:      expiresAt ? expiresAt.getTime() - Date.now() : null,
+      is_expired:         isExpired,
+      subscription_status: accessRow?.subscription_status ?? null,
+      stripe_customer_id: accessRow?.stripe_customer_id ?? null,
+      updated_at:         accessRow?.updated_at ?? null,
+    },
+    full_profile: data ?? null,
+    _note: data === null
+      ? 'ERROR: No user_profiles row found for this auth user ID — webhook may not have created it'
+      : `Row found. plan_type=${accessRow?.plan_type}. Last updated: ${accessRow?.updated_at}`,
   })
 }

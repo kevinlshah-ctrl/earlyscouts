@@ -132,17 +132,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const poll = async () => {
       attempts++
-      const p = await fetchProfile(user.id)
-      if (p?.subscription_tier === 'premium' || attempts >= MAX) {
+      // Use profile from closure for logging — the DB query below is the source of truth
+      console.log(
+        `[confirmAccess] poll ${attempts}/${MAX} — context plan_type=${
+          (profile as UserProfile | null)?.subscription_tier ?? 'unknown'
+        } userId=${user.id}`
+      )
+
+      // Query Supabase directly instead of going through fetchProfile so we can
+      // see the exact raw value that comes back from the DB at each poll.
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('plan_type, access_expires_at, updated_at')
+        .eq('id', user.id)
+        .single()
+
+      console.log('[confirmAccess] direct DB result:', JSON.stringify(data), 'error:', error?.message ?? 'none')
+
+      if (data?.plan_type === 'premium') {
+        console.log('[confirmAccess] premium confirmed — refreshing full profile')
+        // Fetch the full profile row to update all context fields
+        await fetchProfile(user.id)
         setIsConfirmingAccess(false)
         return
       }
+
+      if (attempts >= MAX) {
+        console.warn('[confirmAccess] max attempts reached — plan_type still not premium')
+        setIsConfirmingAccess(false)
+        return
+      }
+
       setTimeout(poll, 2000)
     }
 
     // First check at 1.5s — gives the webhook time to fire
     setTimeout(poll, 1500)
-  }, [user, fetchProfile])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, fetchProfile, supabase])
 
   // ── Bootstrap session ──────────────────────────────────────────────────────
   // Use onAuthStateChange exclusively — it fires INITIAL_SESSION immediately on
