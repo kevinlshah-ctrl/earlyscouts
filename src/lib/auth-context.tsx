@@ -62,8 +62,17 @@ interface AuthState {
     data: Partial<Pick<UserProfile, 'display_name' | 'onboarding_data'>>
   ) => Promise<{ error: string | null }>
   deleteAccount: () => Promise<{ error: string | null }>
-  /** Refresh profile from DB (e.g. after a Stripe webhook updates tier). */
-  refreshProfile: () => Promise<void>
+  /** Refresh profile from DB. Returns the latest profile (or null on error). */
+  refreshProfile: () => Promise<UserProfile | null>
+  /**
+   * Poll fetchProfile every 2s (up to 5 attempts / 10s) until plan_type is
+   * 'premium'. Call this after a successful Stripe checkout redirect so the
+   * context stays live while the webhook fires asynchronously.
+   * isConfirmingAccess is true while polling is in progress.
+   */
+  confirmAccess: () => void
+  /** True while confirmAccess() is polling for the premium update. */
+  isConfirmingAccess: boolean
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -71,6 +80,7 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [isConfirmingAccess, setIsConfirmingAccess] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -109,8 +119,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [supabase]
   )
 
-  const refreshProfile = useCallback(async () => {
-    if (user) await fetchProfile(user.id)
+  const refreshProfile = useCallback(async (): Promise<UserProfile | null> => {
+    if (!user) return null
+    return fetchProfile(user.id)
+  }, [user, fetchProfile])
+
+  const confirmAccess = useCallback(() => {
+    if (!user) return
+    setIsConfirmingAccess(true)
+    let attempts = 0
+    const MAX = 5
+
+    const poll = async () => {
+      attempts++
+      const p = await fetchProfile(user.id)
+      if (p?.subscription_tier === 'premium' || attempts >= MAX) {
+        setIsConfirmingAccess(false)
+        return
+      }
+      setTimeout(poll, 2000)
+    }
+
+    // First check at 1.5s — gives the webhook time to fire
+    setTimeout(poll, 1500)
   }, [user, fetchProfile])
 
   // ── Bootstrap session ──────────────────────────────────────────────────────
@@ -304,6 +335,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateProfile,
         deleteAccount,
         refreshProfile,
+        confirmAccess,
+        isConfirmingAccess,
       }}
     >
       {children}

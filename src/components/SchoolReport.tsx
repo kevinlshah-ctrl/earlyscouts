@@ -506,10 +506,12 @@ export default function SchoolReport({
   const schoolType = school.type || 'public'
   const typeLabel = schoolType.charAt(0).toUpperCase() + schoolType.slice(1)
 
-  const { profile, user, signOut } = useAuth()
+  const { profile, user, signOut, isConfirmingAccess } = useAuth()
   // forcePaywall=true overrides even isGuide — used by server-gated guide pages
   // that have already stripped sections before sending to the client.
-  const isPaid = !forcePaywall && (isGuide || hasActiveAccess(profile))
+  // isConfirmingAccess is true while the post-Stripe webhook poll is in flight —
+  // treat as paid to prevent the paywall from flashing before the DB update lands.
+  const isPaid = !forcePaywall && (isGuide || hasActiveAccess(profile) || isConfirmingAccess)
 
   const [scrolled, setScrolled] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(false)

@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 
 export default function WelcomeToast() {
-  const searchParams  = useSearchParams()
-  const router        = useRouter()
-  const { refreshProfile } = useAuth()
+  const searchParams        = useSearchParams()
+  const router              = useRouter()
+  const { confirmAccess, isConfirmingAccess } = useAuth()
   const [visible, setVisible] = useState(false)
   // Prevent double-firing in React StrictMode / concurrent renders
   const handled = useRef(false)
@@ -24,27 +24,40 @@ export default function WelcomeToast() {
     url.searchParams.delete('welcome')
     router.replace(url.pathname + (url.search || ''))
 
-    // The Stripe webhook updates user_profiles after issuing the redirect.
-    // Re-fetch the profile twice — once quickly, once after a longer delay —
-    // so the paid subscription status is reflected without a manual refresh.
-    const t1 = setTimeout(() => refreshProfile(), 1500)
-    const t2 = setTimeout(() => refreshProfile(), 5000)
-    const t3 = setTimeout(() => setVisible(false), 6000)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [searchParams, router, refreshProfile])
+    // Start the polling loop in the AuthProvider (persists across navigation).
+    // confirmAccess polls fetchProfile every 2s until plan_type='premium' or 5 attempts.
+    confirmAccess()
+  }, [searchParams, router, confirmAccess])
+
+  // Auto-dismiss 4s after access is confirmed
+  useEffect(() => {
+    if (visible && !isConfirmingAccess) {
+      const t = setTimeout(() => setVisible(false), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [visible, isConfirmingAccess])
 
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#5B9A6F] text-white text-sm font-medium px-5 py-3 rounded-full shadow-lg">
-      <span>Welcome to EarlyScouts! You have full access.</span>
-      <button
-        onClick={() => setVisible(false)}
-        className="text-white/60 hover:text-white transition-colors leading-none"
-        aria-label="Dismiss"
-      >
-        ✕
-      </button>
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#5B9A6F] text-white text-sm font-medium px-5 py-3 rounded-full shadow-lg transition-all">
+      {isConfirmingAccess ? (
+        <>
+          <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin shrink-0" />
+          <span>Setting up your access…</span>
+        </>
+      ) : (
+        <>
+          <span>You have full access. Welcome!</span>
+          <button
+            onClick={() => setVisible(false)}
+            className="text-white/60 hover:text-white transition-colors leading-none"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </>
+      )}
     </div>
   )
 }
