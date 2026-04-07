@@ -177,7 +177,7 @@ export default function ProfilePage() {
     setDeleteError(null)
 
     const timeout = new Promise<{ error: string }>(resolve =>
-      setTimeout(() => resolve({ error: 'Request timed out — please try again.' }), 10_000)
+      setTimeout(() => resolve({ error: 'Request timed out — please try again.' }), 30_000)
     )
 
     const result = await Promise.race([deleteAccount(), timeout])
