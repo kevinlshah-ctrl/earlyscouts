@@ -1,33 +1,29 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 
+// Shown after a successful Stripe checkout.
+// CheckoutButton sets 'showWelcomeToast' in sessionStorage right before the
+// Stripe redirect. On return we read that flag here — no URL params needed
+// (middleware was stripping ?welcome=1 before useSearchParams could read it).
 export default function WelcomeToast() {
-  const searchParams        = useSearchParams()
-  const router              = useRouter()
-  const { confirmAccess, isConfirmingAccess } = useAuth()
+  const { isConfirmingAccess } = useAuth()
   const [visible, setVisible] = useState(false)
   // Prevent double-firing in React StrictMode / concurrent renders
   const handled = useRef(false)
 
   useEffect(() => {
-    if (searchParams.get('welcome') !== '1') return
     if (handled.current) return
+    try {
+      if (sessionStorage.getItem('showWelcomeToast') !== 'true') return
+      sessionStorage.removeItem('showWelcomeToast')
+    } catch {
+      return
+    }
     handled.current = true
-
     setVisible(true)
-
-    // Strip ?welcome=1 from the URL without adding a history entry
-    const url = new URL(window.location.href)
-    url.searchParams.delete('welcome')
-    router.replace(url.pathname + (url.search || ''))
-
-    // Start the polling loop in the AuthProvider (persists across navigation).
-    // confirmAccess polls fetchProfile every 2s until plan_type='premium' or 5 attempts.
-    confirmAccess()
-  }, [searchParams, router, confirmAccess])
+  }, [])
 
   // Auto-dismiss 4s after access is confirmed
   useEffect(() => {

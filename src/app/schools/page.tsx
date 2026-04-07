@@ -12,7 +12,6 @@ export default async function SchoolsPage() {
   const schools = await getDeepDiveSchools()
   return (
     <>
-      {/* WelcomeToast uses useSearchParams — must be in its own Suspense boundary */}
       <Suspense fallback={null}>
         <WelcomeToast />
       </Suspense>

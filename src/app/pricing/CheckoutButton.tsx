@@ -24,7 +24,19 @@ async function runCheckout(tier: 'premium' | 'extended', token: string): Promise
       body: JSON.stringify({ tier }),
     })
     const data: { url?: string; error?: string } = await res.json()
-    if (data.url) { window.location.href = data.url; return null }
+    if (data.url) {
+      // Set flags before the Stripe redirect so they survive the navigation.
+      // sessionStorage persists across same-tab page loads (unlike in-memory
+      // state) but is cleared when the tab closes — safe for this use case.
+      // pendingAccessConfirm → AuthProvider polls until plan_type='premium'
+      // showWelcomeToast     → WelcomeToast shows the confirmation UI
+      try {
+        sessionStorage.setItem('pendingAccessConfirm', 'true')
+        sessionStorage.setItem('showWelcomeToast', 'true')
+      } catch {}
+      window.location.href = data.url
+      return null
+    }
     return data.error ?? 'Payment unavailable — please try again or contact hello@earlyscouts.com'
   } catch {
     return 'Payment unavailable — please try again or contact hello@earlyscouts.com'

@@ -171,6 +171,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, fetchProfile, supabase])
 
+  // ── Post-checkout access confirmation ────────────────────────────────────────
+  // CheckoutButton sets 'pendingAccessConfirm' in sessionStorage right before
+  // redirecting to Stripe. On return, this effect fires as soon as the user is
+  // available and kicks off the confirmAccess() polling loop without relying on
+  // URL params (which can be stripped by middleware before the component reads them).
+  useEffect(() => {
+    if (!user) return
+    try {
+      if (sessionStorage.getItem('pendingAccessConfirm') !== 'true') return
+      sessionStorage.removeItem('pendingAccessConfirm')
+      confirmAccess()
+    } catch {}
+  // confirmAccess is stable (useCallback with [user, fetchProfile, supabase])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
   // ── Bootstrap session ──────────────────────────────────────────────────────
   // Use onAuthStateChange exclusively — it fires INITIAL_SESSION immediately on
   // registration with the current cookies-based session, eliminating the race
