@@ -14,8 +14,6 @@ export async function POST() {
         getAll() {
           return cookieStore.getAll()
         },
-        // In a Route Handler, cookies() is writable — write cleared cookies
-        // into the response so the HttpOnly session cookie is removed.
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
@@ -25,6 +23,29 @@ export async function POST() {
     }
   )
 
-  await supabase.auth.signOut()
+  // Best-effort: revoke the server-side session. This may fail (e.g. if the
+  // access token is expired and the refresh token is already invalidated) but
+  // we clear the cookies regardless below.
+  await supabase.auth.signOut().catch(() => {})
+
+  // Explicitly delete all Supabase auth cookies from the response.
+  // We do this unconditionally because signOut() may return early on API error
+  // without triggering setAll, leaving the cookie intact. The cookie is also
+  // not HttpOnly so the client clears it in JS, but belt-and-suspenders here.
+  const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
+    .match(/https?:\/\/([^.]+)/)?.[1] ?? ''
+  const cookiePrefix = `sb-${projectRef}-auth-token`
+
+  cookieStore.getAll()
+    .filter(c => c.name.startsWith(cookiePrefix))
+    .forEach(c => {
+      response.cookies.set(c.name, '', {
+        maxAge: 0,
+        path: '/',
+        sameSite: 'lax',
+        secure: true,
+      })
+    })
+
   return response
 }

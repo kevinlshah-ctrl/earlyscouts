@@ -313,11 +313,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setProfile(null)
     setSession(null)
-    // Await the server-side route so the Set-Cookie response (which clears
-    // the HttpOnly refresh token cookie) is processed BEFORE the caller
-    // does router.push() — otherwise the navigation aborts the fetch and
-    // the cookie is never cleared.
+    // Call server-side route to revoke the session and get Set-Cookie headers.
     await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
+    // Belt-and-suspenders: also clear the Supabase cookie directly from JS.
+    // The auth cookie is NOT HttpOnly (it's readable in document.cookie), so
+    // this works client-side and handles the case where the server route's
+    // Set-Cookie is overridden by the middleware's session-refresh response.
+    try {
+      const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
+        .match(/https?:\/\/([^.]+)/)?.[1] ?? ''
+      const cookiePrefix = `sb-${projectRef}-auth-token`
+      document.cookie.split(';').forEach(c => {
+        const name = c.trim().split('=')[0]
+        if (name.startsWith(cookiePrefix)) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`
+        }
+      })
+    } catch {}
   }, [])
 
   const toggleFollow = useCallback(
