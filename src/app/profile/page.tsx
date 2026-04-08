@@ -95,7 +95,7 @@ function DeleteModal({
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, loading, deleteAccount } = useAuth()
+  const { user, profile, loading, sessionToken, deleteAccount } = useAuth()
 
   const [timedOut, setTimedOut] = useState(false)
   useEffect(() => {
@@ -112,10 +112,9 @@ export default function ProfilePage() {
   async function handleStripePortal() {
     setPortalLoading(true)
     try {
-      const { data: { session: s } } = await getBrowserClient().auth.getSession()
       const res = await fetch('/api/stripe/portal', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${s?.access_token}` },
+        headers: { Authorization: `Bearer ${sessionToken}` },
       })
       const body = await res.json() as { url?: string }
       if (body.url) window.location.href = body.url
@@ -257,6 +256,7 @@ export default function ProfilePage() {
                   onChange={e => setNewPwd(e.target.value)}
                   placeholder="New password"
                   required
+                  autoComplete="new-password"
                   className={`${inputCls} pr-10`}
                 />
                 <button
@@ -287,6 +287,7 @@ export default function ProfilePage() {
                 onChange={e => setConfirmPwd(e.target.value)}
                 placeholder="Confirm new password"
                 required
+                autoComplete="new-password"
                 className={`${inputCls} pr-10`}
               />
               <button

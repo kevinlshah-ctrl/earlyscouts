@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   type ReactNode,
@@ -45,6 +46,8 @@ interface AuthState {
   user: User | null
   profile: UserProfile | null
   session: Session | null
+  /** Current access token — updated on every auth state change, never calls getSession(). */
+  sessionToken: string | null
   loading: boolean
   /** Send a magic-link to the given email. Returns error string or null. */
   signIn: (email: string) => Promise<{ error: string | null }>
@@ -83,6 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isConfirmingAccess, setIsConfirmingAccess] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Holds the current access token without ever calling getSession().
+  // Updated synchronously in onAuthStateChange so callbacks can read the token
+  // from a ref instead of awaiting getSession() (which acquires an IndexedDB lock).
+  const sessionTokenRef = useRef<string | null>(null)
 
   const supabase = getBrowserClient()
 
@@ -134,19 +142,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       attempts++
       console.log(`[confirmAccess] poll ${attempts}/${MAX} userId=${user.id}`)
 
-      // Use a plain fetch to /api/debug-profile instead of a direct Supabase
-      // client query — the Supabase JS client uses an IndexedDB lock for token
-      // refresh, and issuing concurrent client queries during the post-checkout
-      // window can trigger "Lock was released because another request stole it"
-      // errors. A simple fetch bypasses that lock entirely.
-      const session = await supabase.auth.getSession()
-      const token   = session.data.session?.access_token
+      // Read token from ref — zero async, no IndexedDB lock.
+      // sessionTokenRef is updated synchronously in onAuthStateChange.
+      const token = sessionTokenRef.current
       if (!token) {
-        console.warn('[confirmAccess] no token — retrying')
+        console.warn('[confirmAccess] no token in ref — retrying')
         if (attempts < MAX) { setTimeout(poll, 2000) } else { setIsConfirmingAccess(false) }
         return
       }
 
+      // Fetch via plain HTTP — bypasses the Supabase JS client lock entirely
       let data: Record<string, unknown> | null = null
       try {
         const res = await fetch('/api/debug-profile', {
@@ -165,12 +170,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         expiresAt &&
         new Date(expiresAt) > new Date()
       ) {
-        console.log('[confirmAccess] premium confirmed — updating profile state')
-        setProfile(prev =>
-          prev
-            ? { ...prev, subscription_tier: 'premium', access_expires_at: expiresAt }
-            : prev
+        console.log(
+          '[confirmAccess] premium confirmed — current tier:',
+          profile?.subscription_tier ?? 'unknown',
+          '| setting subscription_tier=premium, access_expires_at=', expiresAt
         )
+        setProfile(prev => {
+          if (!prev) return prev
+          const updated = { ...prev, subscription_tier: 'premium' as const, access_expires_at: expiresAt }
+          console.log('[confirmAccess] setProfile called — new tier:', updated.subscription_tier)
+          return updated
+        })
         setIsConfirmingAccess(false)
         return
       }
@@ -186,9 +196,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // First check at 1.5s — gives the webhook time to fire
     setTimeout(poll, 1500)
-  // setProfile is a stable useState setter; supabase singleton is stable
+  // sessionTokenRef is a stable ref — no dep needed; profile read for logging only
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, supabase])
+  }, [user])
 
   // ── Post-checkout access confirmation ────────────────────────────────────────
   // CheckoutButton sets 'pendingAccessConfirm' in sessionStorage right before
@@ -216,6 +226,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, s: Session | null) => {
+      // Keep the ref in sync first — callbacks read from here instead of calling getSession()
+      sessionTokenRef.current = s?.access_token ?? null
       setSession(s)
       setUser(s?.user ?? null)
       if (s?.user) {
@@ -361,8 +373,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = useCallback(async (): Promise<{ error: string | null }> => {
     if (!user) return { error: 'Not signed in' }
 
-    const { data: { session: s } } = await supabase.auth.getSession()
-    const token = s?.access_token
+    const token = sessionTokenRef.current
     if (!token) return { error: 'No active session' }
 
     const res = await fetch('/api/profile/delete', {
@@ -388,6 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         profile,
         session,
+        sessionToken: session?.access_token ?? null,
         loading,
         signIn,
         signInWithPassword,
