@@ -142,6 +142,9 @@ export async function POST(request: NextRequest) {
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         subscription_data: { metadata: { userId: user.id, tier: 'premium' } },
         metadata:    { userId: user.id, tier: 'premium' },
+        // Only collect payment method when the total is > $0 — allows promo
+        // codes that reduce the total to $0 to skip the payment form entirely.
+        payment_method_collection: 'if_required',
         success_url: `${appUrl}/schools?welcome=1`,
         cancel_url:  `${appUrl}/pricing`,
       })
