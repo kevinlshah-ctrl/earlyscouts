@@ -1,7 +1,7 @@
 /**
  * Neighborhood-to-school mapping for EarlyScouts discovery page.
  * Source of truth: only schools with report_data in Supabase appear here.
- * Last updated: April 5, 2026 — 136 schools + 5 playbooks (added Hollywood Hills)
+ * Last updated: April 8, 2026 — expanded Hollywood Hills (added 7 elementaries, le-conte middle, marshall high)
  */
 
 export interface NeighborhoodConfig {
@@ -437,19 +437,31 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     region: 'Hollywood Hills',
     districts: ['LAUSD'],
     elementarySlugs: [
-      'cheremoya-avenue-elementary-los-angeles-ca',
+      // Core Hollywood Hills elementaries
       'wonderland-avenue-elementary-los-angeles-ca',
       'gardner-street-elementary-los-angeles-ca',
-      'cwc-hollywood-los-angeles-ca',
-      'larchmont-charter-los-angeles-ca',
+      'cheremoya-avenue-elementary-los-angeles-ca',
+      'micheltorena-elementary-los-angeles-ca',
+      'franklin-avenue-elementary-los-angeles-ca',
+      'los-feliz-stemm-magnet-los-angeles-ca',
+      'atwater-avenue-elementary-los-angeles-ca',
+      // Charter / magnet (escape options)
       'larchmont-charter-school-los-angeles-ca',
+      'larchmont-charter-los-angeles-ca',
+      'cwc-hollywood-los-angeles-ca',
+      'laces-magnet-los-angeles-ca',
+      // Over-the-hill charters (~15 min via Laurel Canyon)
+      'carpenter-charter-studio-city-ca',
+      'colfax-charter-valley-village-ca',
     ],
     middleSlugs: [
       'bancroft-middle-school-los-angeles-ca',
+      'le-conte-middle-school-los-angeles-ca',
       'john-burroughs-middle-school-los-angeles-ca',
     ],
     highSlugs: [
       'hollywood-high-school-los-angeles-ca',
+      'john-marshall-high-school-los-angeles-ca',
       'fairfax-high-school-los-angeles-ca',
     ],
     playbookSlugs: [
