@@ -93,12 +93,14 @@ export default function SignInPage() {
       setSubmitting(false)
       return
     }
-    // Defensive upsert — idempotent if DB trigger already created the row
+    // Defensive upsert — idempotent if DB trigger already created the row.
+    // ignoreDuplicates: true → ON CONFLICT (id) DO NOTHING, preventing a 400
+    // when the profile row already exists (e.g. from a DB trigger or prior signup).
     await supabase.from('user_profiles').upsert({
       id:        data.user.id,
       email:     data.user.email ?? email.trim().toLowerCase(),
       plan_type: 'free',
-    })
+    }, { onConflict: 'id', ignoreDuplicates: true })
     // New account → send to pricing to choose a plan
     router.push('/pricing')
   }

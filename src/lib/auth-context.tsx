@@ -307,12 +307,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const signOut = useCallback(async () => {
-    // Swallow any signOut error (e.g. IndexedDB lock) — always clear local state.
-    try { await getBrowserClient().auth.signOut() } catch {}
+    // Capture token before zeroing the ref.
+    const token = sessionTokenRef.current
+    // Clear local state immediately — before any async work — so the UI updates
+    // regardless of whether the server-side call succeeds or hangs.
     sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
     setSession(null)
+    // Invalidate the session server-side via direct fetch, bypassing the Supabase
+    // JS client which acquires an IndexedDB lock that can hang indefinitely.
+    if (token) {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        },
+      }).catch(() => {})
+    }
   }, [])
 
   const toggleFollow = useCallback(
@@ -388,7 +401,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: (body as { error?: string }).error ?? 'Deletion failed' }
     }
 
-    try { await getBrowserClient().auth.signOut() } catch {}
+    // The auth user is already deleted server-side — calling signOut() here
+    // would try to acquire the same IndexedDB lock and hang. Just clear state.
     sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
