@@ -9,6 +9,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
+import { useRouter } from 'next/navigation'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { getBrowserClient } from './supabase-browser'
 
@@ -81,6 +82,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isConfirmingAccess, setIsConfirmingAccess] = useState(false)
@@ -307,30 +309,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const signOut = useCallback(async () => {
-    // Clear local state immediately — before any async work — so the UI updates
-    // regardless of whether the server-side call succeeds or hangs.
     sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
-    setSession(null)
-    // Call server-side route to revoke the session and get Set-Cookie headers.
-    await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
-    // Belt-and-suspenders: also clear the Supabase cookie directly from JS.
-    // The auth cookie is NOT HttpOnly (it's readable in document.cookie), so
-    // this works client-side and handles the case where the server route's
-    // Set-Cookie is overridden by the middleware's session-refresh response.
-    try {
-      const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
-        .match(/https?:\/\/([^.]+)/)?.[1] ?? ''
-      const cookiePrefix = `sb-${projectRef}-auth-token`
-      document.cookie.split(';').forEach(c => {
-        const name = c.trim().split('=')[0]
-        if (name.startsWith(cookiePrefix)) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`
-        }
-      })
-    } catch {}
-  }, [])
+
+    // Both calls needed:
+    // - Server route clears HttpOnly cookies + revokes session
+    // - Browser SDK clears JS-readable sb-* cookie with correct
+    //   domain/path/Secure attributes
+    await Promise.all([
+      fetch('/api/auth/signout', { method: 'POST' }).catch(() => {}),
+      getBrowserClient().auth.signOut().catch(() => {}),
+    ])
+
+    router.push('/')
+  }, [router])
 
   const toggleFollow = useCallback(
     async (slug: string): Promise<boolean> => {
