@@ -17,11 +17,12 @@ export async function POST(request: NextRequest) {
     const rawHost = request.headers.get('host') ?? 'earlyscouts.com'
     const reqHost = rawHost.replace(/^www\./, '')
     const appUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${reqHost}`
-    const premiumPriceId   = process.env.STRIPE_PRICE_PREMIUM
-    const extMonthlyPriceId = process.env.STRIPE_PRICE_EXTENDED_MONTHLY
-    const extOnetimePriceId = process.env.STRIPE_PRICE_EXTENDED_ONETIME
+    const setupFeePriceId      = process.env.STRIPE_PRICE_SETUP_FEE
+    const premiumMonthlyPriceId = process.env.STRIPE_PRICE_PREMIUM_MONTHLY
+    const extMonthlyPriceId     = process.env.STRIPE_PRICE_EXTENDED_MONTHLY
+    const extOnetimePriceId     = process.env.STRIPE_PRICE_EXTENDED_ONETIME
 
-    console.log('[checkout] price IDs:', premiumPriceId, extOnetimePriceId, extMonthlyPriceId)
+    console.log('[checkout] price IDs: setup=', setupFeePriceId, 'premiumMonthly=', premiumMonthlyPriceId, 'extMonthly=', extMonthlyPriceId)
 
     if (!supabaseUrl || !serviceKey) {
       console.error('[checkout] Missing Supabase env vars')
@@ -31,8 +32,8 @@ export async function POST(request: NextRequest) {
       console.error('[checkout] Missing STRIPE_SECRET_KEY')
       return NextResponse.json({ error: 'Payment system not configured' }, { status: 500 })
     }
-    if (!premiumPriceId || !extMonthlyPriceId) {
-      console.error('[checkout] Missing Stripe price ID env vars — STRIPE_PRICE_PREMIUM:', premiumPriceId, 'STRIPE_PRICE_EXTENDED_MONTHLY:', extMonthlyPriceId)
+    if (!setupFeePriceId || !premiumMonthlyPriceId || !extMonthlyPriceId) {
+      console.error('[checkout] Missing Stripe price ID env vars — STRIPE_PRICE_SETUP_FEE:', setupFeePriceId, 'STRIPE_PRICE_PREMIUM_MONTHLY:', premiumMonthlyPriceId, 'STRIPE_PRICE_EXTENDED_MONTHLY:', extMonthlyPriceId)
       return NextResponse.json({ error: 'Payment system not configured — missing price IDs' }, { status: 500 })
     }
 
@@ -127,15 +128,19 @@ export async function POST(request: NextRequest) {
 
     if (tier === 'premium') {
       session = await stripe.checkout.sessions.create({
-        mode:     'payment',
+        mode:     'subscription',
         customer: customerId,
         // client_reference_id is a top-level Stripe field (not metadata) — more reliable
         // for webhook lookup because it persists even when metadata is trimmed.
         client_reference_id: user.id,
-        line_items: [{ price: premiumPriceId, quantity: 1 }],
+        line_items: [
+          { price: setupFeePriceId,       quantity: 1 }, // $55 one-time setup fee
+          { price: premiumMonthlyPriceId, quantity: 1 }, // $4.99/month recurring
+        ],
         // allow_promotion_codes and discounts are mutually exclusive in Stripe:
         // use pre-applied discount if provided, otherwise let the Checkout UI accept codes.
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
+        subscription_data: { metadata: { userId: user.id, tier: 'premium' } },
         metadata:    { userId: user.id, tier: 'premium' },
         success_url: `${appUrl}/schools?welcome=1`,
         cancel_url:  `${appUrl}/pricing`,
