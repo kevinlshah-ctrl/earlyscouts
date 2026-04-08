@@ -46,7 +46,7 @@ export function getBrowserClient(): BrowserClient {
 
   // Anchor the singleton on window so it survives Fast Refresh re-evaluations
   // and any duplicate module instances created by bundle splitting.
-  const w = window as Window & Record<string, unknown>
+  const w = window as unknown as Record<string, unknown>
   if (!w[SINGLETON_KEY]) {
     w[SINGLETON_KEY] = createInstance()
   }
