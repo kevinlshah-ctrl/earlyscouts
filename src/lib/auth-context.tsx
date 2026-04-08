@@ -233,7 +233,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s)
       setUser(s?.user ?? null)
       if (s?.user) {
-        await fetchProfile(s.user.id)
+        const profileData = await fetchProfile(s.user.id)
+        // Safety net: if no user_profiles row exists (e.g. account created via
+        // AuthModal on the pricing page before this upsert was added), create it now.
+        if (!profileData && event === 'SIGNED_IN') {
+          await supabase.from('user_profiles').upsert({
+            id:           s.user.id,
+            email:        s.user.email ?? '',
+            plan_type:    'free',
+            display_name: s.user.email?.split('@')[0] || 'User',
+          }, { onConflict: 'id', ignoreDuplicates: true })
+          await fetchProfile(s.user.id)
+        }
         // Process any pending follow saved by FollowButton before sign-in
         if (event === 'SIGNED_IN') {
           try {

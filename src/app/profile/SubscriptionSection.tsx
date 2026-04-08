@@ -62,7 +62,9 @@ export default function SubscriptionSection() {
     }
   }
 
-  if (!profile) return null
+  if (!profile) return (
+    <div className="text-sm text-gray-500">Loading plan info…</div>
+  )
 
   const tier      = profile.subscription_tier
   const status    = profile.subscription_status

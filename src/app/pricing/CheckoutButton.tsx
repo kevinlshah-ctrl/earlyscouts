@@ -103,10 +103,11 @@ function AuthModal({
       }
       // Defensive upsert — idempotent if DB trigger already created the row
       await supabase.from('user_profiles').upsert({
-        id:        data.user.id,
-        email:     data.user.email ?? email.trim().toLowerCase(),
-        plan_type: 'free',
-      })
+        id:           data.user.id,
+        email:        data.user.email ?? email.trim().toLowerCase(),
+        plan_type:    'free',
+        display_name: (data.user.email ?? email).split('@')[0] || 'User',
+      }, { onConflict: 'id', ignoreDuplicates: true })
       const err = await runCheckout(tier, data.session.access_token)
       if (err) { setError(err); setLoading(false) }
       // On success, runCheckout navigates away — leave spinner
