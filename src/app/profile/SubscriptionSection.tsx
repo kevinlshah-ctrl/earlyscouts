@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
-import type { UserProfile } from '@/lib/auth-context'
+import { useAuth, type UserProfile } from '@/lib/auth-context'
 
 interface Props {
   profile: UserProfile
@@ -48,7 +49,13 @@ function PortalButton({
   )
 }
 
-export default function SubscriptionSection({ profile, onPortalClick, portalLoading }: Props) {
+export default function SubscriptionSection({ profile: propProfile, onPortalClick, portalLoading }: Props) {
+  // Refresh profile from DB on mount so subscription state is always current.
+  const { profile: authProfile, refreshProfile } = useAuth()
+  useEffect(() => { refreshProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Use freshly-fetched auth context profile when available, fall back to prop
+  const profile   = authProfile ?? propProfile
   const tier      = profile.subscription_tier
   const status    = profile.subscription_status
   const expiresAt = profile.access_expires_at

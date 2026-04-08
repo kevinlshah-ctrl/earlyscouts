@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { getBrowserClient } from '@/lib/supabase-browser'
 
@@ -66,7 +67,9 @@ function AuthModal({
   const [error,           setError]           = useState<string | null>(null)
   const [forgotSent,      setForgotSent]      = useState(false)
   // Only show requirements after the user starts typing
-  const [pwdTouched, setPwdTouched] = useState(false)
+  const [pwdTouched,      setPwdTouched]      = useState(false)
+  const [showPwd,         setShowPwd]         = useState(false)
+  const [showConfirmPwd,  setShowConfirmPwd]  = useState(false)
 
   const inputCls =
     'w-full border border-[#E8E5E1] rounded-xl px-3 py-2.5 text-sm text-[#1A1A2E] ' +
@@ -125,8 +128,11 @@ function AuthModal({
 
   async function handleForgotPassword() {
     if (!email.trim()) { setError('Enter your email address above first.'); return }
-    const supabase = getBrowserClient()
-    await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase())
+    const supabase  = getBrowserClient()
+    const redirectTo = typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/callback?next=/auth/reset-password`
+      : '/auth/callback?next=/auth/reset-password'
+    await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo })
     setForgotSent(true)
     setError(null)
   }
@@ -138,6 +144,8 @@ function AuthModal({
     setPassword('')
     setConfirmPassword('')
     setPwdTouched(false)
+    setShowPwd(false)
+    setShowConfirmPwd(false)
   }
 
   return (
@@ -178,14 +186,25 @@ function AuthModal({
             />
 
             <div className="flex flex-col gap-1.5">
-              <input
-                type="password"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setPwdTouched(true) }}
-                placeholder="Password"
-                required
-                className={inputCls}
-              />
+              <div className="relative">
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setPwdTouched(true) }}
+                  placeholder="Password"
+                  required
+                  className={`${inputCls} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9690] hover:text-[#1A1A2E] transition-colors"
+                  tabIndex={-1}
+                  aria-label={showPwd ? 'Hide password' : 'Show password'}
+                >
+                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
 
               {/* Requirements checklist — signup mode only, shown after first keystroke */}
               {mode === 'signup' && pwdTouched && (
@@ -203,14 +222,25 @@ function AuthModal({
             {/* Confirm password — signup only */}
             {mode === 'signup' && (
               <div className="flex flex-col gap-1">
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm password"
-                  required
-                  className={`${inputCls} ${confirmPassword.length > 0 && !confirmMatch ? 'border-red-300 focus:border-red-400' : ''}`}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPwd ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm password"
+                    required
+                    className={`${inputCls} pr-10 ${confirmPassword.length > 0 && !confirmMatch ? 'border-red-300 focus:border-red-400' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPwd(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9690] hover:text-[#1A1A2E] transition-colors"
+                    tabIndex={-1}
+                    aria-label={showConfirmPwd ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 {confirmPassword.length > 0 && !confirmMatch && (
                   <p className="text-[11px] text-red-400 pl-0.5">Passwords don&apos;t match</p>
                 )}

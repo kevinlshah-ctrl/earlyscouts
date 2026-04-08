@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Eye, EyeOff } from 'lucide-react'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
@@ -94,7 +95,7 @@ function DeleteModal({
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, loading, signOut, deleteAccount } = useAuth()
+  const { user, profile, loading, deleteAccount } = useAuth()
 
   const [timedOut, setTimedOut] = useState(false)
   useEffect(() => {
@@ -124,12 +125,13 @@ export default function ProfilePage() {
   }
 
   // ── Change password ───────────────────────────────────────────────────────
-  const [currentPwd, setCurrentPwd] = useState('')
-  const [newPwd,     setNewPwd]     = useState('')
-  const [confirmPwd, setConfirmPwd] = useState('')
-  const [pwdLoading, setPwdLoading] = useState(false)
-  const [pwdSuccess, setPwdSuccess] = useState(false)
-  const [pwdError,   setPwdError]   = useState<string | null>(null)
+  const [newPwd,        setNewPwd]        = useState('')
+  const [confirmPwd,    setConfirmPwd]    = useState('')
+  const [showNewPwd,    setShowNewPwd]    = useState(false)
+  const [showConfPwd,   setShowConfPwd]   = useState(false)
+  const [pwdLoading,    setPwdLoading]    = useState(false)
+  const [pwdSuccess,    setPwdSuccess]    = useState(false)
+  const [pwdError,      setPwdError]      = useState<string | null>(null)
 
   const pwdChecks = PWD_REQS.map(r => ({ ...r, met: r.test(newPwd) }))
   const allPwdMet = pwdChecks.every(c => c.met)
@@ -138,29 +140,18 @@ export default function ProfilePage() {
     e.preventDefault()
     setPwdError(null)
     setPwdSuccess(false)
-    if (!allPwdMet) { setPwdError('New password does not meet all requirements.'); return }
+    if (!allPwdMet) { setPwdError('Password does not meet all requirements.'); return }
     if (newPwd !== confirmPwd) { setPwdError('Passwords do not match.'); return }
 
     setPwdLoading(true)
-    const supabase = getBrowserClient()
-
-    // Verify current password first
-    const { error: reAuthErr } = await supabase.auth.signInWithPassword({
-      email: user?.email ?? '',
-      password: currentPwd,
-    })
-    if (reAuthErr) {
-      setPwdError('Current password is incorrect.')
-      setPwdLoading(false)
-      return
-    }
-
-    const { error: updateErr } = await supabase.auth.updateUser({ password: newPwd })
+    // Supabase session is already authenticated — call updateUser directly.
+    // Re-authenticating with the current password is unnecessary and can cause
+    // session conflicts; the active JWT already proves identity.
+    const { error: updateErr } = await getBrowserClient().auth.updateUser({ password: newPwd })
     if (updateErr) {
       setPwdError('Could not update password. Please try again.')
     } else {
       setPwdSuccess(true)
-      setCurrentPwd('')
       setNewPwd('')
       setConfirmPwd('')
     }
@@ -236,7 +227,7 @@ export default function ProfilePage() {
             <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
           <button
-            onClick={signOut}
+            onClick={async () => { await getBrowserClient().auth.signOut(); router.push('/') }}
             className="text-xs text-gray-400 hover:text-charcoal transition-colors shrink-0"
           >
             Sign out
@@ -258,23 +249,26 @@ export default function ProfilePage() {
         <Card>
           <h2 className="font-semibold text-charcoal mb-4">Change Password</h2>
           <form onSubmit={handlePasswordChange} className="flex flex-col gap-3">
-            <input
-              type="password"
-              value={currentPwd}
-              onChange={e => setCurrentPwd(e.target.value)}
-              placeholder="Current password"
-              required
-              className={inputCls}
-            />
             <div className="flex flex-col gap-1.5">
-              <input
-                type="password"
-                value={newPwd}
-                onChange={e => setNewPwd(e.target.value)}
-                placeholder="New password"
-                required
-                className={inputCls}
-              />
+              <div className="relative">
+                <input
+                  type={showNewPwd ? 'text' : 'password'}
+                  value={newPwd}
+                  onChange={e => setNewPwd(e.target.value)}
+                  placeholder="New password"
+                  required
+                  className={`${inputCls} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPwd(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-charcoal transition-colors"
+                  tabIndex={-1}
+                  aria-label={showNewPwd ? 'Hide password' : 'Show password'}
+                >
+                  {showNewPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               {newPwd.length > 0 && (
                 <ul className="flex flex-col gap-0.5 pl-0.5">
                   {pwdChecks.map(c => (
@@ -286,19 +280,30 @@ export default function ProfilePage() {
                 </ul>
               )}
             </div>
-            <input
-              type="password"
-              value={confirmPwd}
-              onChange={e => setConfirmPwd(e.target.value)}
-              placeholder="Confirm new password"
-              required
-              className={inputCls}
-            />
+            <div className="relative">
+              <input
+                type={showConfPwd ? 'text' : 'password'}
+                value={confirmPwd}
+                onChange={e => setConfirmPwd(e.target.value)}
+                placeholder="Confirm new password"
+                required
+                className={`${inputCls} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfPwd(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-charcoal transition-colors"
+                tabIndex={-1}
+                aria-label={showConfPwd ? 'Hide password' : 'Show password'}
+              >
+                {showConfPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             {pwdError   && <p className="text-xs text-red-500">{pwdError}</p>}
             {pwdSuccess && <p className="text-xs text-scout-green">Password updated successfully.</p>}
             <button
               type="submit"
-              disabled={pwdLoading || !currentPwd || !newPwd || !confirmPwd}
+              disabled={pwdLoading || !newPwd || !confirmPwd}
               className="py-2.5 bg-scout-green text-white text-sm font-semibold rounded-full disabled:opacity-50 hover:bg-scout-green-dark transition-colors flex items-center justify-center gap-2"
             >
               {pwdLoading && <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />}
@@ -318,7 +323,7 @@ export default function ProfilePage() {
               onClick={() => setShowDelete(true)}
               className="text-xs text-red-400 hover:text-red-600 transition-colors font-medium px-3 py-2 -my-2 rounded-lg"
             >
-              Delete my account
+              Delete and cancel my account
             </button>
           </div>
         </Card>
