@@ -307,25 +307,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const signOut = useCallback(async () => {
-    // Capture token before zeroing the ref.
-    const token = sessionTokenRef.current
     // Clear local state immediately — before any async work — so the UI updates
     // regardless of whether the server-side call succeeds or hangs.
     sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
     setSession(null)
-    // Invalidate the session server-side via direct fetch, bypassing the Supabase
-    // JS client which acquires an IndexedDB lock that can hang indefinitely.
-    if (token) {
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        },
-      }).catch(() => {})
-    }
+    // Call our server-side route which has access to the HttpOnly cookie and
+    // can properly invalidate the session + clear the cookie in the response.
+    // Fire-and-forget: we don't block on it since local state is already cleared.
+    fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
   }, [])
 
   const toggleFollow = useCallback(

@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 const supabaseAdmin = createClient(
@@ -22,5 +24,29 @@ export async function DELETE(request: Request) {
   const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ success: true })
+  // Clear the HttpOnly session cookie server-side so the client is fully
+  // signed out even though the Supabase JS client can't run in this context.
+  const cookieStore = cookies()
+  const response = NextResponse.json({ success: true })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // User is already deleted — signOut() will fail the API call but still
+  // triggers the cookie-clearing setAll callback, removing the HttpOnly token.
+  await supabase.auth.signOut().catch(() => {})
+
+  return response
 }
