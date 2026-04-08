@@ -12,6 +12,7 @@ const VALID_GUIDE_SLUGS = new Set([
   'lausd-school-choice-playbook',
   'beach-cities-school-choice-blueprint',
   'hollywood-hills-school-choice-playbook',
+  'la-charter-magnet-school-choice-playbook',
 ])
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {

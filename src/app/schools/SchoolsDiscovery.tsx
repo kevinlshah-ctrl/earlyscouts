@@ -24,6 +24,8 @@ const PLAYBOOK_DESCRIPTIONS: Record<string, string> = {
     'How to navigate open enrollment across Manhattan Beach, El Segundo, Hermosa, and Redondo unified school districts.',
   'hollywood-hills-school-choice-playbook':
     'School options for Hollywood Hills families: LAUSD magnet pathways, local public schools, and nearby private alternatives.',
+  'la-charter-magnet-school-choice-playbook':
+    'Decoding the two systems most parents confuse: the LAUSD Magnet Priority Points system and independent charter school lotteries. Covers CWC, WISH, Larchmont, Ocean Charter, Community Magnet, Westchester Enriched Sciences, and every lottery date, priority tier, and strategic angle.',
 }
 
 /** Guide slugs live at /guides/[slug], not /schools/[slug] */

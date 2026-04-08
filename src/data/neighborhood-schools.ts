@@ -39,6 +39,8 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'westminster-avenue-elementary-school-los-angeles-ca',
       'cwc-mar-vista-los-angeles-ca',
       'ocean-charter-school-los-angeles-ca',
+      'wish-charter-schools-los-angeles-ca',
+      'open-charter-magnet-school-los-angeles-ca',
     ],
     middleSlugs: [
       'mark-twain-middle-school-los-angeles-ca',
@@ -52,6 +54,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'smmusd-transfer-playbook',
       'ccusd-transfer-playbook',
       'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
     ],
   },
 
@@ -120,6 +123,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
     ],
   },
 
@@ -198,6 +202,8 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'westwood-charter-elementary-los-angeles-ca',
       'laces-magnet-los-angeles-ca',
       'new-west-charter-school-los-angeles-ca',
+      'community-magnet-charter-school-los-angeles-ca',
+      'wish-charter-schools-los-angeles-ca',
     ],
     middleSlugs: [
       'emerson-community-charter-middle-los-angeles-ca',
@@ -207,6 +213,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
     ],
   },
 
@@ -353,6 +360,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
     ],
   },
 
@@ -434,6 +442,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'gardner-street-elementary-los-angeles-ca',
       'cwc-hollywood-los-angeles-ca',
       'larchmont-charter-los-angeles-ca',
+      'larchmont-charter-school-los-angeles-ca',
     ],
     middleSlugs: [
       'bancroft-middle-school-los-angeles-ca',
@@ -446,6 +455,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     playbookSlugs: [
       'hollywood-hills-school-choice-playbook',
       'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
     ],
     privateSlugs: [
       'the-oaks-school-los-angeles-ca',
@@ -480,6 +490,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'third-street-elementary-los-angeles-ca',
       'laces-magnet-los-angeles-ca',
       'larchmont-charter-los-angeles-ca',
+      'larchmont-charter-school-los-angeles-ca',
     ],
     middleSlugs: [
       'le-conte-middle-school-los-angeles-ca',
@@ -489,6 +500,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
     ],
   },
 

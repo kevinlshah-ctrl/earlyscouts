@@ -32,6 +32,11 @@ const nextConfig = {
         destination: '/guides/beach-cities-school-choice-blueprint',
         permanent: true,
       },
+      {
+        source: '/schools/la-charter-magnet-school-choice-playbook',
+        destination: '/guides/la-charter-magnet-school-choice-playbook',
+        permanent: true,
+      },
       // Move the static playbook to /guides/
       {
         source: '/schools/playbook',
