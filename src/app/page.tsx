@@ -34,27 +34,33 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto flex flex-col items-center gap-3">
 
           <h1 className="font-serif text-5xl sm:text-6xl text-[#1A1A2E] leading-tight">
-            Make the best school decision for your kids.
+            The LA School Research Platform Parents Trust
           </h1>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[#A09A94] font-mono uppercase tracking-wider">
-            <span>100+ schools researched</span>
-            <span className="hidden sm:inline text-[#D4D0CC]">·</span>
-            <span>30+ sources per report</span>
-            <span className="hidden sm:inline text-[#D4D0CC]">·</span>
-            <span>Permitting process decoded</span>
-          </div>
+          <p className="text-base text-[#6E6A65] leading-relaxed max-w-xl">
+            Stop spending hours on GreatSchools and Facebook groups. EarlyScouts gives you
+            deep, honest reports on 135 LA schools — covering test scores, feeder pipelines,
+            Scout Takes, and parent reviews — plus transfer playbooks that replace the $500 consultant.
+          </p>
 
-          <Link
-            href="/schools"
-            className="inline-block bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-base px-8 py-3.5 rounded-full transition-colors shadow-sm mt-1"
-          >
-            Find Schools Near You
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-1">
+            <Link
+              href="/schools"
+              className="inline-block bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-base px-8 py-3.5 rounded-full transition-colors shadow-sm"
+            >
+              Browse LA Schools
+            </Link>
+            <Link
+              href="/schools/mar-vista-elementary-school-los-angeles-ca"
+              className="inline-block border border-[#5B9A6F] text-[#5B9A6F] hover:bg-[#5B9A6F] hover:text-white font-semibold text-base px-8 py-3.5 rounded-full transition-colors"
+            >
+              View Sample Report
+            </Link>
+          </div>
 
           <div className="inline-flex items-center bg-[#FEF3E8] border border-[#F2C49A] rounded-full px-4 py-1.5">
             <span className="text-sm text-[#C97B3A]">
-              Helping <strong>400+</strong> families across LA make smarter school decisions
+              135 schools · 6 transfer guides · Updated 2026
             </span>
           </div>
 

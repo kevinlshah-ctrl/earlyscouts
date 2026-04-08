@@ -447,7 +447,6 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'atwater-avenue-elementary-los-angeles-ca',
       // Charter / magnet (escape options)
       'larchmont-charter-school-los-angeles-ca',
-      'larchmont-charter-los-angeles-ca',
       'cwc-hollywood-los-angeles-ca',
       'laces-magnet-los-angeles-ca',
       // Over-the-hill charters (~15 min via Laurel Canyon)
@@ -501,7 +500,6 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'hancock-park-elementary-los-angeles-ca',
       'third-street-elementary-los-angeles-ca',
       'laces-magnet-los-angeles-ca',
-      'larchmont-charter-los-angeles-ca',
       'larchmont-charter-school-los-angeles-ca',
     ],
     middleSlugs: [

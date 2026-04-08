@@ -6,7 +6,6 @@ import { NextResponse, type NextRequest } from 'next/server'
  *    Stripe webhooks and other external callers that don't follow redirects
  *    are never bounced with a 307/308).
  * 2. Refreshes the Supabase session token on every request.
- * 3. Checks the preview_access cookie to gate the private beta.
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -60,26 +59,6 @@ export async function middleware(request: NextRequest) {
   // AFTER the route handler's clearing Set-Cookie, overwriting the deletion.
   if (!pathname.startsWith('/api/auth/signout')) {
     await supabase.auth.getUser()
-  }
-
-  // ── Preview gate ───────────────────────────────────────────────────────────
-  // Skip the gate for: the preview page itself, all API routes (including
-  // /api/preview-auth and Stripe webhooks), and the Supabase auth callback.
-  const isExempt =
-    pathname.startsWith('/preview') ||
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/auth/')
-
-  if (!isExempt && request.cookies.get('preview_access')?.value !== 'true') {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/preview'
-    loginUrl.searchParams.set('from', pathname)
-    const redirectResponse = NextResponse.redirect(loginUrl)
-    // Copy any Supabase session cookies onto the redirect so they aren't lost.
-    response.cookies.getAll().forEach(cookie => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
-    })
-    return redirectResponse
   }
 
   return response

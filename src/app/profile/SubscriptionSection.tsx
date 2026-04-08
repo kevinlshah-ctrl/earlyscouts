@@ -74,6 +74,17 @@ export default function SubscriptionSection() {
   if (tier === 'free') {
     return (
       <div className="flex flex-col gap-4 max-w-xl">
+        {/* Access banner */}
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+          <span className="text-gray-400 mt-0.5 shrink-0 text-base">○</span>
+          <div>
+            <p className="text-sm font-semibold text-charcoal">Free Plan — Previews only</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Upgrade to unlock all schools and guides.{' '}
+              <a href="/pricing" className="text-scout-green underline hover:no-underline">See plans →</a>
+            </p>
+          </div>
+        </div>
         <div className="bg-white border border-gray-100 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-serif text-xl text-charcoal">Your Plan</h2>
@@ -112,9 +123,30 @@ export default function SubscriptionSection() {
   // ── Premium (one-time 30-day access) ─────────────────────────────────────
   if (tier === 'premium') {
     const expired = expiresAt ? new Date(expiresAt) < new Date() : false
+    const expiryLabel = expiresAt
+      ? (expired ? `Expired ${formatDate(expiresAt)}` : `Access expires ${formatDate(expiresAt)}`)
+      : 'Lifetime Access'
 
     return (
       <div className="flex flex-col gap-4 max-w-xl">
+        {/* Access banner */}
+        {expired ? (
+          <div className="bg-red-50 border border-red-100 rounded-2xl px-5 py-4 flex items-start gap-3">
+            <span className="text-red-400 mt-0.5 shrink-0 text-base font-bold">✕</span>
+            <div>
+              <p className="text-sm font-semibold text-red-700">Access Expired</p>
+              <p className="text-xs text-red-500 mt-0.5">{expiryLabel} — <a href="/pricing" className="underline hover:no-underline">Renew access →</a></p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-scout-green/5 border border-scout-green/20 rounded-2xl px-5 py-4 flex items-start gap-3">
+            <span className="text-scout-green mt-0.5 shrink-0 text-base font-bold">✓</span>
+            <div>
+              <p className="text-sm font-semibold text-scout-green">Full Access — All 135 schools and 6 guides unlocked.</p>
+              <p className="text-xs text-scout-green/70 mt-0.5">{expiryLabel}</p>
+            </div>
+          </div>
+        )}
         <div className="bg-white border border-gray-100 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-serif text-xl text-charcoal">Your Plan</h2>
@@ -181,6 +213,26 @@ export default function SubscriptionSection() {
 
   return (
     <div className="flex flex-col gap-4 max-w-xl">
+      {/* Access banner */}
+      {statusGreen ? (
+        <div className="bg-scout-green/5 border border-scout-green/20 rounded-2xl px-5 py-4 flex items-start gap-3">
+          <span className="text-scout-green mt-0.5 shrink-0 text-base font-bold">✓</span>
+          <div>
+            <p className="text-sm font-semibold text-scout-green">Full Access — All 135 schools and 6 guides unlocked.</p>
+            <p className="text-xs text-scout-green/70 mt-0.5">
+              {status === 'trialing' ? 'Trial active — full access included.' : 'Subscription active.'}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-red-50 border border-red-100 rounded-2xl px-5 py-4 flex items-start gap-3">
+          <span className="text-red-400 mt-0.5 shrink-0 text-base font-bold">!</span>
+          <div>
+            <p className="text-sm font-semibold text-red-700">Access Issue — {statusLabel}</p>
+            <p className="text-xs text-red-500 mt-0.5">Update your payment method to restore access.</p>
+          </div>
+        </div>
+      )}
       <div className="bg-white border border-gray-100 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-serif text-xl text-charcoal">Your Plan</h2>
