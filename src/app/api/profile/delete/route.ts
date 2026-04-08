@@ -9,26 +9,13 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 )
 
-export async function DELETE(request: Request) {
-  const authHeader = request.headers.get('Authorization')
-  if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const token = authHeader.replace('Bearer ', '')
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
-  if (authError || !user) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-
-  // Delete profile row first (non-fatal if row doesn't exist)
-  await supabaseAdmin.from('user_profiles').delete().eq('id', user.id)
-
-  // Delete auth user
-  const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  // Clear the HttpOnly session cookie server-side so the client is fully
-  // signed out even though the Supabase JS client can't run in this context.
+export async function DELETE() {
   const cookieStore = cookies()
   const response = NextResponse.json({ success: true })
 
+  // Use the session cookie to identify the user — more reliable than a
+  // Bearer token because the cookie is always present when the user is on
+  // the profile page, even if the client-side access token is stale.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -44,8 +31,21 @@ export async function DELETE(request: Request) {
     }
   )
 
-  // User is already deleted — signOut() will fail the API call but still
-  // triggers the cookie-clearing setAll callback, removing the HttpOnly token.
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Delete profile row first (non-fatal if row doesn't exist)
+  await supabaseAdmin.from('user_profiles').delete().eq('id', user.id)
+
+  // Delete auth user
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Sign out server-side to clear the HttpOnly session cookie in the response.
+  // The user is already deleted so the API call will fail, but the setAll
+  // callback still fires and writes the cookie-clearing Set-Cookie headers.
   await supabase.auth.signOut().catch(() => {})
 
   return response

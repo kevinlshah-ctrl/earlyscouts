@@ -380,21 +380,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = useCallback(async (): Promise<{ error: string | null }> => {
     if (!user) return { error: 'Not signed in' }
 
-    const token = sessionTokenRef.current
-    if (!token) return { error: 'No active session' }
-
-    const res = await fetch('/api/profile/delete', {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    // No Bearer token needed — the route uses the HttpOnly session cookie.
+    const res = await fetch('/api/profile/delete', { method: 'DELETE' })
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
       return { error: (body as { error?: string }).error ?? 'Deletion failed' }
     }
 
-    // The auth user is already deleted server-side — calling signOut() here
-    // would try to acquire the same IndexedDB lock and hang. Just clear state.
+    // Server already deleted the user and cleared the cookie. Just clear
+    // local state — no signOut() call needed (would hang on IndexedDB lock).
     sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
