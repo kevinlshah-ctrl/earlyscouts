@@ -1,13 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-
-interface Props {
-  onPortalClick: () => Promise<void>
-  portalLoading: boolean
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -31,7 +26,7 @@ function PortalButton({
   onClick,
   loading,
 }: {
-  onClick: () => Promise<void>
+  onClick: () => void
   loading: boolean
 }) {
   return (
@@ -48,11 +43,24 @@ function PortalButton({
   )
 }
 
-export default function SubscriptionSection({ onPortalClick, portalLoading }: Props) {
+export default function SubscriptionSection() {
   // Always read from context — never from a prop — so confirmAccess() updates
   // are reflected immediately without re-mounting this component.
   const { profile, refreshProfile } = useAuth()
   useEffect(() => { refreshProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [portalLoading, setPortalLoading] = useState(false)
+
+  async function handleManageSubscription() {
+    setPortalLoading(true)
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json() as { url?: string }
+      if (data.url) window.location.href = data.url
+    } finally {
+      setPortalLoading(false)
+    }
+  }
 
   if (!profile) return null
 
@@ -148,7 +156,7 @@ export default function SubscriptionSection({ onPortalClick, portalLoading }: Pr
             </Link>
           ) : (
             <>
-              <PortalButton onClick={onPortalClick} loading={portalLoading} />
+              <PortalButton onClick={handleManageSubscription} loading={portalLoading} />
               <p className="text-xs text-gray-400 text-center mt-2">
                 Cancel anytime — access continues until your period ends.
               </p>
@@ -197,7 +205,7 @@ export default function SubscriptionSection({ onPortalClick, portalLoading }: Pr
           ))}
         </ul>
 
-        <PortalButton onClick={onPortalClick} loading={portalLoading} />
+        <PortalButton onClick={handleManageSubscription} loading={portalLoading} />
         <p className="text-xs text-gray-400 text-center mt-2">
           Cancel anytime — access continues until your period ends.
         </p>

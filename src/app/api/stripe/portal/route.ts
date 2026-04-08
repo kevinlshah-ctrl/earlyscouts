@@ -1,53 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('Authorization')
-  const token = authHeader?.replace('Bearer ', '')
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-  if (!token) {
-    return NextResponse.json({ error: 'Missing auth token' }, { status: 401 })
-  }
+export async function POST() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  )
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  const stripeKey = process.env.STRIPE_SECRET_KEY
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!stripeKey) {
-    return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
-  }
-
-  const supabaseAdmin = createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  })
-
-  // Verify user
-  const { data: { user }, error: verifyError } = await supabaseAdmin.auth.getUser(token)
-  if (verifyError || !user) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-  }
-
-  // Get stripe_customer_id from profile
-  const { data: profile } = await supabaseAdmin
+  const { data: profile } = await supabase
     .from('user_profiles')
     .select('stripe_customer_id')
     .eq('id', user.id)
     .single()
 
   if (!profile?.stripe_customer_id) {
-    return NextResponse.json({ error: 'No billing account found' }, { status: 404 })
+    return NextResponse.json({ error: 'No Stripe customer found' }, { status: 400 })
   }
 
-  const stripe = new Stripe(stripeKey)
-  const proto   = request.headers.get('x-forwarded-proto') ?? 'https'
-  const reqHost = request.headers.get('host') ?? 'www.earlyscouts.com'
-  const appUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${reqHost}`
+  const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.earlyscouts.com'
 
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: profile.stripe_customer_id,
+  const session = await stripe.billingPortal.sessions.create({
+    customer:   profile.stripe_customer_id,
     return_url: `${appUrl}/profile`,
   })
 
-  return NextResponse.json({ url: portalSession.url })
+  return NextResponse.json({ url: session.url })
 }

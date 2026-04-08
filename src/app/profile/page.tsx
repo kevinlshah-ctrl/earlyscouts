@@ -95,7 +95,7 @@ function DeleteModal({
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, loading, sessionToken, signOut, deleteAccount } = useAuth()
+  const { user, profile, loading, signOut, deleteAccount } = useAuth()
 
   const [timedOut, setTimedOut] = useState(false)
   useEffect(() => {
@@ -106,22 +106,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!loading && !user) router.replace('/signin')
   }, [loading, user, router])
-
-  // ── Stripe portal ─────────────────────────────────────────────────────────
-  const [portalLoading, setPortalLoading] = useState(false)
-  async function handleStripePortal() {
-    setPortalLoading(true)
-    try {
-      const res = await fetch('/api/stripe/portal', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${sessionToken}` },
-      })
-      const body = await res.json() as { url?: string }
-      if (body.url) window.location.href = body.url
-    } finally {
-      setPortalLoading(false)
-    }
-  }
 
   // ── Change password ───────────────────────────────────────────────────────
   const [newPwd,        setNewPwd]        = useState('')
@@ -238,10 +222,7 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
 
         {/* Plan */}
-        <SubscriptionSection
-          onPortalClick={handleStripePortal}
-          portalLoading={portalLoading}
-        />
+        <SubscriptionSection />
 
         {/* Change password */}
         <Card>
