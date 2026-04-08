@@ -36,7 +36,9 @@ export default function Nav() {
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
-  async function handleSignOut() {
+  async function handleSignOut(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
     setDropdownOpen(false)
     setMobileOpen(false)
     await signOut()

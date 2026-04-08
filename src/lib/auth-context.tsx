@@ -307,11 +307,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    // Swallow any signOut error (e.g. IndexedDB lock) — always clear local state.
+    try { await getBrowserClient().auth.signOut() } catch {}
+    sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
     setSession(null)
-  }, [supabase])
+  }, [])
 
   const toggleFollow = useCallback(
     async (slug: string): Promise<boolean> => {
@@ -386,12 +388,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: (body as { error?: string }).error ?? 'Deletion failed' }
     }
 
-    await supabase.auth.signOut()
+    try { await getBrowserClient().auth.signOut() } catch {}
+    sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
     setSession(null)
     return { error: null }
-  }, [user, supabase])
+  }, [user])
 
   return (
     <AuthContext.Provider

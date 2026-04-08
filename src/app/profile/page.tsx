@@ -95,7 +95,7 @@ function DeleteModal({
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, loading, sessionToken, deleteAccount } = useAuth()
+  const { user, profile, loading, sessionToken, signOut, deleteAccount } = useAuth()
 
   const [timedOut, setTimedOut] = useState(false)
   useEffect(() => {
@@ -226,7 +226,7 @@ export default function ProfilePage() {
             <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
           <button
-            onClick={async () => { await getBrowserClient().auth.signOut(); router.push('/') }}
+            onClick={async (e) => { e.preventDefault(); e.stopPropagation(); await signOut(); router.push('/') }}
             className="text-xs text-gray-400 hover:text-charcoal transition-colors shrink-0"
           >
             Sign out
