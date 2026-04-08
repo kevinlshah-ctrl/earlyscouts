@@ -393,14 +393,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: (body as { error?: string }).error ?? 'Deletion failed' }
     }
 
-    // Server already deleted the user and cleared the cookie. Just clear
-    // local state — no signOut() call needed (would hang on IndexedDB lock).
     sessionTokenRef.current = null
     setUser(null)
     setProfile(null)
-    setSession(null)
+    getBrowserClient().auth.signOut().catch(() => {})  // clear sb-* cookie
+    router.push('/')
     return { error: null }
-  }, [user])
+  }, [user, router])
 
   return (
     <AuthContext.Provider
