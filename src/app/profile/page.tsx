@@ -104,7 +104,7 @@ export default function ProfilePage() {
   }, [])
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/signin')
+    if (!loading && !user) router.replace('/')
   }, [loading, user, router])
 
   // ── Change password ───────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ export default function ProfilePage() {
       </main>
     )
   }
-  if (!user) return null
+  if (!user) { router.replace('/'); return null }
 
   const profile_ = profile ?? {
     id: user.id, email: user.email ?? '',

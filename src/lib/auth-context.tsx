@@ -109,7 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const row = data as Record<string, unknown>
       const normalized: UserProfile = {
         id: row.id as string,
-        email: row.email as string,
+        // user_profiles has no email column — email lives in supabase.auth
+        email: (row.email as string | undefined) ?? '',
         display_name: (row.display_name as string | null) ?? null,
         followed_schools: Array.isArray(row.followed_schools)
           ? (row.followed_schools as string[])
@@ -120,7 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         access_expires_at: (row.access_expires_at as string | null) ?? null,
         stripe_customer_id: (row.stripe_customer_id as string | null) ?? null,
         preferences: (row.preferences as Record<string, unknown> | null) ?? null,
-        created_at: row.created_at as string,
+        // user_profiles has no created_at column (only updated_at)
+        created_at: (row.created_at as string | undefined) ?? '',
         updated_at: row.updated_at as string,
       }
       setProfile(normalized)
@@ -237,9 +239,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Safety net: if no user_profiles row exists (e.g. account created via
         // AuthModal on the pricing page before this upsert was added), create it now.
         if (!profileData && event === 'SIGNED_IN') {
+          // Note: no email column in user_profiles — email lives in supabase.auth
           await supabase.from('user_profiles').upsert({
             id:           s.user.id,
-            email:        s.user.email ?? '',
             plan_type:    'free',
             display_name: s.user.email?.split('@')[0] || 'User',
           }, { onConflict: 'id', ignoreDuplicates: true })

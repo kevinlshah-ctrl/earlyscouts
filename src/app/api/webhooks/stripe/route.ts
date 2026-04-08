@@ -66,30 +66,6 @@ async function updateByCustomerId(
 }
 
 /**
- * Update user_profiles by email (last-resort fallback).
- * Returns the number of rows actually updated.
- */
-async function updateByEmail(
-  supabase: AdminClient,
-  email: string,
-  values: Record<string, unknown>
-): Promise<number> {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .update(values as never)
-    .eq('email', email)
-    .select('id')
-
-  if (error) {
-    console.error('[webhook] updateByEmail error:', error.message, '| code:', error.code)
-    return 0
-  }
-  const count = data?.length ?? 0
-  console.log(`[webhook] updateByEmail email=${email} rows_updated=${count}`)
-  return count
-}
-
-/**
  * Upsert a user_profiles row when all lookups return 0 rows.
  * Uses the userId as the primary key — safe to call even if the row exists.
  */
@@ -222,22 +198,13 @@ export async function POST(request: NextRequest) {
           rowsUpdated = await updateByCustomerId(supabase, customerId, updatePayload)
         }
 
-        // ── Attempt 4: customer email ────────────────────────────────────
-        if (rowsUpdated === 0 && customerEmail) {
-          console.log(`[webhook] Attempt 4: updateByEmail email=${customerEmail}`)
-          rowsUpdated = await updateByEmail(supabase, customerEmail, updatePayload)
-        }
-
-        // ── Attempt 5: upsert using best available userId ────────────────
+        // ── Attempt 4: upsert using best available userId ────────────────
+        // Note: user_profiles has no email column — do not include email in upsert
         if (rowsUpdated === 0) {
           const upsertId = lookupUserId ?? clientRefId
           if (upsertId) {
             console.warn(`[webhook] All lookups returned 0 rows — upserting new row for userId=${upsertId}`)
-            const email = customerEmail ?? undefined
-            await upsertProfile(supabase, upsertId, {
-              ...updatePayload,
-              ...(email ? { email } : {}),
-            })
+            await upsertProfile(supabase, upsertId, updatePayload)
           } else {
             console.error('[webhook] FATAL: no userId available for any lookup — cannot update profile. session.id=', session.id)
           }

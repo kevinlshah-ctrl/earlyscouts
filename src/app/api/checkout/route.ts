@@ -63,14 +63,15 @@ export async function POST(request: NextRequest) {
     console.log(`[checkout] user=${user.id} tier=${tier} coupon=${couponCode ?? 'none'}`)
 
     // ── Profile & Stripe customer ─────────────────────────────────────────────
+    // Note: user_profiles has no email column — email comes from supabase.auth
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('email, stripe_customer_id')
+      .select('stripe_customer_id')
       .eq('id', user.id)
       .single()
 
-    const row       = profile as { email: string; stripe_customer_id: string | null } | null
-    const email     = row?.email ?? user.email ?? ''
+    const row       = profile as { stripe_customer_id: string | null } | null
+    const email     = user.email ?? ''
 
     // If the profile row doesn't exist yet (DB trigger didn't fire, or the
     // client-side upsert lost a race), create it now using the service-role
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('user_profiles')
         .upsert(
-          { id: user.id, email, plan_type: 'free' },
+          { id: user.id, plan_type: 'free' },
           { onConflict: 'id' }
         )
     }
