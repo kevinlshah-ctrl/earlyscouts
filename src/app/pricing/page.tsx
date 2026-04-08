@@ -5,14 +5,14 @@ import CheckoutButton from './CheckoutButton'
 
 export const metadata = {
   title: 'Pricing | EarlyScouts',
-  description: 'Full access to every LA school report and transfer playbook.',
+  description: 'Full access to every LA school report and transfer playbook. $59.99 initial, then $4.99/month. Cancel anytime.',
 }
 
 const COMPARE = [
   { label: 'School reports',     us: '100+',    consultant: '3–5',       diy: 'Scattered' },
   { label: 'Transfer playbooks', us: '✓',       consultant: '✓',         diy: '✗'         },
   { label: 'Time required',      us: '~30 min', consultant: '5+ hrs',    diy: '20+ hrs'   },
-  { label: 'Premium (one-time)', us: '$59.99',  consultant: '$200–$500', diy: 'Free'      },
+  { label: 'Premium',            us: '$59.99 + $4.99/mo', consultant: '$200–$500', diy: 'Free' },
 ]
 
 export default function PricingPage({ searchParams }: { searchParams?: { next?: string } }) {
@@ -86,10 +86,11 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
 
               <div className="mb-5">
                 <p className="text-xs font-mono uppercase tracking-widest text-[#6B8080] mb-2">Premium</p>
-                <div className="flex items-baseline gap-1">
+                <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="font-serif text-4xl text-white">$59.99</span>
+                  <span className="text-sm text-[#9B9690]">then $4.99/mo</span>
                 </div>
-                <p className="text-xs text-[#9B9690] mt-1.5">30 days of full access</p>
+                <p className="text-xs text-[#9B9690] mt-1.5">30 days of full access, then $4.99/month. Cancel anytime.</p>
                 <p className="text-xs text-[#9B9690] mt-2 leading-relaxed">
                   Everything you need for a thorough research season. Read every report, every playbook, every comparison.
                 </p>
@@ -113,11 +114,14 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
               <div className="mt-auto pt-5">
                 <CheckoutButton
                   tier="premium"
-                  label="Get Premium for $59.99"
+                  label="Get Premium – $59.99 Initial"
                   loadingLabel="Setting up checkout..."
                   className="block w-full text-center bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
                   next={next}
                 />
+                <p className="text-[10px] text-[#6B8080] text-center mt-2 leading-relaxed">
+                  $55 setup + $4.99 first month. Renews at $4.99/month. Cancel anytime.
+                </p>
               </div>
             </div>
 
@@ -186,8 +190,8 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                 a: 'Every school has a full analyst-written report covering test scores in context, parent review synthesis, a comparison table, a feeder pipeline map, and enrollment details.',
               },
               {
-                q: 'How long does Premium access last?',
-                a: 'You pay $59.99 once and get 30 days of full access. No subscription, no recurring charges.',
+                q: 'How does Premium pricing work?',
+                a: 'You pay $59.99 upfront (a $55 setup fee + $4.99 first month), then $4.99/month after that. You get 30 days of full access from day one. Cancel anytime — if you cancel in your first month, you\'re only charged the $59.99 and nothing more.',
               },
               {
                 q: 'What are transfer playbooks?',
