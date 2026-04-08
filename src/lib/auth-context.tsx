@@ -313,10 +313,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setProfile(null)
     setSession(null)
-    // Call our server-side route which has access to the HttpOnly cookie and
-    // can properly invalidate the session + clear the cookie in the response.
-    // Fire-and-forget: we don't block on it since local state is already cleared.
-    fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
+    // Await the server-side route so the Set-Cookie response (which clears
+    // the HttpOnly refresh token cookie) is processed BEFORE the caller
+    // does router.push() — otherwise the navigation aborts the fetch and
+    // the cookie is never cleared.
+    await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
   }, [])
 
   const toggleFollow = useCallback(
