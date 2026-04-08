@@ -132,27 +132,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const poll = async () => {
       attempts++
-      // Use profile from closure for logging — the DB query below is the source of truth
-      console.log(
-        `[confirmAccess] poll ${attempts}/${MAX} — context plan_type=${
-          (profile as UserProfile | null)?.subscription_tier ?? 'unknown'
-        } userId=${user.id}`
-      )
+      console.log(`[confirmAccess] poll ${attempts}/${MAX} userId=${user.id}`)
 
-      // Query Supabase directly instead of going through fetchProfile so we can
-      // see the exact raw value that comes back from the DB at each poll.
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('plan_type, access_expires_at, updated_at')
-        .eq('id', user.id)
-        .single()
+      // Use a plain fetch to /api/debug-profile instead of a direct Supabase
+      // client query — the Supabase JS client uses an IndexedDB lock for token
+      // refresh, and issuing concurrent client queries during the post-checkout
+      // window can trigger "Lock was released because another request stole it"
+      // errors. A simple fetch bypasses that lock entirely.
+      const session = await supabase.auth.getSession()
+      const token   = session.data.session?.access_token
+      if (!token) {
+        console.warn('[confirmAccess] no token — retrying')
+        if (attempts < MAX) { setTimeout(poll, 2000) } else { setIsConfirmingAccess(false) }
+        return
+      }
 
-      console.log('[confirmAccess] direct DB result:', JSON.stringify(data), 'error:', error?.message ?? 'none')
+      let data: Record<string, unknown> | null = null
+      try {
+        const res = await fetch('/api/debug-profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) data = await res.json() as Record<string, unknown>
+      } catch (err) {
+        console.warn('[confirmAccess] fetch error:', err)
+      }
 
-      if (data?.plan_type === 'premium') {
-        console.log('[confirmAccess] premium confirmed — refreshing full profile')
-        // Fetch the full profile row to update all context fields
-        await fetchProfile(user.id)
+      console.log('[confirmAccess] debug-profile result:', JSON.stringify(data))
+
+      const expiresAt = data?.access_expires_at as string | null | undefined
+      if (
+        data?.plan_type === 'premium' &&
+        expiresAt &&
+        new Date(expiresAt) > new Date()
+      ) {
+        console.log('[confirmAccess] premium confirmed — updating profile state')
+        setProfile(prev =>
+          prev
+            ? { ...prev, subscription_tier: 'premium', access_expires_at: expiresAt }
+            : prev
+        )
         setIsConfirmingAccess(false)
         return
       }
@@ -168,8 +186,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // First check at 1.5s — gives the webhook time to fire
     setTimeout(poll, 1500)
+  // setProfile is a stable useState setter; supabase singleton is stable
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, fetchProfile, supabase])
+  }, [user, supabase])
 
   // ── Post-checkout access confirmation ────────────────────────────────────────
   // CheckoutButton sets 'pendingAccessConfirm' in sessionStorage right before

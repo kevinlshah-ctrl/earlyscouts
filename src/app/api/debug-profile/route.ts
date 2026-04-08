@@ -57,20 +57,22 @@ export async function GET(request: NextRequest) {
   const expiresAt = accessRow?.access_expires_at ? new Date(accessRow.access_expires_at) : null
   const isExpired = expiresAt ? expiresAt < new Date() : null
 
+  // Top-level plan_type + access_expires_at are read directly by confirmAccess
+  // in auth-context.tsx — keep them at the root of the response.
   return NextResponse.json({
-    fetched_at:   now,
-    auth_user_id: user.id,
-    auth_email:   user.email,
-    access: {
-      plan_type:          accessRow?.plan_type ?? 'NOT FOUND',
-      access_expires_at:  accessRow?.access_expires_at ?? null,
-      expires_in_ms:      expiresAt ? expiresAt.getTime() - Date.now() : null,
-      is_expired:         isExpired,
-      subscription_status: accessRow?.subscription_status ?? null,
-      stripe_customer_id: accessRow?.stripe_customer_id ?? null,
-      updated_at:         accessRow?.updated_at ?? null,
-    },
-    full_profile: data ?? null,
+    // Fields read by confirmAccess polling loop
+    plan_type:         accessRow?.plan_type        ?? null,
+    access_expires_at: accessRow?.access_expires_at ?? null,
+    // Diagnostic fields
+    fetched_at:        now,
+    auth_user_id:      user.id,
+    auth_email:        user.email,
+    expires_in_ms:     expiresAt ? expiresAt.getTime() - Date.now() : null,
+    is_expired:        isExpired,
+    subscription_status: accessRow?.subscription_status ?? null,
+    stripe_customer_id:  accessRow?.stripe_customer_id  ?? null,
+    updated_at:          accessRow?.updated_at           ?? null,
+    full_profile:        data ?? null,
     _note: data === null
       ? 'ERROR: No user_profiles row found for this auth user ID — webhook may not have created it'
       : `Row found. plan_type=${accessRow?.plan_type}. Last updated: ${accessRow?.updated_at}`,
