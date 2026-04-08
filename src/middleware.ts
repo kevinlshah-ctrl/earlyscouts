@@ -55,7 +55,12 @@ export async function middleware(request: NextRequest) {
   )
 
   // getUser() validates + refreshes the session; side-effect writes cookies.
-  await supabase.auth.getUser()
+  // Skip for the signout route: the route handler is about to clear the session
+  // cookie, and calling getUser() here would write a refreshed session cookie
+  // AFTER the route handler's clearing Set-Cookie, overwriting the deletion.
+  if (!pathname.startsWith('/api/auth/signout')) {
+    await supabase.auth.getUser()
+  }
 
   // ── Preview gate ───────────────────────────────────────────────────────────
   // Skip the gate for: the preview page itself, all API routes (including
