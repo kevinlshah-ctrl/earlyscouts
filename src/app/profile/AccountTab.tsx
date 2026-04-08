@@ -125,7 +125,6 @@ export default function AccountTab({
   stripePortalLoading,
 }: Props) {
   // ── Password change state ─────────────────────────────────────────────────
-  const [currentPwd,  setCurrentPwd]  = useState('')
   const [newPwd,      setNewPwd]      = useState('')
   const [confirmPwd,  setConfirmPwd]  = useState('')
   const [pwdLoading,  setPwdLoading]  = useState(false)
@@ -163,25 +162,12 @@ export default function AccountTab({
     }
 
     setPwdLoading(true)
-    const supabase = getBrowserClient()
-
-    // Re-authenticate with current password to verify identity
-    const { error: reAuthErr } = await supabase.auth.signInWithPassword({
-      email:    user.email ?? '',
-      password: currentPwd,
-    })
-    if (reAuthErr) {
-      setPwdError('Current password is incorrect.')
-      setPwdLoading(false)
-      return
-    }
-
-    const { error: updateErr } = await supabase.auth.updateUser({ password: newPwd })
+    // Active session proves identity — call updateUser directly.
+    const { error: updateErr } = await getBrowserClient().auth.updateUser({ password: newPwd })
     if (updateErr) {
       setPwdError('Could not update password. Please try again.')
     } else {
       setPwdSuccess(true)
-      setCurrentPwd('')
       setNewPwd('')
       setConfirmPwd('')
     }
@@ -230,15 +216,6 @@ export default function AccountTab({
         <Card>
           <h2 className="font-semibold text-charcoal mb-4">Change Password</h2>
           <form onSubmit={handlePasswordChange} className="flex flex-col gap-3">
-            <input
-              type="password"
-              value={currentPwd}
-              onChange={e => setCurrentPwd(e.target.value)}
-              placeholder="Current password"
-              required
-              className={inputCls}
-            />
-
             <div className="flex flex-col gap-1.5">
               <input
                 type="password"
@@ -279,7 +256,7 @@ export default function AccountTab({
 
             <button
               type="submit"
-              disabled={pwdLoading || !currentPwd || !newPwd || !confirmPwd}
+              disabled={pwdLoading || !newPwd || !confirmPwd}
               className="py-2.5 bg-scout-green text-white text-sm font-semibold rounded-full disabled:opacity-50 hover:bg-scout-green-dark transition-colors flex items-center justify-center gap-2"
             >
               {pwdLoading && (

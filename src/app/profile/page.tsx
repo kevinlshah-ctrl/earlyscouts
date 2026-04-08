@@ -239,7 +239,6 @@ export default function ProfilePage() {
 
         {/* Plan */}
         <SubscriptionSection
-          profile={profile_}
           onPortalClick={handleStripePortal}
           portalLoading={portalLoading}
         />
