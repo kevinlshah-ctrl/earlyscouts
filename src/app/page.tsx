@@ -39,7 +39,7 @@ export default function HomePage() {
 
           <p className="text-base text-[#6E6A65] leading-relaxed max-w-xl">
             Stop spending hours on GreatSchools and Facebook groups. EarlyScouts gives you
-            deep, honest reports on 135 LA schools — covering test scores, feeder pipelines,
+            deep, honest reports on hundreds of LA schools — covering test scores, feeder pipelines,
             Scout Takes, and parent reviews — plus transfer playbooks that replace the $500 consultant.
           </p>
 
@@ -60,7 +60,7 @@ export default function HomePage() {
 
           <div className="inline-flex items-center bg-[#FEF3E8] border border-[#F2C49A] rounded-full px-4 py-1.5">
             <span className="text-sm text-[#C97B3A]">
-              135 schools · 6 transfer guides · Updated 2026
+              Hundreds of schools · Multiple transfer guides · Updated 2026
             </span>
           </div>
 
