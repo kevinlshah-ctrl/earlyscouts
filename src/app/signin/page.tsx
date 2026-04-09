@@ -31,7 +31,7 @@ export default function SignInPage() {
 
   // If already signed in, redirect
   useEffect(() => {
-    if (user) router.replace('/profile')
+    if (user) router.replace('/schools')
   }, [user, router])
 
   // Persist ?next for post-auth redirect
