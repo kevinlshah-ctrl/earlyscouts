@@ -72,6 +72,12 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                 >
                   Start Browsing
                 </Link>
+                {/* Invisible spacer — matches the two-line fine print below the Premium button
+                    so both button tops sit at the same vertical position. */}
+                <p className="text-[10px] mt-2 leading-relaxed opacity-0 pointer-events-none select-none" aria-hidden="true">
+                  $55 setup + $4.99 first month. Renews at $4.99/month.<br />
+                  Cancel anytime.
+                </p>
               </div>
             </div>
 
