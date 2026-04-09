@@ -50,6 +50,13 @@ export default function SubscriptionSection() {
   useEffect(() => { refreshProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [portalLoading, setPortalLoading] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
+
+  // Prevent indefinite spinner on iOS where profile may never resolve
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 5000)
+    return () => clearTimeout(t)
+  }, [])
 
   async function handleManageSubscription() {
     setPortalLoading(true)
@@ -63,7 +70,9 @@ export default function SubscriptionSection() {
   }
 
   if (!profile) return (
-    <div className="text-sm text-gray-500">Loading plan info…</div>
+    <div className="text-sm text-gray-500">
+      {timedOut ? 'Could not load plan info. Try refreshing.' : 'Loading plan info…'}
+    </div>
   )
 
   const tier      = profile.subscription_tier

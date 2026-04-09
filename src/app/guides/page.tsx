@@ -27,6 +27,17 @@ type GuideRow = {
   report_data: ReportData | null
 }
 
+// ── Guide display order ───────────────────────────────────────────────────────
+// Slugs listed here appear first, in this order. Any unrecognised slug falls to the end.
+const GUIDE_ORDER = [
+  'lausd-school-choice-playbook',
+  'la-charter-magnet-school-choice-playbook',
+  'smmusd-transfer-playbook',
+  'ccusd-transfer-playbook',
+  'beach-cities-school-choice-blueprint',
+  'hollywood-hills-school-choice-playbook',
+]
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function GuidesPage() {
@@ -36,9 +47,15 @@ export default async function GuidesPage() {
     .from('schools')
     .select('slug, name, district, report_data')
     .or('slug.like.%playbook%,slug.like.%blueprint%')
-    .order('name')
 
-  const guides = (data ?? []) as GuideRow[]
+  const guides = ((data ?? []) as GuideRow[]).sort((a, b) => {
+    const ai = GUIDE_ORDER.indexOf(a.slug)
+    const bi = GUIDE_ORDER.indexOf(b.slug)
+    if (ai === -1 && bi === -1) return 0
+    if (ai === -1) return 1
+    if (bi === -1) return -1
+    return ai - bi
+  })
 
   return (
     <main>

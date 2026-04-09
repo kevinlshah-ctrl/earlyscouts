@@ -507,12 +507,14 @@ export default function SchoolReport({
   const schoolType = school.type || 'public'
   const typeLabel = schoolType.charAt(0).toUpperCase() + schoolType.slice(1)
 
-  const { profile, user, signOut, isConfirmingAccess } = useAuth()
+  const { profile, user, signOut, isConfirmingAccess, loading: authLoading } = useAuth()
   // forcePaywall=true overrides even isGuide — used by server-gated guide pages
   // that have already stripped sections before sending to the client.
   // isConfirmingAccess is true while the post-Stripe webhook poll is in flight —
   // treat as paid to prevent the paywall from flashing before the DB update lands.
-  const isPaid = !forcePaywall && (isGuide || hasActiveAccess(profile) || isConfirmingAccess)
+  // authLoading is true until INITIAL_SESSION fires — prevents paywall flash on
+  // slow connections / iOS where profile hasn't loaded yet on first render.
+  const isPaid = !forcePaywall && (isGuide || authLoading || hasActiveAccess(profile) || isConfirmingAccess)
 
   // ── Debug: log access state whenever it changes ───────────────────────────
   useEffect(() => {
@@ -700,6 +702,16 @@ export default function SchoolReport({
       </div>{/* end stickyHeader */}
 
     <div className={styles.report}>
+
+      {/* ── Back link ── */}
+      <div className="px-5 pt-3 pb-1">
+        <Link
+          href={isGuide ? '/guides' : '/schools'}
+          className="text-xs font-semibold text-[#5B9A6F] hover:underline"
+        >
+          ← {isGuide ? 'Back to Guides' : 'Back to Schools'}
+        </Link>
+      </div>
 
       {/* ── Hero ── */}
       <div className={styles.heroArea}>
