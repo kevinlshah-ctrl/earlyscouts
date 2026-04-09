@@ -36,7 +36,7 @@ function wordsFromBlock(block: ContentBlock): number {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Estimate read time in minutes at 250 wpm (appropriate for detailed/technical content).
+ * Estimate read time in minutes at 125 wpm (dense technical content read carefully).
  * Counts words across all sections, alerts, and verdict text.
  */
 export function calculateReadTime(reportData: ReportData): number {
@@ -62,7 +62,7 @@ export function calculateReadTime(reportData: ReportData): number {
     totalWords += countWords(verdict.consider_alternatives ?? '')
   }
 
-  return Math.max(1, Math.round(totalWords / 250))
+  return Math.max(1, Math.round(totalWords / 125))
 }
 
 /**

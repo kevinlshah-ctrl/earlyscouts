@@ -276,6 +276,11 @@ export interface ReportData {
   /** Set server-side on gated guide pages to preserve the real chapter count
    *  after sections are stripped to slice(0,1) for unauthenticated visitors. */
   total_sections?: number
+  /** Pre-computed read time (minutes) — preserved on gated guide pages so the
+   *  hero badge reflects the full report even when sections are stripped. */
+  _guide_read_time?: number
+  /** Pre-computed source count — preserved on gated guide pages. */
+  _guide_source_count?: number
 }
 
 export interface TourDate {

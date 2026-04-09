@@ -120,7 +120,8 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                   next={next}
                 />
                 <p className="text-[10px] text-[#6B8080] text-center mt-2 leading-relaxed">
-                  $55 setup + $4.99 first month. Renews at $4.99/month. Cancel anytime.
+                  $55 setup + $4.99 first month. Renews at $4.99/month.<br />
+                  Cancel anytime.
                 </p>
               </div>
             </div>

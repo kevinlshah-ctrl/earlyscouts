@@ -3,6 +3,7 @@ import { createServerClient, rowToSchool } from '@/lib/supabase'
 import { createAuthServerClient } from '@/lib/supabase-server'
 import SchoolReport from '@/components/SchoolReport'
 import type { School } from '@/lib/types'
+import { calculateReadTime, calculateSourceCount } from '@/lib/report-metrics'
 
 // These are the slugs backed by Supabase report_data records.
 // Any other slug 404s immediately without touching the DB.
@@ -90,6 +91,10 @@ export default async function GuidePage({ params }: { params: { slug: string } }
   // forcePaywall overrides SchoolReport's built-in isGuide bypass so the
   // paywall card renders even though this is a guide/playbook page.
   const sections = school.reportData?.sections ?? []
+  // Calculate metrics from the FULL report before stripping — the hero badges
+  // should reflect the complete guide even for unauthenticated visitors.
+  const preStripReadTime    = school.reportData ? calculateReadTime(school.reportData) : 0
+  const preStripSourceCount = school.reportData ? calculateSourceCount(school.reportData) : 0
   const gatedSchool: School = {
     ...school,
     reportData: school.reportData
@@ -98,6 +103,10 @@ export default async function GuidePage({ params }: { params: { slug: string } }
           // Preserve real chapter count before stripping so the hero pill shows
           // the correct "N chapters" instead of "1 chapters".
           total_sections: sections.length,
+          // Preserve real read time + source count — calculated above from
+          // the full report so hero badges stay accurate after stripping.
+          _guide_read_time:    preStripReadTime,
+          _guide_source_count: preStripSourceCount,
           sections: sections.slice(0, 1),
           // Clear the verdict so it never reaches the client unauthenticated.
           verdict: { paragraphs: [], best_for: '', consider_alternatives: '' },
