@@ -38,6 +38,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'charnock-road-elementary-school-los-angeles-ca',
       'westminster-avenue-elementary-school-los-angeles-ca',
       'cwc-mar-vista-los-angeles-ca',
+      'goethe-international-charter-school-los-angeles-ca',
       'ocean-charter-school-los-angeles-ca',
       'wish-charter-schools-los-angeles-ca',
       'open-charter-magnet-school-los-angeles-ca',
@@ -90,6 +91,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     elementarySlugs: [
       'clover-avenue-elementary-school-los-angeles-ca',
       'overland-avenue-elementary-school-los-angeles-ca',
+      'castle-heights-elementary-school-los-angeles-ca',
       'richland-avenue-elementary-school-los-angeles-ca',
       'short-avenue-elementary-school-los-angeles-ca',
       'braddock-drive-elementary-school-culver-city-ca',
@@ -112,6 +114,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     districts: ['LAUSD'],
     elementarySlugs: [
       'playa-vista-elementary-school-los-angeles-ca',
+      'goethe-international-charter-school-los-angeles-ca',
       'playa-del-rey-elementary-school-los-angeles-ca',
       'westchester-enriched-sciences-magnets-los-angeles-ca',
     ],
