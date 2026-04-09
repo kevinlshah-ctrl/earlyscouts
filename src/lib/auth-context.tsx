@@ -227,6 +227,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // mount and getSession() occasionally resolved first with a stale null value,
   // causing loading to be set false before the user was populated.
   useEffect(() => {
+    // Safety net: if fetchProfile hangs inside the INITIAL_SESSION callback,
+    // setLoading(false) would never be called, leaving authLoading=true forever.
+    // That makes isPaid=true for all users in SchoolReport (the paywall bypass bug).
+    // Force-clear loading after 5s regardless of whether the profile fetch resolves.
+    const safetyTimer = setTimeout(() => setLoading(false), 5000)
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, s: Session | null) => {
@@ -274,11 +280,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // INITIAL_SESSION is the first event fired — marks the end of bootstrap.
       // Only set loading=false here so the nav never renders in an indeterminate state.
       if (event === 'INITIAL_SESSION') {
+        clearTimeout(safetyTimer)
         setLoading(false)
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(safetyTimer)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Actions ───────────────────────────────────────────────────────────────
