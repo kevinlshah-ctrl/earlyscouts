@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServerClient, rowToSchool } from '@/lib/supabase'
 import { createAuthServerClient } from '@/lib/supabase-server'
 import SchoolReport from '@/components/SchoolReport'
-import type { School } from '@/lib/types'
+import type { School, CalloutBlock, ComparisonTableBlock, GuidePreviewExtras } from '@/lib/types'
 import { calculateReadTime, calculateSourceCount } from '@/lib/report-metrics'
 
 // These are the slugs backed by Supabase report_data records.
@@ -95,6 +95,63 @@ export default async function GuidePage({ params }: { params: { slug: string } }
   // should reflect the complete guide even for unauthenticated visitors.
   const preStripReadTime    = school.reportData ? calculateReadTime(school.reportData) : 0
   const preStripSourceCount = school.reportData ? calculateSourceCount(school.reportData) : 0
+
+  // ── Extract strategic preview content from gated sections ──────────────────
+  // Shown to unauthenticated visitors as a conversion teaser before the paywall.
+  const gatedSections = sections.slice(1)
+  const previewExtras: GuidePreviewExtras = {}
+
+  // 1. First green/sky callout that isn't the Scout Take
+  for (const section of gatedSections) {
+    const found = section.content.find(
+      b => b.type === 'callout' &&
+           ((b as CalloutBlock).variant === 'green' || (b as CalloutBlock).variant === 'sky') &&
+           (b as CalloutBlock).label?.toLowerCase() !== 'scout take'
+    ) as CalloutBlock | undefined
+    if (found) { previewExtras.callout = found; break }
+  }
+
+  // 2. First comparison table from any gated section
+  for (const section of gatedSections) {
+    const found = section.content.find(b => b.type === 'comparison_table') as ComparisonTableBlock | undefined
+    if (found) { previewExtras.comparison_table = found; break }
+  }
+
+  // 3. Calendar section — partial (5 visible rows + up to 3 blurred rows)
+  const calSection = gatedSections.find(s => {
+    const id = s.id.toLowerCase(); const title = s.title.toLowerCase(); const tag = (s.tag ?? '').toLowerCase()
+    return id.includes('calendar') || id.includes('timeline') ||
+           title.includes('calendar') || title.includes('timeline') ||
+           tag.includes('calendar') || tag.includes('timeline')
+  })
+  if (calSection) {
+    const tableBlock = calSection.content.find(b => b.type === 'comparison_table') as ComparisonTableBlock | undefined
+    if (tableBlock) {
+      previewExtras.calendar = {
+        title: calSection.title,
+        subtitle: calSection.subtitle || undefined,
+        columns: tableBlock.columns,
+        visible_rows: tableBlock.rows.slice(0, 5),
+        blurred_rows: tableBlock.rows.slice(5, 8),
+      }
+    }
+  }
+
+  // 4. Contacts section — partial (heading + first 2 blocks)
+  const contactSection = gatedSections.find(s => {
+    const id = s.id.toLowerCase(); const title = s.title.toLowerCase(); const tag = (s.tag ?? '').toLowerCase()
+    return id.includes('contact') || title.includes('contact') || tag.includes('contact')
+  })
+  if (contactSection) {
+    previewExtras.contacts = {
+      title: contactSection.title,
+      visible_blocks: contactSection.content.slice(0, 2),
+    }
+  }
+
+  const hasExtras = previewExtras.callout || previewExtras.comparison_table ||
+                    previewExtras.calendar || previewExtras.contacts
+
   const gatedSchool: School = {
     ...school,
     reportData: school.reportData
@@ -110,6 +167,8 @@ export default async function GuidePage({ params }: { params: { slug: string } }
           sections: sections.slice(0, 1),
           // Clear the verdict so it never reaches the client unauthenticated.
           verdict: { paragraphs: [], best_for: '', consider_alternatives: '' },
+          // Strategic preview content for unauthenticated visitors.
+          ...(hasExtras ? { _guide_preview_extras: previewExtras } : {}),
         }
       : null,
   }

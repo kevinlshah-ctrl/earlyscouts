@@ -264,6 +264,23 @@ export interface RelatedSchoolItem {
   tag: string
 }
 
+/** Extra preview content shown to unauthenticated visitors on guide pages. */
+export interface GuidePreviewExtras {
+  callout?: CalloutBlock
+  comparison_table?: ComparisonTableBlock
+  calendar?: {
+    title: string
+    subtitle?: string
+    columns: string[]
+    visible_rows: ComparisonRow[]
+    blurred_rows: ComparisonRow[]
+  }
+  contacts?: {
+    title: string
+    visible_blocks: ContentBlock[]
+  }
+}
+
 export interface ReportData {
   generated_at: string
   version: number
@@ -281,6 +298,8 @@ export interface ReportData {
   _guide_read_time?: number
   /** Pre-computed source count — preserved on gated guide pages. */
   _guide_source_count?: number
+  /** Strategic preview content extracted server-side for unauthenticated guide visitors. */
+  _guide_preview_extras?: GuidePreviewExtras
 }
 
 export interface TourDate {

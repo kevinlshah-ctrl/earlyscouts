@@ -18,6 +18,7 @@ import type {
   TimelineBlock,
   AlertItem,
   RelatedSchoolItem,
+  GuidePreviewExtras,
 } from '@/lib/types'
 import styles from './SchoolReport.module.css'
 import Footer from './Footer'
@@ -363,6 +364,93 @@ function ContentBlockRenderer({ block }: { block: ContentBlock }) {
     case 'section_divider':  return <div className={styles.sectionDivider} />
     default: return null
   }
+}
+
+// ── Guide Preview Extras ──────────────────────────────────────────────────────
+// Shown to unauthenticated guide visitors as a strategic content teaser.
+
+function GuidePreviewExtrasComp({ extras }: { extras: GuidePreviewExtras }) {
+  const { callout, comparison_table, calendar, contacts } = extras
+  const blurOverlayStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(to bottom, rgba(255,250,246,0) 0%, rgba(255,250,246,0.95) 80%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+  const blurLabelStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: 8,
+    padding: '8px 16px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    fontSize: 13,
+    color: '#5B9A6F',
+    fontWeight: 600,
+    fontFamily: "'DM Sans', sans-serif",
+  }
+  return (
+    <div className={styles.section}>
+      {callout && <ContentBlockRenderer block={callout} />}
+      {comparison_table && <ContentBlockRenderer block={comparison_table} />}
+      {calendar && (
+        <>
+          <h2 className={styles.sectionTitle}>{calendar.title}</h2>
+          {calendar.subtitle && <div className={styles.sectionSubtitle}>{calendar.subtitle}</div>}
+          <div className={styles.compTableWrap}>
+            <table className={styles.compTable}>
+              <thead>
+                <tr>{calendar.columns.map((col, i) => <th key={i}>{col}</th>)}</tr>
+              </thead>
+              <tbody>
+                {calendar.visible_rows.map((row, i) => (
+                  <tr key={i} className={row.highlight ? styles.compTableHighlight : ''}>
+                    {row.cells.map((cell, j) => <td key={j}>{cell}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {calendar.blurred_rows.length > 0 && (
+            <div style={{ position: 'relative', overflow: 'hidden' }}>
+              <div style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.5 }}>
+                <div className={styles.compTableWrap}>
+                  <table className={styles.compTable}>
+                    <tbody>
+                      {calendar.blurred_rows.map((row, i) => (
+                        <tr key={i} className={row.highlight ? styles.compTableHighlight : ''}>
+                          {row.cells.map((cell, j) => <td key={j}>{cell}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div style={blurOverlayStyle}>
+                <span style={blurLabelStyle}>🔒 12+ more deadlines in the full guide</span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+      {contacts && (
+        <>
+          <h2 className={styles.sectionTitle}>{contacts.title}</h2>
+          {contacts.visible_blocks.map((block, i) => (
+            <ContentBlockRenderer key={i} block={block} />
+          ))}
+          <div style={{ position: 'relative', overflow: 'hidden', minHeight: 80 }}>
+            <div style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.5 }}>
+              <p className={styles.para}>Phone numbers, emails, and office addresses available in the full guide.</p>
+            </div>
+            <div style={blurOverlayStyle}>
+              <span style={blurLabelStyle}>🔒 8+ more contacts in the full guide</span>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 // ── Section ───────────────────────────────────────────────────────────────────
@@ -799,40 +887,145 @@ export default function SchoolReport({
           <LazySection key={section.id} section={section} eager={i === 0} />
         ))
       ) : (
-        // Free preview — first two sections visible, CTA card, then locked sections
+        // Free preview — free sections, optional guide extras, paywall card, locked sections
         <>
-          {sections.slice(0, 2).map(section => (
-            <ReportSectionComp key={section.id} section={section} />
-          ))}
+          {/* Free sections: guides show all (already stripped server-side);
+              school reports show first 2 + any pipeline/feeder section */}
+          {sections
+            .filter((s, i) => {
+              if (forcePaywall) return true
+              if (i < 2) return true
+              const id = s.id.toLowerCase()
+              const title = s.title.toLowerCase()
+              const tag = (s.tag ?? '').toLowerCase()
+              return id.includes('pipeline') || id.includes('feeder') ||
+                     title.includes('pipeline') || title.includes('feeder') ||
+                     tag.includes('pipeline') || tag.includes('feeder')
+            })
+            .map(section => (
+              <ReportSectionComp key={section.id} section={section} />
+            ))
+          }
+
+          {/* Guide preview extras — strategic content teaser for unauthenticated guide visitors */}
+          {forcePaywall && data._guide_preview_extras && (
+            <GuidePreviewExtrasComp extras={data._guide_preview_extras} />
+          )}
 
           {/* Mid-content CTA card */}
-          <div className={styles.freePreviewCard}>
-            <p className={styles.freePreviewLabel}>Free Preview</p>
-            <h3 className={styles.freePreviewTitle}>You&apos;re reading the free preview</h3>
-            <p className={styles.freePreviewBody}>
-              Access every school report and transfer guide.
-            </p>
-            <Link href="/pricing" className={styles.freePreviewCta}>
-              Get Full Access · $59.99
-            </Link>
-            <p className={styles.freePreviewSubtext}>30 days of full access · one-time payment</p>
-          </div>
-
-          {/* Locked sections — blurred preview with fade */}
-          {sections.slice(2).map(section => (
-            <div key={section.id} className={styles.lockedSection}>
-              <div className={styles.lockedSectionLabel}>
-                <span className={styles.lockedSectionLock}>🔒</span>
-                <span className={styles.lockedSectionTitle}>{section.title}</span>
+          {forcePaywall ? (
+            // Guide paywall card
+            <div style={{
+              background: 'white',
+              borderLeft: '4px solid #5B9A6F',
+              borderRadius: 12,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              padding: 28,
+              margin: '32px 0',
+            }}>
+              <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: '#2D3436', marginBottom: 6, marginTop: 0 }}>
+                You&apos;ve seen the preview. Here&apos;s what&apos;s behind the paywall:
+              </h3>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#636E72', marginBottom: 20, marginTop: 0 }}>
+                The complete guide has every deadline, every contact, and every backup plan.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                {[
+                  'Complete 16-month planning calendar with every deadline highlighted',
+                  'All contacts — every phone number, email, and address you\'ll need',
+                  '"If Denied" — the exact appeal process, addresses, and LACOE escalation',
+                  'Priority tier breakdown — where your family actually falls',
+                  'Strategy — what experienced families do that first-timers don\'t know',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <span style={{ color: '#5B9A6F', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#636E72' }}>{item}</span>
+                  </div>
+                ))}
               </div>
-              <div className={styles.lockedSectionPreview} aria-hidden="true">
-                <div className={styles.lockedSectionContent}>
-                  <ReportSectionComp section={section} />
-                </div>
-                <div className={styles.lockedSectionFade} />
+              <div style={{ textAlign: 'center', marginBottom: 20, fontFamily: "'DM Serif Display', serif", fontSize: 17, fontStyle: 'italic', color: '#2D3436' }}>
+                &ldquo;The guide that replaces a $500/hour education consultant.&rdquo;
               </div>
+              <Link href="/pricing" style={{
+                display: 'block', background: '#5B9A6F', color: 'white', textAlign: 'center',
+                padding: '14px 24px', borderRadius: 8, fontSize: 16, fontWeight: 700,
+                fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', marginBottom: 12,
+              }}>
+                Unlock All Guides + 135 School Reports · $59.99
+              </Link>
+              <p style={{ textAlign: 'center', fontSize: 13, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
+                $59.99 to start · $4.99/mo to stay current · Cancel anytime
+              </p>
             </div>
-          ))}
+          ) : (
+            // School report paywall card
+            <div style={{
+              background: 'white',
+              borderLeft: '4px solid #5B9A6F',
+              borderRadius: 12,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              padding: 28,
+              margin: '32px 0',
+            }}>
+              <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: '#2D3436', marginBottom: 16, marginTop: 0 }}>
+                This report continues with:
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                {[
+                  'Programs & Enrichment — GATE, music, art, after-school, funding details',
+                  'Comparison Table — side-by-side vs. nearby schools',
+                  'Parent Reviews — what families love AND where they express concern',
+                  'Tour Questions — 6 questions based on real parent feedback',
+                  'Enrollment — deadlines, contacts, how to apply',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <span style={{ color: '#5B9A6F', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#636E72' }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ textAlign: 'center', marginBottom: 20, fontFamily: "'DM Serif Display', serif", fontSize: 17, fontStyle: 'italic', color: '#2D3436' }}>
+                &ldquo;Stop Googling. Start deciding.&rdquo;
+              </div>
+              <Link href="/pricing" style={{
+                display: 'block', background: '#5B9A6F', color: 'white', textAlign: 'center',
+                padding: '14px 24px', borderRadius: 8, fontSize: 16, fontWeight: 700,
+                fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', marginBottom: 12,
+              }}>
+                Unlock 135+ School Reports &amp; 6 Transfer Guides · $59.99
+              </Link>
+              <p style={{ textAlign: 'center', fontSize: 13, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
+                $59.99 to start · then $4.99/mo · Cancel anytime
+              </p>
+            </div>
+          )}
+
+          {/* Locked sections — school reports only (guide sections stripped server-side) */}
+          {!forcePaywall && sections
+            .filter((s, i) => {
+              if (i < 2) return false
+              const id = s.id.toLowerCase()
+              const title = s.title.toLowerCase()
+              const tag = (s.tag ?? '').toLowerCase()
+              return !(id.includes('pipeline') || id.includes('feeder') ||
+                       title.includes('pipeline') || title.includes('feeder') ||
+                       tag.includes('pipeline') || tag.includes('feeder'))
+            })
+            .map(section => (
+              <div key={section.id} className={styles.lockedSection}>
+                <div className={styles.lockedSectionLabel}>
+                  <span className={styles.lockedSectionLock}>🔒</span>
+                  <span className={styles.lockedSectionTitle}>{section.title}</span>
+                </div>
+                <div className={styles.lockedSectionPreview} aria-hidden="true">
+                  <div className={styles.lockedSectionContent}>
+                    <ReportSectionComp section={section} />
+                  </div>
+                  <div className={styles.lockedSectionFade} />
+                </div>
+              </div>
+            ))
+          }
         </>
       )}
 
@@ -860,8 +1053,7 @@ export default function SchoolReport({
       <div className={styles.reportFooter}>
         <div className={styles.reportFooterBrand}>EarlyScouts</div>
         <p className={styles.reportFooterText}>
-          For parents who plan ahead.<br />
-          Generated {new Date(data.generated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
+          For parents who plan ahead.
         </p>
       </div>
 

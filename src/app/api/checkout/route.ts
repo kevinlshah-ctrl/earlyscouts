@@ -54,11 +54,19 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Body params ───────────────────────────────────────────────────────────
-    const body       = await request.json().catch(() => ({})) as { tier?: string; couponCode?: string }
+    const body       = await request.json().catch(() => ({})) as {
+      tier?: string; couponCode?: string
+      utm_source?: string; utm_medium?: string; utm_campaign?: string
+      utm_content?: string; utm_term?: string
+    }
     const tier       = body.tier === 'extended' ? 'extended' : 'premium'
     const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim()
       ? body.couponCode.trim().toUpperCase()
       : null
+    const utmMetadata: Record<string, string> = {}
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const) {
+      if (typeof body[key] === 'string' && body[key]) utmMetadata[key] = body[key] as string
+    }
 
     console.log(`[checkout] user=${user.id} tier=${tier} coupon=${couponCode ?? 'none'}`)
 
@@ -141,8 +149,8 @@ export async function POST(request: NextRequest) {
         // allow_promotion_codes and discounts are mutually exclusive in Stripe:
         // use pre-applied discount if provided, otherwise let the Checkout UI accept codes.
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
-        subscription_data: { metadata: { userId: user.id, tier: 'premium' } },
-        metadata:    { userId: user.id, tier: 'premium' },
+        subscription_data: { metadata: { userId: user.id, tier: 'premium', ...utmMetadata } },
+        metadata:    { userId: user.id, tier: 'premium', ...utmMetadata },
         // Only collect payment method when the total is > $0 — allows promo
         // codes that reduce the total to $0 to skip the payment form entirely.
         payment_method_collection: 'if_required',
@@ -161,9 +169,9 @@ export async function POST(request: NextRequest) {
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         subscription_data: {
           trial_period_days: 3,
-          metadata: { userId: user.id, tier: 'extended' },
+          metadata: { userId: user.id, tier: 'extended', ...utmMetadata },
         },
-        metadata:    { userId: user.id, tier: 'extended' },
+        metadata:    { userId: user.id, tier: 'extended', ...utmMetadata },
         success_url: `${appUrl}/schools?welcome=1`,
         cancel_url:  `${appUrl}/pricing`,
       })

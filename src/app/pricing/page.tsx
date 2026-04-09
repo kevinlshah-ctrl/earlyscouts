@@ -12,7 +12,7 @@ const COMPARE = [
   { label: 'School reports',     us: '100+',    consultant: '3–5',       diy: 'Scattered' },
   { label: 'Transfer playbooks', us: '✓',       consultant: '✓',         diy: '✗'         },
   { label: 'Time required',      us: '~30 min', consultant: '5+ hrs',    diy: '20+ hrs'   },
-  { label: 'Premium',            us: '$59.99 + $4.99/mo', consultant: '$200–$500', diy: 'Free' },
+  { label: 'Premium',            us: '$59.99 to start', consultant: '$200–$500', diy: 'Free' },
 ]
 
 export default function PricingPage({ searchParams }: { searchParams?: { next?: string } }) {
@@ -44,19 +44,20 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
             {/* ── Card 1: Free ── (mobile: order-2, desktop: order-1) */}
             <div className="order-2 lg:order-1 flex-1 bg-white border border-[#E8E5E1] rounded-2xl p-6 flex flex-col shadow-sm">
               <div className="mb-5">
-                <p className="text-xs font-mono uppercase tracking-widest text-[#9B9690] mb-2">Basic</p>
+                <p className="text-xs font-mono uppercase tracking-widest text-[#9B9690] mb-2">Browse Free</p>
                 <div className="flex items-baseline gap-1">
                   <span className="font-serif text-4xl text-[#1A1A2E]">Free</span>
                 </div>
-                <p className="text-xs text-[#9B9690] mt-1.5">Explore schools at your own pace</p>
+                <p className="text-xs text-[#9B9690] mt-1.5">See what EarlyScouts covers before you commit</p>
               </div>
 
               <ul className="flex flex-col gap-2.5 flex-1">
                 {[
-                  'School directory for all neighborhoods',
-                  'Scout Takes (our editorial opinion on every school)',
-                  'Quick Stats (test scores, enrollment, ratings)',
-                  'K–12 pipeline maps',
+                  'Scout Take editorial for every school',
+                  'Feeder pipeline maps — the K-12 trajectory',
+                  'Quick stats, alerts & school overviews',
+                  'Preview of every transfer guide',
+                  'First 3 months of deadline calendars',
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2 text-sm text-[#3D3A36]">
                     <span className="text-[#5B9A6F] font-bold mt-0.5 shrink-0">✓</span>
@@ -72,11 +73,9 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                 >
                   Start Browsing
                 </Link>
-                {/* Invisible spacer — matches the two-line fine print below the Premium button
-                    so both button tops sit at the same vertical position. */}
+                {/* Invisible spacer — matches the fine print below the Premium button */}
                 <p className="text-[10px] mt-2 leading-relaxed opacity-0 pointer-events-none select-none" aria-hidden="true">
-                  $55 setup + $4.99 first month. Renews at $4.99/month.<br />
-                  Cancel anytime.
+                  Your $4.99/mo keeps everything current. Cancel anytime.
                 </p>
               </div>
             </div>
@@ -96,19 +95,22 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
                   <span className="font-serif text-4xl text-white">$59.99</span>
                   <span className="text-sm text-[#9B9690]">then $4.99/mo</span>
                 </div>
-                <p className="text-xs text-[#9B9690] mt-1.5">30 days of full access, then $4.99/month. Cancel anytime.</p>
+                <p className="text-xs text-[#9B9690] mt-1.5">Cancel anytime. No commitment after your first 30 days.</p>
                 <p className="text-xs text-[#9B9690] mt-2 leading-relaxed">
-                  Everything you need for a thorough research season. Read every report, every playbook, every comparison.
+                  Everything you need to research, compare, and decide.
                 </p>
               </div>
 
               <ul className="flex flex-col gap-2.5 flex-1">
                 {[
-                  'All 100+ deep-dive school reports',
-                  'Transfer playbooks with every deadline',
+                  '135+ deep-dive school reports',
+                  '6 transfer & school choice guides',
+                  'Full 16-month deadline calendars',
+                  'Every contact, phone number & form',
                   'Side-by-side comparison tables',
-                  'Parent review analysis from 30+ sources',
-                  'Full enrollment details and logistics',
+                  'Parent reviews — the good AND the bad',
+                  'Tour questions based on real parent feedback',
+                  'Updated monthly — tour dates, deadlines, new schools',
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2 text-sm text-[#C4BFB9]">
                     <span className="text-[#5B9A6F] font-bold mt-0.5 shrink-0">✓</span>
@@ -120,14 +122,13 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
               <div className="mt-auto pt-5">
                 <CheckoutButton
                   tier="premium"
-                  label="Get Premium – $59.99 Initial"
+                  label="Get Full Access · $59.99"
                   loadingLabel="Setting up checkout..."
                   className="block w-full text-center bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
                   next={next}
                 />
                 <p className="text-[10px] text-[#6B8080] text-center mt-2 leading-relaxed">
-                  $55 setup + $4.99 first month. Renews at $4.99/month.<br />
-                  Cancel anytime.
+                  Your $4.99/mo keeps everything current. Cancel anytime.
                 </p>
               </div>
             </div>
@@ -198,7 +199,7 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
               },
               {
                 q: 'How does Premium pricing work?',
-                a: 'You pay $59.99 upfront (a $55 setup fee + $4.99 first month), then $4.99/month after that. You get 30 days of full access from day one. Cancel anytime — if you cancel in your first month, you\'re only charged the $59.99 and nothing more.',
+                a: 'You pay $59.99 for your first 30 days of full access — every school report, transfer guide, comparison table, and deadline calendar. After that, it\'s $4.99/month to keep everything current with updated tour dates, new schools, and shifting deadlines. Cancel anytime — there\'s no lock-in after your first 30 days.',
               },
               {
                 q: 'What are transfer playbooks?',
@@ -217,6 +218,41 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
               hello@earlyscouts.com
             </a>
           </p>
+        </div>
+      </section>
+
+      {/* What Parents Are Solving */}
+      <section className="px-4 py-12 bg-[#FFFAF6] border-t border-[#E8E5E1]">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="font-serif text-xl text-[#1A1A2E] mb-6 text-center">What parents are solving with EarlyScouts</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                q: 'Should I transfer from LAUSD to Santa Monica schools?',
+                a: 'Our SMMUSD Transfer Blueprint covers the two-step process, every deadline, and the priority tier system.',
+                link: 'Read the guide →',
+                href: '/guides/smmusd-transfer-playbook',
+              },
+              {
+                q: 'Is my neighborhood school actually good?',
+                a: 'Our 30-minute deep dives go beyond GreatSchools — test scores in context, programs, and what 50+ parents really think.',
+                link: 'Browse schools →',
+                href: '/schools',
+              },
+              {
+                q: 'Charter, magnet, or neighborhood school?',
+                a: 'Our LAUSD School Choice Guide decodes 200+ magnets, 300+ charters, and 5 permit types.',
+                link: 'Read the guide →',
+                href: '/guides/lausd-school-choice-playbook',
+              },
+            ].map(({ q, a, link, href }) => (
+              <div key={q} style={{ background: '#FFFAF6', borderRadius: 12, padding: 20, border: '1px solid #E8E5E1' }}>
+                <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, fontWeight: 700, color: '#2D3436', marginBottom: 8, marginTop: 0 }}>{q}</p>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#636E72', marginBottom: 12, marginTop: 0 }}>{a}</p>
+                <Link href={href} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#5B9A6F', fontWeight: 600, textDecoration: 'none' }}>{link}</Link>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

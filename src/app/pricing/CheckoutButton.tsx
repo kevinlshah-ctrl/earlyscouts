@@ -15,6 +15,12 @@ interface Props {
 
 // ── Shared checkout helper ────────────────────────────────────────────────────
 async function runCheckout(tier: 'premium' | 'extended', token: string): Promise<string | null> {
+  let utmParams: Record<string, string> = {}
+  try {
+    const stored = sessionStorage.getItem('utm_params')
+    if (stored) utmParams = JSON.parse(stored)
+  } catch {}
+
   try {
     const res = await fetch('/api/checkout', {
       method:  'POST',
@@ -22,7 +28,7 @@ async function runCheckout(tier: 'premium' | 'extended', token: string): Promise
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ tier }),
+      body: JSON.stringify({ tier, ...utmParams }),
     })
     const data: { url?: string; error?: string } = await res.json()
     if (data.url) {

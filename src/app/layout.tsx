@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Suspense } from 'react'
 import { AuthProvider } from '@/lib/auth-context'
+import { UTMCapture } from '@/components/UTMCapture'
 
 export const metadata: Metadata = {
   title: 'EarlyScouts - For parents who plan ahead.',
@@ -29,7 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-cream text-charcoal antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <Suspense fallback={null}>
+            <UTMCapture />
+          </Suspense>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )
