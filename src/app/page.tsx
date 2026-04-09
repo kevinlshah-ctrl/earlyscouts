@@ -60,13 +60,7 @@ export default function HomePage() {
 
           <div className="inline-flex items-center bg-[#FEF3E8] border border-[#F2C49A] rounded-full px-5 py-2">
             <span className="text-sm text-[#C97B3A]">
-              Helping <strong>400+</strong> families across LA make smarter school decisions
-            </span>
-          </div>
-
-          <div className="inline-flex items-center bg-[#FEF3E8] border border-[#F2C49A] rounded-full px-4 py-1.5">
-            <span className="text-sm text-[#C97B3A]">
-              Hundreds of schools · Multiple transfer guides · Updated 2026
+              Built by LA parents, for LA parents
             </span>
           </div>
 

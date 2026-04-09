@@ -829,7 +829,7 @@ export default function SchoolReport({
             {!isGuide && <span className={styles.metaPill}>Grades {school.grades}</span>}
             {!isGuide && <span className={styles.metaPill}>~{(school.enrollment ?? 0).toLocaleString()} Students</span>}
             {isGuide && <span className={styles.metaPill}>Comprehensive guide · {data.total_sections ?? sections.length} chapters</span>}
-            {isGuide && <span className={styles.metaPill}>Updated {new Date(data.generated_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}</span>}
+            {/* date intentionally not displayed */}
             {isGuide && school.reportData && <span className={styles.metaPill}>{school.reportData._guide_read_time ?? calculateReadTime(school.reportData)} min read</span>}
             {isGuide && school.reportData && <span className={styles.metaPill}>{school.reportData._guide_source_count ?? calculateSourceCount(school.reportData)}+ sources</span>}
             {!isGuide && accentStats.map((s, i) => (

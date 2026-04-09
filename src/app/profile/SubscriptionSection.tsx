@@ -46,17 +46,20 @@ function PortalButton({
 export default function SubscriptionSection() {
   // Always read from context — never from a prop — so confirmAccess() updates
   // are reflected immediately without re-mounting this component.
-  const { profile, refreshProfile } = useAuth()
+  const { profile, refreshProfile, loading: authLoading } = useAuth()
   useEffect(() => { refreshProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [portalLoading, setPortalLoading] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
 
-  // Prevent indefinite spinner on iOS where profile may never resolve
+  // Only start the error timeout after auth finishes loading — prevents the
+  // "Could not load plan info" message on desktop where the component mounts
+  // before the auth context has resolved the session.
   useEffect(() => {
+    if (authLoading) return
     const t = setTimeout(() => setTimedOut(true), 5000)
     return () => clearTimeout(t)
-  }, [])
+  }, [authLoading])
 
   async function handleManageSubscription() {
     setPortalLoading(true)
@@ -69,9 +72,9 @@ export default function SubscriptionSection() {
     }
   }
 
-  if (!profile) return (
+  if (authLoading || !profile) return (
     <div className="text-sm text-gray-500">
-      {timedOut ? 'Could not load plan info. Try refreshing.' : 'Loading plan info…'}
+      {(!authLoading && timedOut) ? 'Could not load plan info. Try refreshing.' : 'Loading plan info…'}
     </div>
   )
 
