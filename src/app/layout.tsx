@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import { Suspense } from 'react'
 import { AuthProvider } from '@/lib/auth-context'
@@ -28,6 +29,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link
           href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=DM+Mono:wght@400;500&display=swap"
           rel="stylesheet"
+        />
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=AW-18077175745" />
+        <Script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-18077175745');
+            `,
+          }}
         />
       </head>
       <body className="bg-cream text-charcoal antialiased">
