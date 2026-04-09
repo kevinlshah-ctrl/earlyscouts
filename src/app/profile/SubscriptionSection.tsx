@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 import { useAuth } from '@/lib/auth-context'
-import { getBrowserClient } from '@/lib/supabase-browser'
 import type { UserProfile } from '@/lib/auth-context'
 
 function formatDate(iso: string): string {
@@ -75,21 +75,41 @@ export default function SubscriptionSection() {
       return
     }
 
-    setPlanLoading(true)
-    getBrowserClient()
-      .from('user_profiles')
-      .select('plan_type, subscription_status, access_expires_at')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }: { data: Record<string, unknown> | null }) => {
-        setPlan({
-          tier:      ((data?.plan_type as UserProfile['subscription_tier']) ?? 'free'),
-          status:    ((data?.subscription_status as UserProfile['subscription_status']) ?? null),
-          expiresAt: (data?.access_expires_at as string | null) ?? null,
-        })
+    let cancelled = false
+
+    async function fetchPlan() {
+      // Fresh client — bypasses the shared singleton's custom cookieOptions so
+      // the session cookies are read with default domain matching (works on all
+      // environments). The singleton in supabase-browser.ts uses domain:
+      // 'earlyscouts.com' which can prevent cookies from being sent on localhost.
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('plan_type, access_expires_at, subscription_status, stripe_customer_id')
+        .eq('id', user!.id)
+        .single()
+
+      if (cancelled) return
+
+      if (error || !data) {
         setPlanLoading(false)
+        return
+      }
+
+      const row = data as Record<string, unknown>
+      setPlan({
+        tier:      ((row.plan_type as UserProfile['subscription_tier']) ?? 'free'),
+        status:    ((row.subscription_status as UserProfile['subscription_status']) ?? null),
+        expiresAt: (row.access_expires_at as string | null) ?? null,
       })
-      .catch(() => { setPlanLoading(false) })
+      setPlanLoading(false)
+    }
+
+    fetchPlan()
+    return () => { cancelled = true }
   }, [user, authLoading])
 
   async function handleManageSubscription() {
