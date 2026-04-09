@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { getBrowserClient } from '@/lib/supabase-browser'
+import type { UserProfile } from '@/lib/auth-context'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -43,23 +45,48 @@ function PortalButton({
   )
 }
 
-export default function SubscriptionSection() {
-  // Always read from context — never from a prop — so confirmAccess() updates
-  // are reflected immediately without re-mounting this component.
-  const { profile, refreshProfile, loading: authLoading } = useAuth()
-  useEffect(() => { refreshProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+type PlanInfo = {
+  tier: UserProfile['subscription_tier']
+  status: UserProfile['subscription_status']
+  expiresAt: string | null
+}
 
+export default function SubscriptionSection() {
+  // Fetch plan data directly via the browser Supabase client rather than
+  // depending on the auth context's async profile-load chain. This is more
+  // reliable on desktop where onAuthStateChange + fetchProfile can race with
+  // the component mounting.
+  const { user } = useAuth()
+
+  const [plan, setPlan]         = useState<PlanInfo | null>(null)
+  const [planLoading, setPlanLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
 
-  // Only start the error timeout after auth finishes loading — prevents the
-  // "Could not load plan info" message on desktop where the component mounts
-  // before the auth context has resolved the session.
   useEffect(() => {
-    if (authLoading) return
-    const t = setTimeout(() => setTimedOut(true), 5000)
+    if (!user) return
+    setPlanLoading(true)
+    getBrowserClient()
+      .from('user_profiles')
+      .select('plan_type, subscription_status, access_expires_at')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }: { data: Record<string, unknown> | null }) => {
+        setPlan({
+          tier:      ((data?.plan_type as UserProfile['subscription_tier']) ?? 'free'),
+          status:    ((data?.subscription_status as UserProfile['subscription_status']) ?? null),
+          expiresAt: (data?.access_expires_at as string | null) ?? null,
+        })
+        setPlanLoading(false)
+      })
+      .catch(() => { setPlanLoading(false) })
+  }, [user])
+
+  // Safety timeout — shows an actionable error if the query never resolves
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 8000)
     return () => clearTimeout(t)
-  }, [authLoading])
+  }, [])
 
   async function handleManageSubscription() {
     setPortalLoading(true)
@@ -72,15 +99,15 @@ export default function SubscriptionSection() {
     }
   }
 
-  if (authLoading || !profile) return (
-    <div className="text-sm text-gray-500">
-      {(!authLoading && timedOut) ? 'Could not load plan info. Try refreshing.' : 'Loading plan info…'}
-    </div>
+  if (planLoading && !timedOut) return (
+    <div className="text-sm text-gray-500">Loading plan info…</div>
   )
 
-  const tier      = profile.subscription_tier
-  const status    = profile.subscription_status
-  const expiresAt = profile.access_expires_at
+  if (!plan) return (
+    <div className="text-sm text-gray-500">Could not load plan info. Try refreshing.</div>
+  )
+
+  const { tier, status, expiresAt } = plan
 
   // ── Free ─────────────────────────────────────────────────────────────────
   if (tier === 'free') {

@@ -82,8 +82,24 @@ export default async function GuidePage({ params }: { params: { slug: string } }
   }
 
   // ── Paid path: send full content ────────────────────────────────────────
+  // Pre-compute metrics server-side so the detail page header always matches
+  // the listing page. Client-side fallback can give different results due to
+  // Next.js server→client prop serialisation of large JSON objects.
   if (hasAccess) {
-    return <SchoolReport school={school} />
+    const fullReadTime    = school.reportData ? calculateReadTime(school.reportData) : 0
+    const fullSourceCount = school.reportData ? calculateSourceCount(school.reportData) : 0
+    const schoolWithMetrics: School = {
+      ...school,
+      reportData: school.reportData
+        ? {
+            ...school.reportData,
+            total_sections:      school.reportData.sections.length,
+            _guide_read_time:    fullReadTime,
+            _guide_source_count: fullSourceCount,
+          }
+        : null,
+    }
+    return <SchoolReport school={schoolWithMetrics} />
   }
 
   // ── Gated path: strip content server-side before it reaches the client ──
