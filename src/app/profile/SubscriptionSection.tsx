@@ -52,19 +52,29 @@ type PlanInfo = {
 }
 
 export default function SubscriptionSection() {
-  // Fetch plan data directly via the browser Supabase client rather than
-  // depending on the auth context's async profile-load chain. This is more
-  // reliable on desktop where onAuthStateChange + fetchProfile can race with
-  // the component mounting.
-  const { user } = useAuth()
+  // authLoading stays true until INITIAL_SESSION fires (or the 5s safety timer
+  // in auth-context.tsx forces it false). We gate the profile query on it so we
+  // don't attempt the fetch before the auth state is settled, and so we show the
+  // error state immediately (instead of waiting for a separate timeout) if auth
+  // resolves but there's no user.
+  const { user, loading: authLoading } = useAuth()
 
   const [plan, setPlan]         = useState<PlanInfo | null>(null)
   const [planLoading, setPlanLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
-  const [timedOut, setTimedOut] = useState(false)
+  // (no local timeout needed — auth-context.tsx has a 5s safety timer that guarantees
+  //  authLoading becomes false, which unblocks the effect above)
 
   useEffect(() => {
-    if (!user) return
+    // Wait for auth to finish bootstrapping (normal path <100ms; safety timer ≤5s)
+    if (authLoading) return
+
+    if (!user) {
+      // Auth resolved but no session — can't fetch plan
+      setPlanLoading(false)
+      return
+    }
+
     setPlanLoading(true)
     getBrowserClient()
       .from('user_profiles')
@@ -80,13 +90,7 @@ export default function SubscriptionSection() {
         setPlanLoading(false)
       })
       .catch(() => { setPlanLoading(false) })
-  }, [user])
-
-  // Safety timeout — shows an actionable error if the query never resolves
-  useEffect(() => {
-    const t = setTimeout(() => setTimedOut(true), 8000)
-    return () => clearTimeout(t)
-  }, [])
+  }, [user, authLoading])
 
   async function handleManageSubscription() {
     setPortalLoading(true)
@@ -99,7 +103,7 @@ export default function SubscriptionSection() {
     }
   }
 
-  if (planLoading && !timedOut) return (
+  if (planLoading) return (
     <div className="text-sm text-gray-500">Loading plan info…</div>
   )
 

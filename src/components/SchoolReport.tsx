@@ -829,9 +829,7 @@ export default function SchoolReport({
             {!isGuide && <span className={styles.metaPill}>Grades {school.grades}</span>}
             {!isGuide && <span className={styles.metaPill}>~{(school.enrollment ?? 0).toLocaleString()} Students</span>}
             {isGuide && <span className={styles.metaPill}>Comprehensive guide · {data.total_sections ?? sections.length} chapters</span>}
-            {/* date intentionally not displayed */}
-            {isGuide && school.reportData && <span className={styles.metaPill}>{school.reportData._guide_read_time ?? calculateReadTime(school.reportData)} min read</span>}
-            {isGuide && school.reportData && <span className={styles.metaPill}>{school.reportData._guide_source_count ?? calculateSourceCount(school.reportData)}+ sources</span>}
+            {/* read time / source count shown on listing page only — not repeated here */}
             {!isGuide && accentStats.map((s, i) => (
               <span key={i} className={`${styles.metaPill} ${styles.metaPillAccent}`}>{s.label} {s.value}</span>
             ))}
