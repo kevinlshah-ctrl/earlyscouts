@@ -2,6 +2,8 @@ import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
 import { createServerClient } from '@/lib/supabase'
+import { ReportMetaBadges } from '@/components/ReportMetaBadges'
+import type { ReportData } from '@/lib/types'
 
 export const metadata = {
   title: 'Guides | EarlyScouts',
@@ -22,10 +24,7 @@ type GuideRow = {
   slug: string
   name: string
   district: string | null
-  report_data: {
-    sections?: Array<{ subtitle?: string }>
-    verdict?: { best_for?: string }
-  } | null
+  report_data: ReportData | null
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -97,6 +96,9 @@ export default async function GuidesPage() {
                     </h2>
                     {description && (
                       <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+                    )}
+                    {guide.report_data && (
+                      <ReportMetaBadges reportData={guide.report_data} size="sm" />
                     )}
                     <span className="text-xs font-semibold text-peach mt-1">Read the guide →</span>
                   </Link>

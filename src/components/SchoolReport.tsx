@@ -22,6 +22,7 @@ import type {
 import styles from './SchoolReport.module.css'
 import Footer from './Footer'
 import { useAuth, hasActiveAccess } from '@/lib/auth-context'
+import { calculateReadTime, calculateSourceCount } from '@/lib/report-metrics'
 import CheckoutButton from '@/app/pricing/CheckoutButton'
 
 // ── Slug resolution — maps short/legacy slugs to actual database IDs ─────────
@@ -729,6 +730,8 @@ export default function SchoolReport({
             {!isGuide && <span className={styles.metaPill}>~{(school.enrollment ?? 0).toLocaleString()} Students</span>}
             {isGuide && <span className={styles.metaPill}>Comprehensive guide · {data.total_sections ?? sections.length} chapters</span>}
             {isGuide && <span className={styles.metaPill}>Updated {new Date(data.generated_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}</span>}
+            {isGuide && school.reportData && <span className={styles.metaPill}>{calculateReadTime(school.reportData)} min read</span>}
+            {isGuide && school.reportData && <span className={styles.metaPill}>{calculateSourceCount(school.reportData)}+ sources</span>}
             {!isGuide && accentStats.map((s, i) => (
               <span key={i} className={`${styles.metaPill} ${styles.metaPillAccent}`}>{s.label} {s.value}</span>
             ))}
