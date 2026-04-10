@@ -84,8 +84,9 @@ const STAT_TOOLTIPS: Record<string, string> = {
   'Math':                       "The % of students who scored 'proficient' or above on the California CAASPP math test. The LAUSD average is 37% and the CA average is also 37%. A score of 60%+ is strong; 80%+ is exceptional.",
   'Math Proficiency':           "The % of students who scored 'proficient' or above on the California CAASPP math test. The LAUSD average is 37% and the CA average is also 37%. A score of 60%+ is strong; 80%+ is exceptional.",
   'Reading':                    "The % of students who scored 'proficient' or above on the California CAASPP English Language Arts test. The LAUSD average is 46% and the CA average is 49%.",
-  'ELA':                        "The % of students who scored 'proficient' or above on the California CAASPP English Language Arts test. The LAUSD average is 46% and the CA average is 49%.",
-  'ELA Proficiency':            "The % of students who scored 'proficient' or above on the California CAASPP English Language Arts test. The LAUSD average is 46% and the CA average is 49%.",
+  'ELA':                        "English Language Arts — the % of students who scored 'proficient' or above on California's CAASPP SBAC assessment, measuring reading, writing, and language proficiency. The LAUSD average is 46% and the CA average is 49%.",
+  'Reading / ELA':              "English Language Arts — the % of students who scored 'proficient' or above on California's CAASPP SBAC assessment, measuring reading, writing, and language proficiency. The LAUSD average is 46% and the CA average is 49%.",
+  'ELA Proficiency':            "English Language Arts — the % of students who scored 'proficient' or above on California's CAASPP SBAC assessment, measuring reading, writing, and language proficiency. The LAUSD average is 46% and the CA average is 49%.",
   'Science':                    "The % proficient on the CA CAST science assessment. LAUSD average is 27%, CA average is 33%. Tested in 5th and 8th grade only.",
   'Science Proficiency':        "The % proficient on the CA CAST science assessment. LAUSD average is 27%, CA average is 33%. Tested in 5th and 8th grade only.",
   'Student:Teacher':            "Students per full-time teacher. Lower means more individual attention. The CA average is 21:1. This is a school-wide ratio; actual class size may be higher.",
@@ -191,21 +192,41 @@ function RenderCallout({ block }: { block: CalloutBlock }) {
   )
 }
 
+/** Returns true if the value looks like a URL or bare domain (e.g. "apply.lausd.net") */
+function looksLikeUrl(v: string): boolean {
+  return /^https?:\/\//i.test(v) || /^[^\s]+\.[a-z]{2,}/i.test(v)
+}
+
 function RenderStatsGrid({ block }: { block: StatsGridBlock }) {
   return (
     <div className={styles.statsGrid}>
-      {block.items.map((item, i) => (
-        <div key={i} className={styles.statBox}>
-          <div className={styles.statLabel}>
-            {item.label}
-            <StatTooltip label={item.label} />
+      {block.items.map((item, i) => {
+        const isUrl = looksLikeUrl(item.value)
+        const href = isUrl
+          ? (item.value.startsWith('http') ? item.value : `https://${item.value}`)
+          : null
+        return (
+          <div key={i} className={styles.statBox}>
+            <div className={styles.statLabel}>
+              {item.label}
+              <StatTooltip label={item.label} />
+            </div>
+            <div className={`${styles.statValue} ${item.green ? styles.statValueGreen : ''} ${isUrl ? styles.statValueUrl : ''}`}>
+              {href ? (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.statValueLink}
+                >
+                  {item.value}
+                </a>
+              ) : item.value}
+            </div>
+            {item.context && <div className={styles.statContext}>{item.context}</div>}
           </div>
-          <div className={`${styles.statValue} ${item.green ? styles.statValueGreen : ''}`}>
-            {item.value}
-          </div>
-          {item.context && <div className={styles.statContext}>{item.context}</div>}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
