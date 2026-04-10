@@ -589,6 +589,10 @@ export default function SchoolReport({
     ? '/guides'
     : (() => { const h = getNeighborhoodForSlug(school.slug); return h ? `/schools?q=${h}` : '/schools' })()
 
+  // "Schools" nav link inside SchoolReport's own header — always points to the
+  // browse page (not /guides), but with the neighborhood param when on a school page.
+  const schoolsNavHref = isGuide ? '/schools' : backHref
+
   const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? 'AIzaSyCkqvCW3lrcveaWyD7MgNNYlucMzFH-C3s'
   const heroTyped = hero as import('@/lib/types').ReportHero
   const svQuery  = heroTyped.street_view_query || school.address || `${school.city}, CA`
@@ -703,7 +707,7 @@ export default function SchoolReport({
             Early<span>Scouts</span>
           </Link>
           <nav className={styles.siteHeaderNav}>
-            <Link href="/schools" className={styles.siteHeaderLink}>Schools</Link>
+            <Link href={schoolsNavHref} className={styles.siteHeaderLink}>Schools</Link>
             <Link href="/guides" className={styles.siteHeaderLink}>Guides</Link>
             <Link href="/pricing" className={styles.siteHeaderLink}>Pricing</Link>
             <Link href="/about" className={styles.siteHeaderLink}>About</Link>
@@ -865,7 +869,7 @@ export default function SchoolReport({
       <div className={styles.breadcrumb}>
         {isGuide
           ? <Link href="/guides" className={styles.breadcrumbLink}>← All Guides</Link>
-          : <Link href="/schools" className={styles.breadcrumbLink}>← All Schools</Link>
+          : <Link href={backHref} className={styles.breadcrumbLink}>← All Schools</Link>
         }
         <span className={styles.breadcrumbSep}>/</span>
         <span className={styles.breadcrumbCurrent}>{school.name}</span>

@@ -10,6 +10,7 @@ import { generateGCalLink, formatTourDate } from '@/lib/tour-calendar'
 import type { RelatedSchool, RelatedSchoolsResponse } from '@/app/api/schools/[id]/related/route'
 import SchoolReport from '@/components/SchoolReport'
 import FollowButton from '@/components/FollowButton'
+import { getNeighborhoodForSlug } from '@/data/neighborhood-schools'
 
 type Tab = 'overview' | 'report' | 'academics' | 'intel' | 'feeder' | 'community' | 'programs' | 'enrollment'
 
@@ -502,6 +503,7 @@ function ScoutAnalysis({ academics }: { academics: AcademicsData }) {
 export default function SchoolDetailPage({ serverGrantedAccess = false }: { serverGrantedAccess?: boolean }) {
   const params = useParams()
   const slug = params?.slug as string
+  const schoolsHref = (() => { const h = getNeighborhoodForSlug(slug); return h ? `/schools?q=${h}` : '/schools' })()
 
   const [school, setSchool] = useState<School | null>(null)
   const [loading, setLoading] = useState(true)
@@ -622,7 +624,7 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
         <div className="min-h-screen flex flex-col items-center justify-center gap-4">
           <div className="text-4xl">🔍</div>
           <h1 className="font-serif text-2xl text-charcoal">School not found</h1>
-          <Link href="/schools" className="text-scout-green hover:underline text-sm">
+          <Link href={schoolsHref} className="text-scout-green hover:underline text-sm">
             Back to Schools
           </Link>
         </div>
@@ -669,7 +671,7 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
       {/* School header */}
       <section className="bg-charcoal py-10 px-4">
         <div className="max-w-4xl mx-auto">
-          <Link href="/schools" className="text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors mb-4 inline-block">
+          <Link href={schoolsHref} className="text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors mb-4 inline-block">
             &larr; Back to Schools
           </Link>
           <div className="flex items-start gap-4 flex-wrap">
