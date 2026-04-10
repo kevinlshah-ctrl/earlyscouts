@@ -197,28 +197,41 @@ function looksLikeUrl(v: string): boolean {
   return /^https?:\/\//i.test(v) || /^[^\s]+\.[a-z]{2,}/i.test(v)
 }
 
+/** Font-size tier based on character count — prevents long words from overflowing. */
+function valueSizeClass(v: string): string {
+  if (v.length <= 6)  return styles.statValueShort  // "63%", "9/10", "Top 5%"
+  if (v.length <= 12) return styles.statValueMed    // "Top 10%", "9-10 months"
+  return styles.statValueLong                        // "Grandparent", "Employment only"
+}
+
 function RenderStatsGrid({ block }: { block: StatsGridBlock }) {
+  // 5+ items = use the wider-minimum compact grid (e.g. 10-tier priority tables)
+  const gridClass = block.items.length > 4
+    ? `${styles.statsGrid} ${styles.statsGridCompact}`
+    : styles.statsGrid
+
   return (
-    <div className={styles.statsGrid}>
+    <div className={gridClass}>
       {block.items.map((item, i) => {
         const isUrl = looksLikeUrl(item.value)
         const href = isUrl
           ? (item.value.startsWith('http') ? item.value : `https://${item.value}`)
           : null
+        const valueClass = [
+          styles.statValue,
+          item.green ? styles.statValueGreen : '',
+          isUrl ? styles.statValueUrl : valueSizeClass(item.value),
+        ].filter(Boolean).join(' ')
+
         return (
           <div key={i} className={styles.statBox}>
             <div className={styles.statLabel}>
-              {item.label}
+              <span className={styles.statLabelText}>{item.label}</span>
               <StatTooltip label={item.label} />
             </div>
-            <div className={`${styles.statValue} ${item.green ? styles.statValueGreen : ''} ${isUrl ? styles.statValueUrl : ''}`}>
+            <div className={valueClass}>
               {href ? (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.statValueLink}
-                >
+                <a href={href} target="_blank" rel="noopener noreferrer" className={styles.statValueLink}>
                   {item.value}
                 </a>
               ) : item.value}

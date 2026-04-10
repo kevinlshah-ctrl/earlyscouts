@@ -662,9 +662,14 @@
 /* ─── Stats Grid ─── */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
   gap: 12px;
   margin: 28px 0;
+}
+/* Large grids (5+ items, e.g. 10-tier priority tables): wider minimum so
+   cards don't get too narrow and each value has room to breathe. */
+.statsGridCompact {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 .statBox {
   background: white;
@@ -683,22 +688,35 @@
   text-transform: uppercase;
   color: #9B9690;
   margin-bottom: 6px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 4px;
+  max-width: 100%;
+}
+/* Span wrapping the label text — truncates with ellipsis if too long */
+.statLabelText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .statValue {
-  font-size: 26px;
   font-weight: 700;
   color: #1A1A2E;
-  line-height: 1.1;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  line-height: 1.15;
+  /* break-word: only breaks within a word if it would otherwise overflow.
+     Never break-all / anywhere — those split syllables mid-word. */
+  overflow-wrap: break-word;
 }
+/* Font-size tiers — applied based on value character length in the JSX */
+.statValueShort { font-size: 26px; }            /* ≤6 chars:  "63%", "9/10"   */
+.statValueMed   { font-size: 20px; }            /* 7-12 chars: "Top 10%"       */
+.statValueLong  { font-size: 15px; font-weight: 600; } /* 13+ chars: "Grandparent" */
 .statValueGreen {
   color: #2D6A4F;
 }
-/* URL values: smaller font so the domain fits, ellipsis as safety net */
+/* URL values: same size as long text, underlined link with ellipsis fallback */
 .statValueUrl {
   font-size: 15px;
   font-weight: 600;
@@ -1297,6 +1315,7 @@
   .sectionTitle { font-size: 25px; }
   .tocList { columns: 1; }
   .statsGrid { grid-template-columns: 1fr 1fr; }
+  .statsGridCompact { grid-template-columns: repeat(3, 1fr); }
   .photoGrid { grid-template-columns: 1fr; }
   .photoGridImg { height: 180px; }
   .compTable { font-size: 12px; }
