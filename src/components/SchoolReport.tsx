@@ -24,6 +24,7 @@ import styles from './SchoolReport.module.css'
 import Footer from './Footer'
 import { useAuth, hasActiveAccess } from '@/lib/auth-context'
 import { calculateReadTime, calculateSourceCount } from '@/lib/report-metrics'
+import { getNeighborhoodForSlug } from '@/data/neighborhood-schools'
 import CheckoutButton from '@/app/pricing/CheckoutButton'
 
 // ── Slug resolution — maps short/legacy slugs to actual database IDs ─────────
@@ -582,6 +583,12 @@ export default function SchoolReport({
   const isGuide = school.slug.includes('playbook') || school.slug.includes('blueprint') ||
     school.name.toLowerCase().includes('blueprint') || school.name.toLowerCase().includes('playbook')
 
+  // Back-link: for school reports, include the neighborhood ?q= param so the
+  // filter is pre-selected when the user returns to the browse page.
+  const backHref = isGuide
+    ? '/guides'
+    : (() => { const h = getNeighborhoodForSlug(school.slug); return h ? `/schools?q=${h}` : '/schools' })()
+
   const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? 'AIzaSyCkqvCW3lrcveaWyD7MgNNYlucMzFH-C3s'
   const heroTyped = hero as import('@/lib/types').ReportHero
   const svQuery  = heroTyped.street_view_query || school.address || `${school.city}, CA`
@@ -796,7 +803,7 @@ export default function SchoolReport({
       {/* ── Back link ── */}
       <div className="px-5 pt-3 pb-1">
         <Link
-          href={isGuide ? '/guides' : '/schools'}
+          href={backHref}
           className="text-xs font-semibold text-[#5B9A6F] hover:underline"
         >
           ← {isGuide ? 'Back to Guides' : 'Back to Schools'}

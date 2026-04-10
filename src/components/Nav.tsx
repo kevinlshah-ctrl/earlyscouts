@@ -2,15 +2,28 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { getNeighborhoodForSlug } from '@/data/neighborhood-schools'
 
 export default function Nav() {
   const router                              = useRouter()
+  const pathname                            = usePathname()
   const [mobileOpen,   setMobileOpen]       = useState(false)
   const [dropdownOpen, setDropdownOpen]     = useState(false)
   const dropdownRef                         = useRef<HTMLDivElement>(null)
   const { user, profile, loading, signOut } = useAuth()
+
+  // On school detail pages, link "Schools" back to the school's neighborhood filter
+  // so the user lands on a pre-filtered browse page rather than an empty one.
+  const schoolsHref = (() => {
+    const m = pathname.match(/^\/schools\/(.+)$/)
+    if (m) {
+      const hood = getNeighborhoodForSlug(m[1])
+      if (hood) return `/schools?q=${hood}`
+    }
+    return '/schools'
+  })()
 
   // Cap loading skeleton at 500ms — after that, render the logged-out state rather
   // than leave the nav blank while fetchProfile is still in-flight (e.g. after
@@ -58,7 +71,7 @@ export default function Nav() {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/schools"  className="text-sm font-medium text-charcoal hover:text-scout-green transition-colors">Schools</Link>
+            <Link href={schoolsHref}  className="text-sm font-medium text-charcoal hover:text-scout-green transition-colors">Schools</Link>
             <Link href="/guides"   className="text-sm font-medium text-charcoal hover:text-scout-green transition-colors">Guides</Link>
             <Link href="/pricing"  className="text-sm font-medium text-charcoal hover:text-scout-green transition-colors">Pricing</Link>
             <Link href="/about"    className="text-sm font-medium text-charcoal hover:text-scout-green transition-colors">About</Link>
@@ -115,7 +128,7 @@ export default function Nav() {
                   Sign In
                 </Link>
                 <Link
-                  href="/schools"
+                  href={schoolsHref}
                   className="text-sm font-medium text-cream bg-scout-green hover:bg-scout-green-dark transition-colors px-4 py-2 rounded-full"
                 >
                   Browse Schools
@@ -139,7 +152,7 @@ export default function Nav() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden border-t border-gray-100 py-4 flex flex-col gap-3">
-            <Link href="/schools"  className="text-sm font-medium text-charcoal hover:text-scout-green px-2 py-1" onClick={() => setMobileOpen(false)}>Schools</Link>
+            <Link href={schoolsHref}  className="text-sm font-medium text-charcoal hover:text-scout-green px-2 py-1" onClick={() => setMobileOpen(false)}>Schools</Link>
             <Link href="/guides"   className="text-sm font-medium text-charcoal hover:text-scout-green px-2 py-1" onClick={() => setMobileOpen(false)}>Guides</Link>
             <Link href="/pricing"  className="text-sm font-medium text-charcoal hover:text-scout-green px-2 py-1" onClick={() => setMobileOpen(false)}>Pricing</Link>
             <Link href="/about"    className="text-sm font-medium text-charcoal hover:text-scout-green px-2 py-1" onClick={() => setMobileOpen(false)}>About</Link>
@@ -164,7 +177,7 @@ export default function Nav() {
               ) : (
                 <>
                   <Link href="/signin"     className="text-sm font-medium text-charcoal text-center py-2 border border-gray-200 rounded-full" onClick={() => setMobileOpen(false)}>Sign In</Link>
-                  <Link href="/schools" className="text-sm font-medium text-cream bg-scout-green text-center py-2 rounded-full"              onClick={() => setMobileOpen(false)}>Browse Schools</Link>
+                  <Link href={schoolsHref} className="text-sm font-medium text-cream bg-scout-green text-center py-2 rounded-full"              onClick={() => setMobileOpen(false)}>Browse Schools</Link>
                 </>
               )}
             </div>

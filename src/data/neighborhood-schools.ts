@@ -569,6 +569,21 @@ export const NEIGHBORHOOD_LABEL_TO_ID: Record<string, string> = Object.fromEntri
   NEIGHBORHOOD_LIST.map((n) => [n.label, n.id])
 )
 
+/** Find the first neighborhood ID that contains this school/guide slug */
+export function getNeighborhoodForSlug(slug: string): string | null {
+  for (const [id, hood] of Object.entries(NEIGHBORHOOD_SCHOOLS)) {
+    const allSlugs = [
+      ...hood.elementarySlugs,
+      ...hood.middleSlugs,
+      ...hood.highSlugs,
+      ...hood.playbookSlugs,
+      ...(hood.privateSlugs ?? []),
+    ]
+    if (allSlugs.includes(slug)) return id
+  }
+  return null
+}
+
 /** Get all slugs across all neighborhoods (for DEEP_DIVE_SLUGS validation) */
 export function getAllDeepDiveSlugs(): Set<string> {
   const slugs = new Set<string>()
