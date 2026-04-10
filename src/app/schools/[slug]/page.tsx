@@ -2,6 +2,9 @@ import { createServerClient } from '@/lib/supabase'
 import { createAuthServerClient } from '@/lib/supabase-server'
 import SchoolDetailPage from './SchoolPageClient'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 /**
  * Thin server wrapper — runs the same access check as the guide page so that
  * premium users see content immediately without waiting for the client-side
