@@ -652,6 +652,9 @@ export default function SchoolReport({
   const hero = data.hero ?? {}
   const quick_stats = data.quick_stats ?? []
   const sections = data.sections ?? []
+  const activeAlerts = (data.alerts ?? []).filter(
+    a => !a.expires_at || new Date(a.expires_at) > new Date()
+  )
   const verdict = data.verdict ?? { paragraphs: [], best_for: '', consider_alternatives: '' }
 
   // isGuide must be computed first — used to skip satellite image for playbooks/blueprints
@@ -971,15 +974,15 @@ export default function SchoolReport({
       )}
 
       {/* ── Alerts ── */}
-      {data.alerts && data.alerts.length > 0 && (
-        <AlertsCard alerts={data.alerts} />
+      {activeAlerts.length > 0 && (
+        <AlertsCard alerts={activeAlerts} />
       )}
 
       {/* ── Sections ── */}
       {isPaid ? (
         // Full access — first section eager, rest lazy-rendered via IntersectionObserver
         sections.map((section, i) => (
-          <LazySection key={section.id} section={section} alerts={data.alerts ?? []} eager={i === 0} />
+          <LazySection key={section.id} section={section} alerts={activeAlerts} eager={i === 0} />
         ))
       ) : (
         // Free preview — free sections, optional guide extras, paywall card, locked sections
@@ -998,7 +1001,7 @@ export default function SchoolReport({
                      tag.includes('pipeline') || tag.includes('feeder')
             })
             .map(section => (
-              <ReportSectionComp key={section.id} section={section} alerts={data.alerts ?? []} />
+              <ReportSectionComp key={section.id} section={section} alerts={activeAlerts} />
             ))
           }
 
@@ -1114,7 +1117,7 @@ export default function SchoolReport({
                 </div>
                 <div className={styles.lockedSectionPreview} aria-hidden="true">
                   <div className={styles.lockedSectionContent}>
-                    <ReportSectionComp section={section} alerts={data.alerts ?? []} />
+                    <ReportSectionComp section={section} alerts={activeAlerts} />
                   </div>
                   <div className={styles.lockedSectionFade} />
                 </div>

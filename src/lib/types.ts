@@ -256,6 +256,7 @@ export interface AlertItem {
   text: string
   cta_text?: string
   cta_url?: string
+  expires_at?: string  // ISO date string — alert is hidden after this date
 }
 
 export interface RelatedSchoolItem {
