@@ -2,26 +2,13 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /**
- * 1. Non-www → www redirect for browser traffic (API routes excluded so
- *    Stripe webhooks and other external callers that don't follow redirects
- *    are never bounced with a 307/308).
- * 2. Refreshes the Supabase session token on every request.
+ * Refreshes the Supabase session token on every request.
+ *
+ * www → apex redirect is handled at the Vercel domain level (not here).
+ * A code-level redirect in the same direction would create an infinite loop.
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // ── Non-www → www redirect ─────────────────────────────────────────────────
-  // Stripe, payment processors, and crawlers must never receive a redirect on
-  // /api/* routes — they won't follow it, causing silent failures (e.g. webhook
-  // 307s that Stripe marks as failed).  Browser-facing pages are fine to redirect.
-  const host = request.headers.get('host') ?? ''
-  const isApex = host === 'earlyscouts.com' || host.startsWith('earlyscouts.com:')
-  const isApiRoute = pathname.startsWith('/api/') || pathname.startsWith('/auth/')
-  if (isApex && !isApiRoute) {
-    const wwwUrl = request.nextUrl.clone()
-    wwwUrl.host = `www.${host.split(':')[0]}${host.includes(':') ? `:${host.split(':')[1]}` : ''}`
-    return NextResponse.redirect(wwwUrl, { status: 308 })
-  }
 
   // ── Supabase session refresh ───────────────────────────────────────────────
   // Start with a plain pass-through response; cookie writes below mutate it.

@@ -566,9 +566,11 @@ function RelatedSchools({ schools }: { schools: RelatedSchoolItem[] }) {
 export default function SchoolReport({
   school,
   forcePaywall = false,
+  serverGrantedAccess = false,
 }: {
   school: School
   forcePaywall?: boolean
+  serverGrantedAccess?: boolean
 }) {
   const data = school.reportData!
   const hero = data.hero ?? {}
@@ -602,7 +604,7 @@ export default function SchoolReport({
   // treat as paid to prevent the paywall from flashing before the DB update lands.
   // authLoading is true until INITIAL_SESSION fires — prevents paywall flash on
   // slow connections / iOS where profile hasn't loaded yet on first render.
-  const isPaid = !forcePaywall && (isGuide || authLoading || hasActiveAccess(profile) || isConfirmingAccess)
+  const isPaid = !forcePaywall && (isGuide || serverGrantedAccess || authLoading || hasActiveAccess(profile) || isConfirmingAccess)
 
   // ── Debug: log access state whenever it changes ───────────────────────────
   useEffect(() => {

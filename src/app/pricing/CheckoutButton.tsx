@@ -107,10 +107,10 @@ function AuthModal({
         setLoading(false)
         return
       }
-      // Defensive upsert — idempotent if DB trigger already created the row
+      // Defensive upsert — idempotent if DB trigger already created the row.
+      // Note: user_profiles has no email column — email lives in supabase.auth.
       await supabase.from('user_profiles').upsert({
         id:           data.user.id,
-        email:        data.user.email ?? email.trim().toLowerCase(),
         plan_type:    'free',
         display_name: (data.user.email ?? email).split('@')[0] || 'User',
       }, { onConflict: 'id', ignoreDuplicates: true })

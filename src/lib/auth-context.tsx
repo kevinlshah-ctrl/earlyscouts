@@ -174,17 +174,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         expiresAt &&
         new Date(expiresAt) > new Date()
       ) {
-        console.log(
-          '[confirmAccess] premium confirmed — current tier:',
-          profile?.subscription_tier ?? 'unknown',
-          '| setting subscription_tier=premium, access_expires_at=', expiresAt
-        )
-        setProfile(prev => {
-          if (!prev) return prev
-          const updated = { ...prev, subscription_tier: 'premium' as const, access_expires_at: expiresAt }
-          console.log('[confirmAccess] setProfile called — new tier:', updated.subscription_tier)
-          return updated
-        })
+        console.log('[confirmAccess] premium confirmed — updating profile state')
+        // Primary: re-fetch the full profile via the Supabase client. This works
+        // even when prev was null (profile still loading) because fetchProfile
+        // calls setProfile(normalized) unconditionally — unlike the old
+        // setProfile(prev => prev ? ... : prev) guard that silently no-oped.
+        const refreshed = await fetchProfile(user.id)
+        if (!refreshed) {
+          // Fallback: the Supabase browser client failed (e.g. IndexedDB lock).
+          // Build the profile directly from the full_profile row that
+          // /api/debug-profile already returned — no extra network hop needed.
+          const row = (data?.full_profile ?? {}) as Record<string, unknown>
+          setProfile({
+            id:                  user.id,
+            email:               '',
+            display_name:        (row.display_name        as string | null)                   ?? null,
+            followed_schools:    Array.isArray(row.followed_schools) ? (row.followed_schools as string[]) : [],
+            onboarding_data:     (row.onboarding_data     as Record<string, unknown> | null)  ?? null,
+            subscription_tier:   'premium' as UserProfile['subscription_tier'],
+            subscription_status: (row.subscription_status as UserProfile['subscription_status']) ?? null,
+            access_expires_at:   expiresAt,
+            stripe_customer_id:  (row.stripe_customer_id  as string | null)                   ?? null,
+            preferences:         (row.preferences         as Record<string, unknown> | null)  ?? null,
+            created_at:          (row.created_at           as string | undefined)              ?? '',
+            updated_at:          (row.updated_at           as string | undefined)              ?? new Date().toISOString(),
+          })
+        }
         setIsConfirmingAccess(false)
         return
       }
@@ -200,9 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // First check at 1.5s — gives the webhook time to fire
     setTimeout(poll, 1500)
-  // sessionTokenRef is a stable ref — no dep needed; profile read for logging only
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  // sessionTokenRef is a stable ref — excluded from deps intentionally.
+  }, [user, fetchProfile])
 
   // ── Post-checkout access confirmation ────────────────────────────────────────
   // CheckoutButton sets 'pendingAccessConfirm' in sessionStorage right before
