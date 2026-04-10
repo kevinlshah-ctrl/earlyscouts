@@ -1310,6 +1310,8 @@
   }
 
   .heroTitle { font-size: 28px; }
+  .heroTitleMed { font-size: 24px; }
+  .heroTitleLong { font-size: 20px; }
   .heroOverlay { padding: 28px 20px 24px; }
   .heroArea { min-height: 240px; }
   .scoutStrip { grid-template-columns: repeat(2, 1fr); margin: -16px 4px 0; }
