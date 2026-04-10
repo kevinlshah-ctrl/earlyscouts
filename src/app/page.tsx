@@ -43,6 +43,16 @@ export default function HomePage() {
             Scout Takes, and parent reviews — plus transfer playbooks that replace the $500 consultant.
           </p>
 
+          {/* Social proof */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex -space-x-1.5">
+              <span className="w-6 h-6 rounded-full bg-[#5B9A6F] border-2 border-[#FFFAF6] inline-block" />
+              <span className="w-6 h-6 rounded-full bg-[#F2945C] border-2 border-[#FFFAF6] inline-block" />
+              <span className="w-6 h-6 rounded-full bg-[#6BB3D9] border-2 border-[#FFFAF6] inline-block" />
+            </div>
+            <span className="text-sm text-[#9B9690]">Trusted by 250+ LA families navigating school choice</span>
+          </div>
+
           <div className="flex flex-wrap items-center justify-center gap-3 mt-1">
             <Link
               href="/schools"
