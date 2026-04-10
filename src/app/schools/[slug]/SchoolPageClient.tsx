@@ -528,12 +528,14 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
   const [related, setRelated] = useState<RelatedSchoolsResponse | null>(null)
   useEffect(() => {
     if (!slug) return
+    console.log('[DEBUG] Fetching school slug:', slug)
     fetch(`/api/schools/${slug}?t=${Date.now()}`)
       .then((r) => {
         if (!r.ok) throw new Error('Not found')
         return r.json()
       })
       .then((data) => {
+        console.log('[DEBUG] School data fetched:', data.reportData?.alerts?.length, 'alerts', data.reportData?.alerts?.map((a: { title: string }) => a.title))
         setSchool(data)
         setLoading(false)
         if (data?.name) document.title = `${data.name} | EarlyScouts`
