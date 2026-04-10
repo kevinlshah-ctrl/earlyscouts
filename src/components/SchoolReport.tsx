@@ -118,8 +118,26 @@ const STAT_TOOLTIPS: Record<string, string> = {
   'Sections':                   "The number of chapters in this guide. Designed to be read start-to-finish or used as a reference: permits, timelines, priority tiers, appeal processes, and more.",
 }
 
+// Abbreviation tooltips — triggered when the abbreviation appears anywhere in the label text.
+// Exact matches in STAT_TOOLTIPS above take priority (they have richer, label-specific descriptions).
+const ABBREV_TOOLTIPS: Record<string, string> = {
+  'ELA':  "English Language Arts — measures reading, writing, and language proficiency on California's SBAC assessment",
+  'FRPL': "Free or Reduced Price Lunch — a federal measure of economic need. Higher percentages indicate more students from lower-income families",
+  'SBAC': "Smarter Balanced Assessment Consortium — California's standardized testing system for grades 3–8 and 11",
+  'SAS':  "School for Advanced Studies — an LAUSD designation for schools with teachers trained to differentiate instruction for gifted learners",
+  'GATE': "Gifted and Talented Education — California's program for academically gifted students, identified through testing",
+}
+
+function getTooltipText(label: string): string | null {
+  if (STAT_TOOLTIPS[label]) return STAT_TOOLTIPS[label]
+  for (const [abbrev, tip] of Object.entries(ABBREV_TOOLTIPS)) {
+    if (new RegExp(`\\b${abbrev}\\b`).test(label)) return tip
+  }
+  return null
+}
+
 function StatTooltip({ label }: { label: string }) {
-  const tip = STAT_TOOLTIPS[label]
+  const tip = getTooltipText(label)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)
 
@@ -200,8 +218,8 @@ function looksLikeUrl(v: string): boolean {
 /** Font-size tier based on character count — prevents long words from overflowing. */
 function valueSizeClass(v: string): string {
   if (v.length <= 6)  return styles.statValueShort  // "63%", "9/10", "Top 5%"
-  if (v.length <= 12) return styles.statValueMed    // "Top 10%", "9-10 months"
-  return styles.statValueLong                        // "Grandparent", "Employment only"
+  if (v.length <= 15) return styles.statValueMed    // "Top 10%", "Grandparent"
+  return styles.statValueLong                        // "Employment only", "Continuing Enrollment"
 }
 
 function RenderStatsGrid({ block }: { block: StatsGridBlock }) {

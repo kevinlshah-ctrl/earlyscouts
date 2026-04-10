@@ -708,11 +708,12 @@
   /* break-word: only breaks within a word if it would otherwise overflow.
      Never break-all / anywhere — those split syllables mid-word. */
   overflow-wrap: break-word;
+  hyphens: auto;
 }
 /* Font-size tiers — applied based on value character length in the JSX */
 .statValueShort { font-size: 26px; }            /* ≤6 chars:  "63%", "9/10"   */
-.statValueMed   { font-size: 20px; }            /* 7-12 chars: "Top 10%"       */
-.statValueLong  { font-size: 15px; font-weight: 600; } /* 13+ chars: "Grandparent" */
+.statValueMed   { font-size: 20px; }            /* 7-15 chars: "Top 10%", "Grandparent" */
+.statValueLong  { font-size: 18px; font-weight: 600; } /* 16+ chars: "Employment only" */
 .statValueGreen {
   color: #2D6A4F;
 }
