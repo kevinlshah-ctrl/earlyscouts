@@ -915,10 +915,7 @@ export default function SchoolReport({
         <div className={styles.heroColorWash} />
         <div className={styles.heroOverlay}>
 
-          <h1 className={[
-            styles.heroTitle,
-            school.name.length > 50 ? styles.heroTitleLong : school.name.length >= 30 ? styles.heroTitleMed : ''
-          ].join(' ')}>{school.name}</h1>
+          <h1 className={styles.heroTitle}>{school.name}</h1>
           {!isGuide && <div className={styles.heroAddress}>{school.address}, {school.city}, CA {school.zip}</div>}
           <div className={styles.metaRow}>
             {!isGuide && <span className={styles.metaPill}>{typeLabel} / {school.district}</span>}
