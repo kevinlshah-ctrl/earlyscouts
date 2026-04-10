@@ -81,6 +81,17 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<School[]>([])
 
+  // Read ?q= on mount — the useState initializer runs during SSR where
+  // window is undefined, so it always produces an empty set.  This effect
+  // runs after hydration on the client and applies the URL filter.
+  useEffect(() => {
+    const ids = readNeighborhoodsFromUrl()
+    if (ids.length === 0) return
+    const newSet = new Set(ids)
+    setActiveNeighborhoods(newSet)
+    setExpandedRegions(getRegionsForNeighborhoods(newSet))
+  }, [])
+
   // Keep state in sync with browser back/forward navigation
   useEffect(() => {
     function onPopState() {
