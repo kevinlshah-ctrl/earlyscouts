@@ -117,7 +117,7 @@ function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
             </div>
             <h2 className="font-serif text-2xl text-[#1A1A2E]">Welcome to EarlyScouts</h2>
           </div>
-          <p className="text-sm text-[#6E6A65] mb-5">Here's how to explore LA Westside schools:</p>
+          <p className="text-sm text-[#6E6A65] mb-5">Here's how to explore LA schools:</p>
           <ul className="flex flex-col gap-3 mb-6">
             {[
               'Select your neighborhood to see every school we cover',
