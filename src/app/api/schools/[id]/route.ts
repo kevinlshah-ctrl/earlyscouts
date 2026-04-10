@@ -71,6 +71,7 @@ export async function GET(
       .from('schools')
       .select('*')
       .eq('slug', slug)
+      .throwOnError()
       .maybeSingle()
     row = data as SchoolRow | null
   }

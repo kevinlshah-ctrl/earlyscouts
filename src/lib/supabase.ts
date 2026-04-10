@@ -7,7 +7,12 @@ export function createServerClient() {
   if (!url || !key) {
     throw new Error('Missing Supabase env vars: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required')
   }
-  return createClient(url, key)
+  return createClient(url, key, {
+    global: {
+      fetch: (input, init = {}) =>
+        fetch(input as string, { ...init, next: { revalidate: 0 } } as RequestInit),
+    },
+  })
 }
 
 // Type for the schools table row (snake_case, matches Supabase columns)
