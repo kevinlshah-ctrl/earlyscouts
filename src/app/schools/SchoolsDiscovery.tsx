@@ -111,10 +111,12 @@ function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
           className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl pointer-events-auto"
           onClick={e => e.stopPropagation()}
         >
-          <div className="w-10 h-10 bg-[#5B9A6F]/10 rounded-full flex items-center justify-center mb-4">
-            <span className="text-xl">🏫</span>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-[#5B9A6F]/10 rounded-full flex items-center justify-center shrink-0">
+              <span className="text-xl">🏫</span>
+            </div>
+            <h2 className="font-serif text-2xl text-[#1A1A2E]">Welcome to EarlyScouts</h2>
           </div>
-          <h2 className="font-serif text-2xl text-[#1A1A2E] mb-1">Welcome to EarlyScouts</h2>
           <p className="text-sm text-[#6E6A65] mb-5">Here's how to explore LA Westside schools:</p>
           <ul className="flex flex-col gap-3 mb-6">
             {[

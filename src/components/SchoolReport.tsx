@@ -508,7 +508,26 @@ function GuidePreviewExtrasComp({ extras }: { extras: GuidePreviewExtras }) {
 
 // ── Section ───────────────────────────────────────────────────────────────────
 
-function ReportSectionComp({ section }: { section: import('@/lib/types').ReportSection }) {
+// Keywords that signal a block contains time-sensitive event info.
+// If the same event already appears in the alerts array, we suppress the block
+// so the information is shown exactly once.
+const ALERT_DATE_KEYWORDS = /\b(tour|orientation|open house|information night|info night|application window|enrollment window|deadline|open enrollment)\b/i
+const ALERT_YEAR_PATTERN = /\b202[5-9]\b/
+
+function blockDuplicatesAlert(block: ContentBlock, alerts: AlertItem[]): boolean {
+  if (!alerts.length) return false
+  if (block.type !== 'paragraph' && block.type !== 'callout') return false
+  const text = (block as ParagraphBlock | CalloutBlock).text ?? ''
+  return ALERT_DATE_KEYWORDS.test(text) && ALERT_YEAR_PATTERN.test(text)
+}
+
+function ReportSectionComp({
+  section,
+  alerts = [],
+}: {
+  section: import('@/lib/types').ReportSection
+  alerts?: AlertItem[]
+}) {
   return (
     <div id={section.id} className={styles.section}>
       <div className={styles.sectionLabel}>
@@ -517,9 +536,11 @@ function ReportSectionComp({ section }: { section: import('@/lib/types').ReportS
       </div>
       <h2 className={styles.sectionTitle}>{section.title}</h2>
       {section.subtitle && <div className={styles.sectionSubtitle}>{section.subtitle}</div>}
-      {section.content.map((block, i) => (
-        <ContentBlockRenderer key={i} block={block} />
-      ))}
+      {section.content
+        .filter(block => !blockDuplicatesAlert(block, alerts))
+        .map((block, i) => (
+          <ContentBlockRenderer key={i} block={block} />
+        ))}
     </div>
   )
 }
@@ -531,9 +552,11 @@ function ReportSectionComp({ section }: { section: import('@/lib/types').ReportS
 
 function LazySection({
   section,
+  alerts = [],
   eager = false,
 }: {
   section: import('@/lib/types').ReportSection
+  alerts?: AlertItem[]
   eager?: boolean
 }) {
   const [visible, setVisible] = useState(eager)
@@ -557,7 +580,7 @@ function LazySection({
     return () => observer.disconnect()
   }, [eager, visible])
 
-  if (visible) return <ReportSectionComp section={section} />
+  if (visible) return <ReportSectionComp section={section} alerts={alerts} />
 
   // Placeholder — keeps the id so TOC anchor links resolve before content loads
   return <div ref={ref} id={section.id} style={{ minHeight: '600px' }} />
@@ -956,7 +979,7 @@ export default function SchoolReport({
       {isPaid ? (
         // Full access — first section eager, rest lazy-rendered via IntersectionObserver
         sections.map((section, i) => (
-          <LazySection key={section.id} section={section} eager={i === 0} />
+          <LazySection key={section.id} section={section} alerts={data.alerts ?? []} eager={i === 0} />
         ))
       ) : (
         // Free preview — free sections, optional guide extras, paywall card, locked sections
@@ -975,7 +998,7 @@ export default function SchoolReport({
                      tag.includes('pipeline') || tag.includes('feeder')
             })
             .map(section => (
-              <ReportSectionComp key={section.id} section={section} />
+              <ReportSectionComp key={section.id} section={section} alerts={data.alerts ?? []} />
             ))
           }
 
@@ -1091,7 +1114,7 @@ export default function SchoolReport({
                 </div>
                 <div className={styles.lockedSectionPreview} aria-hidden="true">
                   <div className={styles.lockedSectionContent}>
-                    <ReportSectionComp section={section} />
+                    <ReportSectionComp section={section} alerts={data.alerts ?? []} />
                   </div>
                   <div className={styles.lockedSectionFade} />
                 </div>
