@@ -3,6 +3,8 @@ import { createServerClient, rowToSchool, type SchoolRow } from '@/lib/supabase'
 import { scrapeSchoolDetailUpdate, scrapeSchoolBySlug, scrapeSchoolsForZip } from '@/lib/scraper'
 import type { School } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * Attaches feeder map data to a school object by querying feeder_maps.
  * feedsInto  — schools this school's graduates typically attend next
