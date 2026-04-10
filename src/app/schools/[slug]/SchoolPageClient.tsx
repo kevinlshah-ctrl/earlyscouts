@@ -528,7 +528,7 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
   const [related, setRelated] = useState<RelatedSchoolsResponse | null>(null)
   useEffect(() => {
     if (!slug) return
-    fetch(`/api/schools/${slug}`)
+    fetch(`/api/schools/${slug}?t=${Date.now()}`)
       .then((r) => {
         if (!r.ok) throw new Error('Not found')
         return r.json()
