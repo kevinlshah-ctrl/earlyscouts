@@ -583,14 +583,23 @@ export default function SchoolReport({
   const isGuide = school.slug.includes('playbook') || school.slug.includes('blueprint') ||
     school.name.toLowerCase().includes('blueprint') || school.name.toLowerCase().includes('playbook')
 
-  // Back-link: for school reports, include the neighborhood ?q= param so the
-  // filter is pre-selected when the user returns to the browse page.
-  const backHref = isGuide
+  // Back-link: initial value is the single-neighborhood fallback (SSR-safe).
+  // The effect below upgrades it to the full multi-select value from
+  // sessionStorage (written by SchoolsDiscovery whenever neighborhoods change).
+  const singleHoodHref = isGuide
     ? '/guides'
     : (() => { const h = getNeighborhoodForSlug(school.slug); return h ? `/schools?q=${h}` : '/schools' })()
+  const [backHref, setBackHref] = useState(singleHoodHref)
+  useEffect(() => {
+    if (isGuide) return
+    try {
+      const saved = sessionStorage.getItem('schoolsFilter')
+      if (saved) setBackHref(`/schools?q=${saved}`)
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  // "Schools" nav link inside SchoolReport's own header — always points to the
-  // browse page (not /guides), but with the neighborhood param when on a school page.
+  // "Schools" nav link inside SchoolReport's own header.
   const schoolsNavHref = isGuide ? '/schools' : backHref
 
   const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? 'AIzaSyCkqvCW3lrcveaWyD7MgNNYlucMzFH-C3s'

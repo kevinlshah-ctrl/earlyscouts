@@ -503,7 +503,16 @@ function ScoutAnalysis({ academics }: { academics: AcademicsData }) {
 export default function SchoolDetailPage({ serverGrantedAccess = false }: { serverGrantedAccess?: boolean }) {
   const params = useParams()
   const slug = params?.slug as string
-  const schoolsHref = (() => { const h = getNeighborhoodForSlug(slug); return h ? `/schools?q=${h}` : '/schools' })()
+  const [schoolsHref, setSchoolsHref] = useState(() => {
+    const h = getNeighborhoodForSlug(slug)
+    return h ? `/schools?q=${h}` : '/schools'
+  })
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('schoolsFilter')
+      if (saved) setSchoolsHref(`/schools?q=${saved}`)
+    } catch {}
+  }, [])
 
   const [school, setSchool] = useState<School | null>(null)
   const [loading, setLoading] = useState(true)

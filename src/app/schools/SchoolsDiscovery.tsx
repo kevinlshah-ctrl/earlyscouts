@@ -92,6 +92,16 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     setExpandedRegions(getRegionsForNeighborhoods(newSet))
   }, [])
 
+  // Persist the current filter to sessionStorage so school report pages can
+  // restore the full multi-select when the user navigates back.
+  useEffect(() => {
+    try {
+      const val = Array.from(activeNeighborhoods).join(',')
+      if (val) sessionStorage.setItem('schoolsFilter', val)
+      else sessionStorage.removeItem('schoolsFilter')
+    } catch {}
+  }, [activeNeighborhoods])
+
   // Keep state in sync with browser back/forward navigation
   useEffect(() => {
     function onPopState() {

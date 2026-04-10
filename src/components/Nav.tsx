@@ -14,16 +14,27 @@ export default function Nav() {
   const dropdownRef                         = useRef<HTMLDivElement>(null)
   const { user, profile, loading, signOut } = useAuth()
 
-  // On school detail pages, link "Schools" back to the school's neighborhood filter
-  // so the user lands on a pre-filtered browse page rather than an empty one.
-  const schoolsHref = (() => {
+  // On school detail pages, link "Schools" back to the neighborhood filter.
+  // Initial value uses the single-neighborhood fallback (SSR-safe).
+  // The effect upgrades it to the full multi-select value from sessionStorage.
+  const [schoolsHref, setSchoolsHref] = useState(() => {
     const m = pathname.match(/^\/schools\/(.+)$/)
     if (m) {
       const hood = getNeighborhoodForSlug(m[1])
       if (hood) return `/schools?q=${hood}`
     }
     return '/schools'
-  })()
+  })
+  useEffect(() => {
+    const m = pathname.match(/^\/schools\/(.+)$/)
+    if (!m) { setSchoolsHref('/schools'); return }
+    try {
+      const saved = sessionStorage.getItem('schoolsFilter')
+      if (saved) { setSchoolsHref(`/schools?q=${saved}`); return }
+    } catch {}
+    const hood = getNeighborhoodForSlug(m[1])
+    setSchoolsHref(hood ? `/schools?q=${hood}` : '/schools')
+  }, [pathname])
 
   // Cap loading skeleton at 500ms — after that, render the logged-out state rather
   // than leave the nav blank while fetchProfile is still in-flight (e.g. after
