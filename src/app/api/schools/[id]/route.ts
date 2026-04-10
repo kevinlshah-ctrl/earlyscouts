@@ -5,6 +5,12 @@ import type { School } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate',
+  'CDN-Cache-Control': 'no-store',
+  'Vercel-CDN-Cache-Control': 'no-store',
+}
+
 /**
  * Attaches feeder map data to a school object by querying feeder_maps.
  * feedsInto  — schools this school's graduates typically attend next
@@ -81,12 +87,12 @@ export async function GET(
   // If the school already has a structured report, return it immediately — no scraping needed
   if (row?.report_data) {
     console.log(`[Detail] Report data present for "${slug}" — skipping enrichment check`)
-    return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)))
+    return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)), { headers: NO_CACHE_HEADERS })
   }
 
   if (row && !isStale && isEnriched) {
     console.log(`[Detail] Cache hit for "${slug}"`)
-    return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)))
+    return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)), { headers: NO_CACHE_HEADERS })
   }
 
   // No row in DB (or stale) — determine how to get the data
@@ -97,7 +103,7 @@ export async function GET(
   if (!gsUrl && !nicheUrl) {
     if (row) {
       // Stale row with no URLs — return what we have
-      return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)))
+      return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)), { headers: NO_CACHE_HEADERS })
     }
     console.log(`[Detail] School "${slug}" not in DB — running slug-based scrape`)
     try {
@@ -161,7 +167,7 @@ export async function GET(
             { onConflict: 'id' }
           )
         }
-        return NextResponse.json(await withFeederMap(supabase, enriched))
+        return NextResponse.json(await withFeederMap(supabase, enriched), { headers: NO_CACHE_HEADERS })
       }
     } catch (err) {
       console.error(`[Detail] Slug-based scrape failed for "${slug}":`, err)
@@ -202,12 +208,12 @@ export async function GET(
 
       const { data: refreshed } = await supabase
         .from('schools').select('*').eq('slug', slug).maybeSingle()
-      if (refreshed) return NextResponse.json(await withFeederMap(supabase, rowToSchool(refreshed as SchoolRow)))
+      if (refreshed) return NextResponse.json(await withFeederMap(supabase, rowToSchool(refreshed as SchoolRow)), { headers: NO_CACHE_HEADERS })
     }
   } catch (err) {
     console.error(`[Detail] Scraping failed for "${slug}":`, err)
   }
 
-  if (row) return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)))
+  if (row) return NextResponse.json(await withFeederMap(supabase, rowToSchool(row as SchoolRow)), { headers: NO_CACHE_HEADERS })
   return NextResponse.json({ error: 'School not found' }, { status: 404 })
 }
