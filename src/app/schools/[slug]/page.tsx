@@ -33,5 +33,5 @@ export default async function SchoolPage({ params }: { params: { slug: string } 
     }
   }
 
-  return <SchoolDetailPage serverGrantedAccess={serverGrantedAccess} />
+  return <SchoolDetailPage key={params.slug} serverGrantedAccess={serverGrantedAccess} />
 }
