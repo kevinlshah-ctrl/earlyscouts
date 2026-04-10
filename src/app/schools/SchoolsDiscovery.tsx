@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import SchoolBracket from '@/components/SchoolBracket'
@@ -13,6 +14,39 @@ import {
 } from '@/data/neighborhood-schools'
 import type { School } from '@/lib/types'
 
+// ── ZIP → neighborhood mapping ────────────────────────────────────────────────
+const ZIP_TO_NEIGHBORHOOD: Record<string, string[]> = {
+  '90066': ['mar-vista', 'playa-vista'],
+  '90034': ['palms'],
+  '90230': ['culver-city'],
+  '90401': ['santa-monica'],
+  '90402': ['santa-monica'],
+  '90403': ['santa-monica'],
+  '90404': ['santa-monica'],
+  '90405': ['santa-monica'],
+  '90045': ['playa-vista'],
+  '90292': ['playa-vista'],
+  '90094': ['playa-vista'],
+  '90291': ['venice'],
+  '90064': ['palms'],
+  '90293': ['playa-vista'],
+  '90254': ['hermosa-beach'],
+  '90266': ['manhattan-beach'],
+  '90277': ['redondo-beach'],
+  '90278': ['redondo-beach'],
+  '90245': ['el-segundo'],
+  '90027': ['hollywood-hills'],
+  '90028': ['hollywood-hills'],
+  '90046': ['hollywood-hills'],
+  '90068': ['hollywood-hills'],
+  '90039': ['silver-lake', 'atwater-village'],
+  '90065': ['atwater-village'],
+  '90041': ['eagle-rock'],
+  '90042': ['eagle-rock'],
+  '90030': ['south-pasadena'],
+}
+
+// ── Playbook descriptions ─────────────────────────────────────────────────────
 const PLAYBOOK_DESCRIPTIONS: Record<string, string> = {
   'smmusd-transfer-playbook':
     'Every step for getting into Santa Monica-Malibu schools as an out-of-district family. Permit windows, priority tiers, and every deadline.',
@@ -25,10 +59,11 @@ const PLAYBOOK_DESCRIPTIONS: Record<string, string> = {
   'hollywood-hills-school-choice-playbook':
     'School options for Hollywood Hills families: LAUSD magnet pathways, local public schools, and nearby private alternatives.',
   'la-charter-magnet-school-choice-playbook':
-    'Decoding the two systems most parents confuse: the LAUSD Magnet Priority Points system and independent charter school lotteries. Covers CWC, WISH, Larchmont, Ocean Charter, Community Magnet, Westchester Enriched Sciences, and every lottery date, priority tier, and strategic angle.',
+    'Decoding the two systems most parents confuse: the LAUSD Magnet Priority Points system and independent charter school lotteries.',
 }
 
-/** Guide slugs live at /guides/[slug], not /schools/[slug] */
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function isGuideSlug(slug: string): boolean {
   return slug.includes('playbook') || slug.includes('blueprint')
 }
@@ -37,12 +72,10 @@ function schoolHref(slug: string): string {
   return isGuideSlug(slug) ? `/guides/${slug}` : `/schools/${slug}`
 }
 
-/** Find which region a neighborhood ID belongs to */
 function getRegionForNeighborhood(id: string): string | null {
   return NEIGHBORHOOD_SCHOOLS[id]?.region ?? null
 }
 
-/** Read neighborhood IDs from URL query param ?q= (comma-separated) */
 function readNeighborhoodsFromUrl(): string[] {
   if (typeof window === 'undefined') return []
   const q = new URLSearchParams(window.location.search).get('q')
@@ -50,40 +83,88 @@ function readNeighborhoodsFromUrl(): string[] {
   return q.split(',').filter(id => getNeighborhoodById(id) != null)
 }
 
-/** Derive initial neighborhood set: URL first, then empty */
 function getInitialNeighborhoods(): Set<string> {
   const fromUrl = readNeighborhoodsFromUrl()
-  if (fromUrl.length > 0) return new Set(fromUrl)
-  return new Set<string>()
+  return fromUrl.length > 0 ? new Set(fromUrl) : new Set<string>()
 }
 
-/** Which regions contain at least one of the given neighborhood IDs */
 function getRegionsForNeighborhoods(ids: Set<string>): Set<string> {
   const regions = new Set<string>()
-  ids.forEach(id => {
-    const r = getRegionForNeighborhood(id)
-    if (r) regions.add(r)
-  })
+  ids.forEach(id => { const r = getRegionForNeighborhood(id); if (r) regions.add(r) })
   return regions
 }
 
+/** Count distinct school-report schools for a region (deduplicated). */
+function getSchoolCountForRegion(region: string, allSchools: School[]): number {
+  const hoods = getNeighborhoodsByRegion(region)
+  const slugSet = new Set(hoods.flatMap(h => [...h.elementarySlugs, ...h.middleSlugs, ...h.highSlugs]))
+  return allSchools.filter(s => slugSet.has(s.slug)).length
+}
+
+// ── Onboarding modal ──────────────────────────────────────────────────────────
+function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onDismiss} />
+      <div className="fixed inset-0 z-[201] flex items-center justify-center px-4 pointer-events-none">
+        <div
+          className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl pointer-events-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="w-10 h-10 bg-[#5B9A6F]/10 rounded-full flex items-center justify-center mb-4">
+            <span className="text-xl">🏫</span>
+          </div>
+          <h2 className="font-serif text-2xl text-[#1A1A2E] mb-1">Welcome to EarlyScouts</h2>
+          <p className="text-sm text-[#6E6A65] mb-5">Here's how to explore LA Westside schools:</p>
+          <ul className="flex flex-col gap-3 mb-6">
+            {[
+              'Select your neighborhood to see every school we cover',
+              'Search by school name or ZIP code',
+              'Browse our transfer guides for step-by-step enrollment help',
+            ].map(item => (
+              <li key={item} className="flex gap-3 text-sm text-[#3D3A36]">
+                <span className="w-5 h-5 rounded-full bg-[#5B9A6F]/12 text-[#5B9A6F] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={onDismiss}
+            className="w-full bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+          >
+            Got it →
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] }) {
   const router = useRouter()
 
   const [activeNeighborhoods, setActiveNeighborhoods] = useState<Set<string>>(getInitialNeighborhoods)
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() => {
-    // Only expand regions when neighborhoods are explicitly set via URL param.
-    // Default fallback (mar-vista) should not auto-expand Westside on fresh load.
     const fromUrl = readNeighborhoodsFromUrl()
-    if (fromUrl.length > 0) return getRegionsForNeighborhoods(new Set(fromUrl))
-    return new Set()
+    return fromUrl.length > 0 ? getRegionsForNeighborhoods(new Set(fromUrl)) : new Set()
   })
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery]   = useState('')
   const [searchResults, setSearchResults] = useState<School[]>([])
+  const [zipNotCovered, setZipNotCovered] = useState(false)
+  const [showModal, setShowModal]         = useState(false)
 
-  // Read ?q= on mount — the useState initializer runs during SSR where
-  // window is undefined, so it always produces an empty set.  This effect
-  // runs after hydration on the client and applies the URL filter.
+  // Show onboarding modal on first visit
+  useEffect(() => {
+    try { if (!localStorage.getItem('schoolsOnboarded')) setShowModal(true) } catch {}
+  }, [])
+
+  function dismissModal() {
+    try { localStorage.setItem('schoolsOnboarded', 'true') } catch {}
+    setShowModal(false)
+  }
+
+  // Read ?q= on mount (SSR-safe: useState initializer runs with window=undefined)
   useEffect(() => {
     const ids = readNeighborhoodsFromUrl()
     if (ids.length === 0) return
@@ -92,8 +173,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     setExpandedRegions(getRegionsForNeighborhoods(newSet))
   }, [])
 
-  // Persist the current filter to sessionStorage so school report pages can
-  // restore the full multi-select when the user navigates back.
+  // Persist filter to sessionStorage for school-report back navigation
   useEffect(() => {
     try {
       const val = Array.from(activeNeighborhoods).join(',')
@@ -102,7 +182,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     } catch {}
   }, [activeNeighborhoods])
 
-  // Keep state in sync with browser back/forward navigation
+  // Browser back/forward
   useEffect(() => {
     function onPopState() {
       const ids = readNeighborhoodsFromUrl()
@@ -116,31 +196,48 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  // Client-side search
+  // School name search
   useEffect(() => {
     if (!searchQuery.trim()) { setSearchResults([]); return }
     const q = searchQuery.toLowerCase()
     setSearchResults(
-      allSchools
-        .filter(s =>
-          s.name.toLowerCase().includes(q) ||
-          s.zip.includes(q) ||
-          s.city.toLowerCase().includes(q)
-        )
-        .slice(0, 7)
+      allSchools.filter(s =>
+        s.name.toLowerCase().includes(q) || s.zip.includes(q) || s.city.toLowerCase().includes(q)
+      ).slice(0, 8)
     )
   }, [searchQuery, allSchools])
+
+  // ── Actions ──────────────────────────────────────────────────────────────
+
+  function applyNeighborhoods(ids: string[]) {
+    const newSet = new Set(ids.filter(id => getNeighborhoodById(id) != null))
+    if (newSet.size === 0) return
+    setActiveNeighborhoods(newSet)
+    setExpandedRegions(getRegionsForNeighborhoods(newSet))
+    window.history.pushState({}, '', `/schools?q=${Array.from(newSet).join(',')}`)
+  }
+
+  function handleSearchChange(val: string) {
+    setSearchQuery(val)
+    setZipNotCovered(false)
+
+    // ZIP detection: 5 digits → auto-select neighborhood(s)
+    if (/^\d{5}$/.test(val.trim())) {
+      const hoods = ZIP_TO_NEIGHBORHOOD[val.trim()]
+      if (hoods?.length) {
+        applyNeighborhoods(hoods)
+        setSearchQuery('')
+      } else {
+        setZipNotCovered(true)
+      }
+    }
+  }
 
   function toggleNeighborhood(id: string) {
     setActiveNeighborhoods(prev => {
       const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      const qStr = next.size > 0 ? `/schools?q=${Array.from(next).join(',')}` : '/schools'
-      window.history.pushState({}, '', qStr)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      window.history.pushState({}, '', next.size > 0 ? `/schools?q=${Array.from(next).join(',')}` : '/schools')
       return next
     })
   }
@@ -148,67 +245,165 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   function toggleRegion(region: string) {
     setExpandedRegions(prev => {
       const next = new Set(prev)
-      if (next.has(region)) next.delete(region)
-      else next.add(region)
+      if (next.has(region)) next.delete(region); else next.add(region)
       return next
     })
   }
 
-  // Combine schools from all active neighborhoods
+  // ── Derived data ──────────────────────────────────────────────────────────
+
   const activeHoods = Array.from(activeNeighborhoods)
     .map(id => getNeighborhoodById(id))
     .filter((h): h is NonNullable<typeof h> => h != null)
 
-  const allHoodSlugs = Array.from(new Set(activeHoods.flatMap(h => [
-    ...h.elementarySlugs, ...h.middleSlugs, ...h.highSlugs,
-  ])))
-  const bracketSchools = allSchools.filter(s => allHoodSlugs.includes(s.slug))
+  const bracketSchools = allSchools.filter(s =>
+    new Set(activeHoods.flatMap(h => [...h.elementarySlugs, ...h.middleSlugs, ...h.highSlugs])).has(s.slug)
+  )
+  const playbookSchools = allSchools.filter(s =>
+    new Set(activeHoods.flatMap(h => h.playbookSlugs)).has(s.slug)
+  )
+  const privateSchools = (() => {
+    const slugs = new Set(activeHoods.flatMap(h => h.privateSlugs ?? []))
+    return slugs.size ? allSchools.filter(s => slugs.has(s.slug)) : []
+  })()
 
-  const allPlaybookSlugs = Array.from(new Set(activeHoods.flatMap(h => h.playbookSlugs)))
-  const playbookSchools = allSchools.filter(s => allPlaybookSlugs.includes(s.slug))
-
-  const allPrivateSlugs = Array.from(new Set(activeHoods.flatMap(h => h.privateSlugs ?? [])))
-  const privateSchools = allPrivateSlugs.length
-    ? allSchools.filter(s => allPrivateSlugs.includes(s.slug))
-    : []
-
-  const firstHood = activeHoods[0] ?? null
-  const headerLabel = activeNeighborhoods.size === 0
-    ? 'Schools'
-    : activeNeighborhoods.size === 1
-    ? firstHood?.label ?? 'Schools'
+  const firstHood     = activeHoods[0] ?? null
+  const headerLabel   = activeNeighborhoods.size === 0 ? 'Schools'
+    : activeNeighborhoods.size === 1 ? (firstHood?.label ?? 'Schools')
     : `${activeNeighborhoods.size} neighborhoods`
-
   const activeRegions = getRegionsForNeighborhoods(activeNeighborhoods)
-  const regions = getRegions()
+  const regions       = getRegions()
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <main className="min-h-screen bg-[#FFFAF6]">
       <Nav />
 
-      {/* Page header */}
-      <section className="bg-[#FFFAF6] px-4 pt-8 pb-3">
+      {/* ── Page header ─────────────────────────────────────────────────── */}
+      <section className="bg-[#FFFAF6] px-4 pt-8 pb-5">
         <div className="max-w-5xl mx-auto">
-          <h1 className="font-serif text-3xl text-[#1A1A2E]">
-            {headerLabel}
-          </h1>
+          <h1 className="font-serif text-3xl text-[#1A1A2E]">{headerLabel}</h1>
           <p className="text-sm text-[#6E6A65] mt-1">
             Deep-dive reports from our research team. Tap any school for a preview.
           </p>
         </div>
       </section>
 
-      {/* Sticky selector bar */}
-      <div className="sticky top-16 bg-[#FFFAF6] border-b border-[#E8E5E1] z-10 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex flex-col gap-2.5">
+      {/* ── Neighborhood selector ────────────────────────────────────────── */}
+      <section className="bg-[#FFFAF6] px-4 pb-6">
+        <div className="max-w-5xl mx-auto">
 
-          {/* Search */}
+          {/* Section label */}
+          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-3">
+            Select your neighborhood
+          </p>
+
+          {/* Region pill buttons */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {regions.map(region => {
+              const count    = getSchoolCountForRegion(region, allSchools)
+              const isActive = activeRegions.has(region)
+              const isOpen   = expandedRegions.has(region)
+              return (
+                <button
+                  key={region}
+                  onClick={() => toggleRegion(region)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border-2 transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white shadow-sm'
+                      : 'bg-white border-[#E8E5E1] text-[#3D3A36] hover:border-[#5B9A6F] hover:text-[#5B9A6F]'
+                  }`}
+                >
+                  {region}
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-[#F0EDE8] text-[#9B9690]'
+                  }`}>
+                    {count}
+                  </span>
+                  <svg
+                    width="9" height="9" viewBox="0 0 10 10" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    className="transition-transform duration-200"
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  >
+                    <polyline points="2 3 5 7 8 3" />
+                  </svg>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Neighborhood chips — shown when a region is expanded */}
+          {regions.some(r => expandedRegions.has(r)) && (
+            <div className="bg-white border border-[#E8E5E1] rounded-2xl p-4 mb-3">
+              {regions.map(region => {
+                if (!expandedRegions.has(region)) return null
+                return (
+                  <div key={region} className="mb-3 last:mb-0">
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-[#B0AAA4] mb-2">
+                      {region}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {getNeighborhoodsByRegion(region).map(n => (
+                        <button
+                          key={n.id}
+                          onClick={() => toggleNeighborhood(n.id)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                            activeNeighborhoods.has(n.id)
+                              ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
+                              : 'bg-[#FAFAFA] border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
+                          }`}
+                        >
+                          {n.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Active selection pills with ×  */}
+          {activeNeighborhoods.size > 0 && (
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#9B9690]">Showing:</span>
+              {Array.from(activeNeighborhoods).map(id => {
+                const hood = getNeighborhoodById(id)
+                if (!hood) return null
+                return (
+                  <button
+                    key={id}
+                    onClick={() => toggleNeighborhood(id)}
+                    className="flex items-center gap-1 bg-[#5B9A6F] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#4a8a5e] transition-colors"
+                  >
+                    {hood.label}
+                    <span className="ml-0.5 opacity-70 text-sm leading-none">×</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Search + guides nudge (sticky) ──────────────────────────────── */}
+      <div className="sticky top-16 bg-[#FFFAF6] border-b border-[#E8E5E1] z-10 px-4 py-3">
+        <div className="max-w-5xl mx-auto flex flex-col gap-2">
+
+          {/* Label */}
+          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#9B9690]">
+            Or search by school name or ZIP code
+          </p>
+
+          {/* Search input */}
           <div className="relative">
             <input
               type="text"
-              placeholder="Search by school name or zip..."
+              placeholder="e.g. 'Mar Vista Elementary' or '90066'"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={e => handleSearchChange(e.target.value)}
               onBlur={() => setTimeout(() => setSearchResults([]), 150)}
               className="w-full border border-[#D4D0CC] rounded-xl px-4 py-2.5 text-sm text-[#1A1A2E] bg-white outline-none focus:border-[#5B9A6F] transition-colors"
             />
@@ -228,84 +423,27 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
             )}
           </div>
 
-          {/* Region-grouped chips — collapsed by default, expand on click */}
-          {/* Mobile: each region stacks vertically; chips scroll horizontally */}
-          {/* Desktop (lg+): all regions inline, chips wrap */}
-          <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center lg:gap-y-2">
-            {regions.map((region, ri) => (
-              <div
-                key={region}
-                className={`flex flex-col lg:flex-row lg:flex-wrap lg:items-center lg:gap-1.5 ${
-                  ri > 0 ? 'mt-2 lg:mt-0 lg:ml-3 lg:pl-3 lg:border-l lg:border-[#E8E5E1]' : ''
-                }`}
-              >
-                {/* Region toggle button */}
-                <button
-                  onClick={() => toggleRegion(region)}
-                  className={`self-start flex items-center gap-0.5 text-[10px] font-mono uppercase tracking-widest lg:mr-1 whitespace-nowrap transition-colors ${
-                    activeRegions.has(region) ? 'text-[#5B9A6F] font-bold' : 'text-[#B0AAA4] hover:text-[#6E6A65]'
-                  }`}
-                >
-                  {region}
-                  <svg
-                    width="8" height="8" viewBox="0 0 10 10" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                    className="ml-0.5 transition-transform"
-                    style={{ transform: expandedRegions.has(region) ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                  >
-                    <polyline points="2 3 5 7 8 3" />
-                  </svg>
-                </button>
-                {/* Neighborhood chips — only visible when region is expanded */}
-                {/* Mobile: single scrollable row; Desktop: wrapping inline */}
-                {expandedRegions.has(region) && (
-                  <div className="flex flex-nowrap overflow-x-auto scrollbar-hide gap-1.5 pb-0.5 mt-1.5 lg:mt-0 lg:flex-wrap lg:overflow-visible lg:pb-0">
-                    {getNeighborhoodsByRegion(region).map(n => (
-                      <button
-                        key={n.id}
-                        onClick={() => toggleNeighborhood(n.id)}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                          activeNeighborhoods.has(n.id)
-                            ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
-                            : 'bg-white border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
-                        }`}
-                      >
-                        {n.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          {/* ZIP not covered message */}
+          {zipNotCovered && (
+            <p className="text-xs text-[#9B9690]">
+              We don&apos;t cover that ZIP yet — but we&apos;re expanding!{' '}
+              <a href="mailto:hello@earlyscouts.com?subject=Coverage request" className="text-[#5B9A6F] hover:underline">
+                Email us to get notified.
+              </a>
+            </p>
+          )}
 
+          {/* Guides nudge */}
+          <p className="text-xs text-[#9B9690]">
+            📋 Transferring districts?{' '}
+            <Link href="/guides" className="text-[#5B9A6F] font-medium hover:underline">
+              Our transfer guides walk you through every deadline and form →
+            </Link>
+          </p>
         </div>
       </div>
 
-      {/* Selected neighborhood pills with X to deselect */}
-      {activeNeighborhoods.size > 0 && (
-        <div className="px-4 pt-4 pb-1">
-          <div className="max-w-5xl mx-auto flex flex-wrap gap-2 items-center">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#9B9690] mr-1">Showing:</span>
-            {Array.from(activeNeighborhoods).map(id => {
-              const hood = getNeighborhoodById(id)
-              if (!hood) return null
-              return (
-                <button
-                  key={id}
-                  onClick={() => toggleNeighborhood(id)}
-                  className="flex items-center gap-1 bg-[#5B9A6F] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#4a8a5e] transition-colors"
-                >
-                  {hood.label}
-                  <span className="ml-0.5 opacity-70 text-sm leading-none">×</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* School bracket */}
+      {/* ── School results ───────────────────────────────────────────────── */}
       <section className="px-4 py-6">
         <div className="max-w-5xl mx-auto">
           {activeNeighborhoods.size === 0 ? (
@@ -325,7 +463,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
         </div>
       </section>
 
-      {/* Transfer Playbooks — link to /guides/[slug] */}
+      {/* ── Transfer playbooks ───────────────────────────────────────────── */}
       {playbookSchools.length > 0 && (
         <section className="px-4 pb-10">
           <div className="max-w-5xl mx-auto">
@@ -337,7 +475,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
                 <a
                   key={pb.id}
                   href={`/guides/${pb.slug}`}
-                  className="bg-white border border-[#E8E5E1] rounded-xl p-4 hover:border-[#F2945C]/60 hover:shadow-sm transition-all group"
+                  className="bg-white border border-[#E8E5E1] rounded-xl p-4 hover:border-[#F2945C]/60 hover:shadow-sm transition-all"
                 >
                   <p className="font-semibold text-sm text-[#1A1A2E] mb-1">{pb.name}</p>
                   <p className="text-[10px] font-mono uppercase tracking-wider text-[#A09A94] mb-2">
@@ -354,7 +492,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
         </section>
       )}
 
-      {/* Private Schools — link to /schools/[slug] (these are school reports, not guides) */}
+      {/* ── Private schools ──────────────────────────────────────────────── */}
       {privateSchools.length > 0 && (
         <section className="px-4 pb-12">
           <div className="max-w-5xl mx-auto">
@@ -387,6 +525,9 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
       )}
 
       <Footer />
+
+      {/* ── First-visit onboarding modal ─────────────────────────────────── */}
+      {showModal && <OnboardingModal onDismiss={dismissModal} />}
     </main>
   )
 }
