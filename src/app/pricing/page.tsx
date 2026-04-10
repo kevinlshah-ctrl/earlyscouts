@@ -178,7 +178,7 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
       <section className="px-4 pb-12 text-center">
         <div className="inline-flex items-center bg-[#FEF3E8] border border-[#F2C49A] rounded-full px-5 py-2">
           <span className="text-sm text-[#C97B3A]">
-            Helping <strong>400+</strong> families across LA make smarter school decisions
+            Helping <strong>250+</strong> families across LA make smarter school decisions
           </span>
         </div>
       </section>
