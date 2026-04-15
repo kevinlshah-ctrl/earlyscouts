@@ -505,12 +505,12 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
   const slug = params?.slug as string
   const [schoolsHref, setSchoolsHref] = useState(() => {
     const h = getNeighborhoodForSlug(slug)
-    return h ? `/schools?q=${h}` : '/schools'
+    return h ? `/schools?area=${h}` : '/schools'
   })
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem('schoolsFilter')
-      if (saved) setSchoolsHref(`/schools?q=${saved}`)
+      if (saved) setSchoolsHref(`/schools?area=${saved}`)
     } catch {}
   }, [])
 

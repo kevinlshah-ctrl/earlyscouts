@@ -239,54 +239,82 @@ function ScoutTakeModal({ townId, onClose }: { townId: string; onClose: () => vo
   if (!take) return null
 
   return (
-    <div className="fixed inset-0 z-[200] bg-[#FFFAF6] overflow-y-auto">
-      {/* Sticky header */}
-      <div className="sticky top-0 bg-[#FFFAF6] border-b border-[#E8E5E1] z-10">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 text-sm text-[#5B9A6F] font-medium hover:text-[#3d7a52] transition-colors shrink-0"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="10 4 6 8 10 12" />
-            </svg>
-            Back to Schools
-          </button>
-          <div className="w-px h-4 bg-[#E8E5E1]" />
-          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] leading-none">
-            Scout&apos;s Take
-          </p>
-        </div>
-      </div>
+    <div className="fixed inset-0 z-[200] flex md:items-center md:justify-center md:p-8">
+      {/* Backdrop — desktop only, click to close */}
+      <div
+        className="hidden md:block absolute inset-0 bg-black/30"
+        onClick={onClose}
+      />
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-5">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🔭</span>
-          <h1 className="font-serif text-2xl text-[#1A1A2E] leading-tight">
-            {take.title.replace("Scout's Take: ", '')}
-          </h1>
-        </div>
-
-        {take.paragraphs.map((p, i) => (
-          <p key={i} className="text-sm text-[#3D3A36] leading-relaxed">{p}</p>
-        ))}
-
-        {/* Pipeline */}
-        <div className="bg-white border border-[#E8E5E1] rounded-xl p-4 mt-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-3">
-            📍 Default Pipeline
-          </p>
-          <div className="flex flex-col gap-2">
-            <PipelineRow label="Elementary" text={take.pipeline.elementary} />
-            <div className="ml-[92px] text-[#B0AAA4] text-sm leading-none">↓</div>
-            <PipelineRow label="Middle" text={take.pipeline.middle} />
-            <div className="ml-[92px] text-[#B0AAA4] text-sm leading-none">↓</div>
-            <PipelineRow label="High" text={take.pipeline.high} />
+      {/* Modal panel — fullscreen on mobile, centered popup on desktop */}
+      <div className="relative z-10 bg-[#FFFAF6] overflow-y-auto w-full h-full md:h-auto md:max-h-[80vh] md:max-w-2xl md:rounded-xl md:shadow-xl">
+        {/* Sticky header */}
+        <div className="sticky top-0 bg-[#FFFAF6] border-b border-[#E8E5E1] z-10">
+          {/* Mobile header: Back button + label */}
+          <div className="flex items-center gap-3 px-4 py-3 md:hidden">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 text-sm text-[#5B9A6F] font-medium hover:text-[#3d7a52] transition-colors shrink-0"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="10 4 6 8 10 12" />
+              </svg>
+              Back to Schools
+            </button>
+            <div className="w-px h-4 bg-[#E8E5E1]" />
+            <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] leading-none">
+              Scout&apos;s Take
+            </p>
+          </div>
+          {/* Desktop header: label + X button */}
+          <div className="hidden md:flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🔭</span>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] leading-none">
+                Scout&apos;s Take
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F0EDE8] text-[#6E6A65] hover:bg-[#E8E5E1] transition-colors shrink-0"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="2" y1="2" x2="12" y2="12" />
+                <line x1="12" y1="2" x2="2" y2="12" />
+              </svg>
+            </button>
           </div>
         </div>
 
-        <div className="h-8" />
+        {/* Content */}
+        <div className="px-6 py-8 flex flex-col gap-5">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🔭</span>
+            <h1 className="font-serif text-2xl text-[#1A1A2E] leading-tight">
+              {take.title.replace("Scout's Take: ", '')}
+            </h1>
+          </div>
+
+          {take.paragraphs.map((p, i) => (
+            <p key={i} className="text-sm text-[#3D3A36] leading-relaxed">{p}</p>
+          ))}
+
+          {/* Pipeline */}
+          <div className="bg-white border border-[#E8E5E1] rounded-xl p-4 mt-2">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-3">
+              📍 Default Pipeline
+            </p>
+            <div className="flex flex-col gap-2">
+              <PipelineRow label="Elementary" text={take.pipeline.elementary} />
+              <div className="ml-[92px] text-[#B0AAA4] text-sm leading-none">↓</div>
+              <PipelineRow label="Middle" text={take.pipeline.middle} />
+              <div className="ml-[92px] text-[#B0AAA4] text-sm leading-none">↓</div>
+              <PipelineRow label="High" text={take.pipeline.high} />
+            </div>
+          </div>
+
+          <div className="h-8" />
+        </div>
       </div>
     </div>
   )

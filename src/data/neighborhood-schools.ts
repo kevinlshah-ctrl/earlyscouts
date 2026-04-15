@@ -5,6 +5,10 @@
  *   added westchester, hollywood, highland-park, brentwood, palisades entries
  */
 
+// IMPORTANT: Every school added to Supabase with report_data MUST be added
+// to at least one neighborhood below. Schools not mapped here won't appear
+// in town-based browsing. Run a periodic audit to check for orphans.
+
 export interface NeighborhoodConfig {
   label: string
   region: string
@@ -40,6 +44,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'richland-avenue-elementary-school-los-angeles-ca',
       'charnock-road-elementary-school-los-angeles-ca',
       'westminster-avenue-elementary-school-los-angeles-ca',
+      'clifford-street-elementary-los-angeles-ca',
       'cwc-mar-vista-los-angeles-ca',
       'goethe-international-charter-school-los-angeles-ca',
       'ocean-charter-school-los-angeles-ca',
@@ -96,6 +101,8 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     elementarySlugs: [
       'clover-avenue-elementary-school-los-angeles-ca',
       'overland-avenue-elementary-school-los-angeles-ca',
+      'brockton-avenue-elementary-los-angeles-ca',
+      'warner-avenue-elementary-los-angeles-ca',
       'castle-heights-elementary-school-los-angeles-ca',
       'richland-avenue-elementary-school-los-angeles-ca',
       'short-avenue-elementary-school-los-angeles-ca',
@@ -110,6 +117,12 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     playbookSlugs: [
       'ccusd-transfer-playbook',
       'lausd-school-choice-playbook',
+    ],
+    privateSlugs: [
+      'open-charter-magnet-school-los-angeles-ca',
+      'new-west-charter-school-los-angeles-ca',
+      'westwood-charter-elementary-los-angeles-ca',
+      'laces-magnet-los-angeles-ca',
     ],
   },
 
@@ -318,6 +331,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     middleSlugs: [
       'le-conte-middle-school-los-angeles-ca',
+      'john-burroughs-middle-school-los-angeles-ca',
     ],
     highSlugs: [
       'fairfax-high-school-los-angeles-ca',
@@ -438,6 +452,9 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'lausd-school-choice-playbook',
       'la-charter-magnet-school-choice-playbook',
     ],
+    privateSlugs: [
+      'goethe-international-charter-school-los-angeles-ca',
+    ],
   },
 
   'eagle-rock': {
@@ -449,6 +466,8 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'eagle-rock-elementary-los-angeles-ca',
       'dahlia-heights-elementary-los-angeles-ca',
       'toland-way-elementary-los-angeles-ca',
+      'delevan-drive-elementary-los-angeles-ca',
+      'rockdale-vapa-magnet-los-angeles-ca',
       'aldama-elementary-los-angeles-ca',
       'arroyo-seco-museum-science-magnet-los-angeles-ca',
     ],
@@ -470,8 +489,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'buchanan-street-elementary-los-angeles-ca',
       'yorkdale-elementary-los-angeles-ca',
       'aldama-elementary-los-angeles-ca',
+      'arroyo-seco-museum-science-magnet-los-angeles-ca',
     ],
-    middleSlugs: [],
+    middleSlugs: [
+      'luther-burbank-middle-school-los-angeles-ca',
+    ],
     highSlugs: [
       'eagle-rock-high-school-los-angeles-ca',
       'benjamin-franklin-high-school-los-angeles-ca',
@@ -553,6 +575,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'brentwood-school-los-angeles-ca',
       'wildwood-school-los-angeles-ca',
       'windward-school-los-angeles-ca',
+      'community-magnet-charter-school-los-angeles-ca',
     ],
   },
 
