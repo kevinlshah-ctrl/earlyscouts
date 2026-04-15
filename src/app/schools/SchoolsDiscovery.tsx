@@ -395,15 +395,36 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   const [zipNotCovered, setZipNotCovered] = useState(false)
   const [showScoutModal, setShowScoutModal] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const regionScrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollRegionLeft, setCanScrollRegionLeft] = useState(false)
+  const [canScrollRegionRight, setCanScrollRegionRight] = useState(false)
 
-  // Read URL on mount + check onboarding
+  // Read URL on mount + check onboarding + detect mobile
   useEffect(() => {
     const ids = readAreasFromUrl()
     if (ids.length > 0) setActiveAreas(new Set(ids))
     try {
       if (!localStorage.getItem('schoolsOnboarded')) setShowOnboarding(true)
     } catch {}
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Region scroll arrows: check after render and whenever regionChips changes
+  useEffect(() => {
+    const el = regionScrollRef.current
+    if (!el) return
+    const update = () => {
+      setCanScrollRegionLeft(el.scrollLeft > 8)
+      setCanScrollRegionRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8)
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    return () => el.removeEventListener('scroll', update)
+  })
 
   // Browser back/forward
   useEffect(() => {
@@ -434,6 +455,25 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
         .slice(0, 8)
     )
   }, [searchQuery, allSchools])
+
+  // Mobile ZIP auto-search: trigger after 500ms debounce when 5 digits entered
+  useEffect(() => {
+    if (!isMobile) return
+    const zip = zipInput.trim()
+    if (!/^\d{5}$/.test(zip)) return
+    const timer = setTimeout(() => {
+      const town = ZIP_TO_TOWN[zip]
+      if (town) {
+        selectSingleArea(town)
+        const hood = getNeighborhoodById(town)
+        if (hood) setExpandedRegion(hood.region)
+      } else {
+        setZipNotCovered(true)
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zipInput, isMobile])
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -585,35 +625,71 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
             Select your area
           </p>
 
-          {/* Region pills — horizontal scroll */}
-          <div
-            className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
-            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-          >
-            {regionChips.map(({ region }) => {
-              const isActive = activeRegions.has(region)
-              const isOpen = expandedRegion === region
-              return (
+          {/* Region pills — horizontal scroll with desktop arrows */}
+          <div className="relative">
+            {/* Left arrow + fade */}
+            {canScrollRegionLeft && (
+              <div className="hidden md:flex absolute left-0 top-0 bottom-2 z-10 items-center">
+                <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#FFFAF6] to-transparent pointer-events-none" />
                 <button
-                  key={region}
-                  onClick={() => toggleRegion(region)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all whitespace-nowrap shrink-0 ${
-                    isActive
-                      ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white shadow-sm'
-                      : 'bg-white border-[#E8E5E1] text-[#3D3A36] hover:border-[#5B9A6F] hover:text-[#5B9A6F]'
-                  }`}
+                  onClick={() => regionScrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
+                  className="relative z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
+                  aria-label="Scroll regions left"
                 >
-                  {region}
-                  <svg
-                    width="10" height="10" viewBox="0 0 10 10" fill="none"
-                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
-                  >
-                    <polyline points="2 3 5 7 8 3" />
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="8 2 4 6 8 10" />
                   </svg>
                 </button>
-              )
-            })}
+              </div>
+            )}
+
+            <div
+              ref={regionScrollRef}
+              className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+              style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+            >
+              {regionChips.map(({ region }) => {
+                const isActive = activeRegions.has(region)
+                const isOpen = expandedRegion === region
+                return (
+                  <button
+                    key={region}
+                    onClick={() => toggleRegion(region)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white shadow-sm'
+                        : 'bg-white border-[#E8E5E1] text-[#3D3A36] hover:border-[#5B9A6F] hover:text-[#5B9A6F]'
+                    }`}
+                  >
+                    {region}
+                    <svg
+                      width="10" height="10" viewBox="0 0 10 10" fill="none"
+                      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+                    >
+                      <polyline points="2 3 5 7 8 3" />
+                    </svg>
+                  </button>
+                )
+              })}
+              <div className="w-4 shrink-0" aria-hidden />
+            </div>
+
+            {/* Right arrow + fade */}
+            {canScrollRegionRight && (
+              <div className="hidden md:flex absolute right-0 top-0 bottom-2 z-10 items-center">
+                <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#FFFAF6] to-transparent pointer-events-none" />
+                <button
+                  onClick={() => regionScrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' })}
+                  className="relative z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
+                  aria-label="Scroll regions right"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="4 2 8 6 4 10" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Town chips for expanded region — horizontal scroll */}
@@ -668,7 +744,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
               <input
                 type="text"
                 inputMode="numeric"
-                placeholder="ZIP + Enter"
+                placeholder={isMobile ? 'ZIP code' : 'ZIP + Enter'}
                 value={zipInput}
                 onChange={e => { setZipInput(e.target.value); setZipNotCovered(false) }}
                 onKeyDown={handleZipKey}
