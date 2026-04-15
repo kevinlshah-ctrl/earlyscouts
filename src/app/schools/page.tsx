@@ -8,8 +8,13 @@ export const metadata = {
   description: 'Deep-dive research reports on 40+ LA schools.',
 }
 
-export default async function SchoolsPage() {
-  const schools = await getDeepDiveSchools()
+export default async function SchoolsPage({
+  searchParams,
+}: {
+  searchParams?: { metro?: string }
+}) {
+  const metro = searchParams?.metro ?? 'los-angeles'
+  const schools = await getDeepDiveSchools(metro)
   return (
     <>
       <Suspense fallback={null}>

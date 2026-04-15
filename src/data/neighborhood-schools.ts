@@ -1,12 +1,14 @@
 /**
  * Neighborhood-to-school mapping for EarlyScouts discovery page.
  * Source of truth: only schools with report_data in Supabase appear here.
- * Last updated: April 8, 2026 — expanded Hollywood Hills (added 7 elementaries, le-conte middle, marshall high)
+ * Last updated: April 10, 2026 — added metro field, updated regions for v3 metro-scalable design,
+ *   added westchester, hollywood, highland-park, brentwood, palisades entries
  */
 
 export interface NeighborhoodConfig {
   label: string
   region: string
+  metro: string  // 'los-angeles', 'san-francisco', etc.
   districts: string[]
   elementarySlugs: string[]
   middleSlugs: string[]
@@ -24,6 +26,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'mar-vista': {
     label: 'Mar Vista',
     region: 'Westside',
+    metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
       'mar-vista-elementary-school-los-angeles-ca',
@@ -62,6 +65,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'venice': {
     label: 'Venice',
     region: 'Westside',
+    metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
       'beethoven-street-elementary-school-los-angeles-ca',
@@ -87,6 +91,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'palms': {
     label: 'Palms / Cheviot Hills',
     region: 'Westside',
+    metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
       'clover-avenue-elementary-school-los-angeles-ca',
@@ -111,6 +116,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'playa-vista': {
     label: 'Playa Vista / Playa del Rey',
     region: 'Westside',
+    metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
       'playa-vista-elementary-school-los-angeles-ca',
@@ -130,9 +136,62 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
   },
 
+  'westchester': {
+    label: 'Westchester',
+    region: 'Westside',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'playa-del-rey-elementary-school-los-angeles-ca',
+      'short-avenue-elementary-school-los-angeles-ca',
+      'westchester-enriched-sciences-magnets-los-angeles-ca',
+      'wish-charter-schools-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'marina-del-rey-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [
+      'westchester-enriched-sciences-magnets-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
+    ],
+  },
+
+  'west-la': {
+    label: 'West LA',
+    region: 'Westside',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'overland-avenue-elementary-los-angeles-ca',
+      'westwood-charter-elementary-los-angeles-ca',
+      'laces-magnet-los-angeles-ca',
+      'new-west-charter-school-los-angeles-ca',
+      'community-magnet-charter-school-los-angeles-ca',
+      'wish-charter-schools-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'emerson-community-charter-middle-los-angeles-ca',
+    ],
+    highSlugs: [
+      'university-high-school-charter-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SANTA MONICA & MALIBU
+  // ═══════════════════════════════════════════════════════════════
+
   'santa-monica': {
     label: 'Santa Monica',
-    region: 'Westside',
+    region: 'Santa Monica & Malibu',
+    metro: 'los-angeles',
     districts: ['SMMUSD'],
     elementarySlugs: [
       'edison-language-academy-santa-monica-ca',
@@ -160,9 +219,29 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
   },
 
+  'malibu': {
+    label: 'Malibu',
+    region: 'Santa Monica & Malibu',
+    metro: 'los-angeles',
+    districts: ['SMMUSD'],
+    elementarySlugs: [
+      'webster-elementary-school-malibu-ca',
+    ],
+    middleSlugs: [],
+    highSlugs: [],
+    playbookSlugs: [
+      'smmusd-transfer-playbook',
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // CULVER CITY
+  // ═══════════════════════════════════════════════════════════════
+
   'culver-city': {
     label: 'Culver City',
-    region: 'Westside',
+    region: 'Culver City',
+    metro: 'los-angeles',
     districts: ['CCUSD'],
     elementarySlugs: [
       'el-marino-language-school-culver-city-ca',
@@ -182,37 +261,66 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
   },
 
-  'malibu': {
-    label: 'Malibu',
-    region: 'Westside',
-    districts: ['SMMUSD'],
+  // ═══════════════════════════════════════════════════════════════
+  // HOLLYWOOD & MID-CITY
+  // ═══════════════════════════════════════════════════════════════
+
+  'hollywood': {
+    label: 'Hollywood',
+    region: 'Hollywood & Mid-City',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
     elementarySlugs: [
-      'webster-elementary-school-malibu-ca',
+      'wonderland-avenue-elementary-los-angeles-ca',
+      'gardner-street-elementary-los-angeles-ca',
+      'cheremoya-avenue-elementary-los-angeles-ca',
+      'micheltorena-elementary-los-angeles-ca',
+      'franklin-avenue-elementary-los-angeles-ca',
+      'los-feliz-stemm-magnet-los-angeles-ca',
+      'atwater-avenue-elementary-los-angeles-ca',
+      'larchmont-charter-school-los-angeles-ca',
+      'cwc-hollywood-los-angeles-ca',
+      'laces-magnet-los-angeles-ca',
+      'carpenter-charter-studio-city-ca',
+      'colfax-charter-valley-village-ca',
     ],
-    middleSlugs: [],
-    highSlugs: [],
+    middleSlugs: [
+      'bancroft-middle-school-los-angeles-ca',
+      'le-conte-middle-school-los-angeles-ca',
+      'john-burroughs-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [
+      'hollywood-high-school-los-angeles-ca',
+      'john-marshall-high-school-los-angeles-ca',
+      'fairfax-high-school-los-angeles-ca',
+    ],
     playbookSlugs: [
-      'smmusd-transfer-playbook',
+      'hollywood-hills-school-choice-playbook',
+      'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
+    ],
+    privateSlugs: [
+      'the-oaks-school-los-angeles-ca',
+      'hollywood-schoolhouse-los-angeles-ca',
     ],
   },
 
-  'west-la': {
-    label: 'West LA',
-    region: 'Westside',
+  'hancock-park': {
+    label: 'Hancock Park',
+    region: 'Hollywood & Mid-City',
+    metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
-      'overland-avenue-elementary-los-angeles-ca',
-      'westwood-charter-elementary-los-angeles-ca',
+      'hancock-park-elementary-los-angeles-ca',
+      'third-street-elementary-los-angeles-ca',
       'laces-magnet-los-angeles-ca',
-      'new-west-charter-school-los-angeles-ca',
-      'community-magnet-charter-school-los-angeles-ca',
-      'wish-charter-schools-los-angeles-ca',
+      'larchmont-charter-school-los-angeles-ca',
     ],
     middleSlugs: [
-      'emerson-community-charter-middle-los-angeles-ca',
+      'le-conte-middle-school-los-angeles-ca',
     ],
     highSlugs: [
-      'university-high-school-charter-los-angeles-ca',
+      'fairfax-high-school-los-angeles-ca',
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
@@ -220,13 +328,260 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
   },
 
+  'los-feliz': {
+    label: 'Los Feliz',
+    region: 'Hollywood & Mid-City',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'ivanhoe-elementary-los-angeles-ca',
+      'franklin-avenue-elementary-los-angeles-ca',
+      'los-feliz-stemm-magnet-los-angeles-ca',
+      'glenfeliz-elementary-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'thomas-starr-king-middle-los-angeles-ca',
+    ],
+    highSlugs: [
+      'john-marshall-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
+  // legacy entry — kept for backward compat; prefer 'hollywood' for v3
+  'hollywood-hills': {
+    label: 'Hollywood Hills',
+    region: 'Hollywood & Mid-City',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'wonderland-avenue-elementary-los-angeles-ca',
+      'gardner-street-elementary-los-angeles-ca',
+      'cheremoya-avenue-elementary-los-angeles-ca',
+      'micheltorena-elementary-los-angeles-ca',
+      'franklin-avenue-elementary-los-angeles-ca',
+      'los-feliz-stemm-magnet-los-angeles-ca',
+      'atwater-avenue-elementary-los-angeles-ca',
+      'larchmont-charter-school-los-angeles-ca',
+      'cwc-hollywood-los-angeles-ca',
+      'laces-magnet-los-angeles-ca',
+      'carpenter-charter-studio-city-ca',
+      'colfax-charter-valley-village-ca',
+    ],
+    middleSlugs: [
+      'bancroft-middle-school-los-angeles-ca',
+      'le-conte-middle-school-los-angeles-ca',
+      'john-burroughs-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [
+      'hollywood-high-school-los-angeles-ca',
+      'john-marshall-high-school-los-angeles-ca',
+      'fairfax-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'hollywood-hills-school-choice-playbook',
+      'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
+    ],
+    privateSlugs: [
+      'the-oaks-school-los-angeles-ca',
+      'hollywood-schoolhouse-los-angeles-ca',
+    ],
+  },
+
+  'studio-city': {
+    label: 'Studio City',
+    region: 'Hollywood & Mid-City',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'carpenter-charter-studio-city-ca',
+      'colfax-charter-valley-village-ca',
+      'wonderland-avenue-elementary-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'john-burroughs-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
   // ═══════════════════════════════════════════════════════════════
-  // BRENTWOOD / PALISADES
+  // NORTHEAST LA
   // ═══════════════════════════════════════════════════════════════
 
+  'silver-lake': {
+    label: 'Silver Lake / Echo Park',
+    region: 'Northeast LA',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'micheltorena-elementary-los-angeles-ca',
+      'allesandro-elementary-los-angeles-ca',
+      'clifford-street-elementary-los-angeles-ca',
+      'delevan-drive-elementary-los-angeles-ca',
+      'elysian-heights-arts-magnet-los-angeles-ca',
+      'rockdale-vapa-magnet-los-angeles-ca',
+      'cwc-silver-lake-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'thomas-starr-king-middle-los-angeles-ca',
+    ],
+    highSlugs: [
+      'john-marshall-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+      'la-charter-magnet-school-choice-playbook',
+    ],
+  },
+
+  'eagle-rock': {
+    label: 'Eagle Rock',
+    region: 'Northeast LA',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'eagle-rock-elementary-los-angeles-ca',
+      'dahlia-heights-elementary-los-angeles-ca',
+      'toland-way-elementary-los-angeles-ca',
+      'aldama-elementary-los-angeles-ca',
+      'arroyo-seco-museum-science-magnet-los-angeles-ca',
+    ],
+    middleSlugs: [],
+    highSlugs: [
+      'eagle-rock-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
+  'highland-park': {
+    label: 'Highland Park',
+    region: 'Northeast LA',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'buchanan-street-elementary-los-angeles-ca',
+      'yorkdale-elementary-los-angeles-ca',
+      'aldama-elementary-los-angeles-ca',
+    ],
+    middleSlugs: [],
+    highSlugs: [
+      'eagle-rock-high-school-los-angeles-ca',
+      'benjamin-franklin-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
+  'atwater-village': {
+    label: 'Atwater Village / Mt. Washington',
+    region: 'Northeast LA',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'atwater-avenue-elementary-los-angeles-ca',
+      'glenfeliz-elementary-los-angeles-ca',
+      'mt-washington-elementary-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'thomas-starr-king-middle-los-angeles-ca',
+    ],
+    highSlugs: [
+      'john-marshall-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SOUTH PASADENA
+  // ═══════════════════════════════════════════════════════════════
+
+  'south-pasadena': {
+    label: 'South Pasadena',
+    region: 'South Pasadena',
+    metro: 'los-angeles',
+    districts: ['SPUSD'],
+    elementarySlugs: [
+      'marengo-elementary-south-pasadena-ca',
+      'arroyo-vista-elementary-south-pasadena-ca',
+      'monterey-hills-elementary-south-pasadena-ca',
+    ],
+    middleSlugs: [
+      'south-pasadena-middle-school-south-pasadena-ca',
+    ],
+    highSlugs: [
+      'south-pasadena-senior-high-south-pasadena-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // BRENTWOOD & PALISADES
+  // ═══════════════════════════════════════════════════════════════
+
+  'brentwood': {
+    label: 'Brentwood',
+    region: 'Brentwood & Palisades',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'kenter-canyon-elementary-los-angeles-ca',
+      'brentwood-science-magnet-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'paul-revere-charter-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [
+      'palisades-charter-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+    privateSlugs: [
+      'brentwood-school-los-angeles-ca',
+      'wildwood-school-los-angeles-ca',
+      'windward-school-los-angeles-ca',
+    ],
+  },
+
+  'palisades': {
+    label: 'Pacific Palisades',
+    region: 'Brentwood & Palisades',
+    metro: 'los-angeles',
+    districts: ['LAUSD'],
+    elementarySlugs: [
+      'palisades-charter-elementary-los-angeles-ca',
+      'canyon-charter-elementary-los-angeles-ca',
+      'marquez-charter-elementary-los-angeles-ca',
+    ],
+    middleSlugs: [
+      'paul-revere-charter-middle-school-los-angeles-ca',
+    ],
+    highSlugs: [
+      'palisades-charter-high-school-los-angeles-ca',
+    ],
+    playbookSlugs: [
+      'lausd-school-choice-playbook',
+    ],
+  },
+
+  // legacy combined entry — kept for backward compat
   'brentwood-palisades': {
     label: 'Brentwood / Palisades',
-    region: 'Westside',
+    region: 'Brentwood & Palisades',
+    metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
       'kenter-canyon-elementary-los-angeles-ca',
@@ -258,6 +613,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'manhattan-beach': {
     label: 'Manhattan Beach',
     region: 'Beach Cities',
+    metro: 'los-angeles',
     districts: ['MBUSD'],
     elementarySlugs: [
       'meadows-avenue-elementary-manhattan-beach-ca',
@@ -280,6 +636,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'el-segundo': {
     label: 'El Segundo',
     region: 'Beach Cities',
+    metro: 'los-angeles',
     districts: ['ESUSD'],
     elementarySlugs: [
       'richmond-street-elementary-el-segundo-ca',
@@ -299,6 +656,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'hermosa-beach': {
     label: 'Hermosa Beach',
     region: 'Beach Cities',
+    metro: 'los-angeles',
     districts: ['HBCSD'],
     elementarySlugs: [
       'hermosa-valley-school-hermosa-beach-ca',
@@ -315,6 +673,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   'redondo-beach': {
     label: 'Redondo Beach',
     region: 'Beach Cities',
+    metro: 'los-angeles',
     districts: ['RBUSD'],
     elementarySlugs: [
       'alta-vista-elementary-redondo-beach-ca',
@@ -338,208 +697,6 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
   },
 
-  // ═══════════════════════════════════════════════════════════════
-  // EAST LA (Silver Lake / Los Feliz / Eagle Rock / Atwater)
-  // ═══════════════════════════════════════════════════════════════
-
-  'silver-lake': {
-    label: 'Silver Lake / Echo Park',
-    region: 'East LA',
-    districts: ['LAUSD'],
-    elementarySlugs: [
-      'micheltorena-elementary-los-angeles-ca',
-      'allesandro-elementary-los-angeles-ca',
-      'clifford-street-elementary-los-angeles-ca',
-      'delevan-drive-elementary-los-angeles-ca',
-      'elysian-heights-arts-magnet-los-angeles-ca',
-      'rockdale-vapa-magnet-los-angeles-ca',
-      'cwc-silver-lake-los-angeles-ca',
-    ],
-    middleSlugs: [
-      'thomas-starr-king-middle-los-angeles-ca',
-    ],
-    highSlugs: [
-      'john-marshall-high-school-los-angeles-ca',
-    ],
-    playbookSlugs: [
-      'lausd-school-choice-playbook',
-      'la-charter-magnet-school-choice-playbook',
-    ],
-  },
-
-  'los-feliz': {
-    label: 'Los Feliz',
-    region: 'East LA',
-    districts: ['LAUSD'],
-    elementarySlugs: [
-      'ivanhoe-elementary-los-angeles-ca',
-      'franklin-avenue-elementary-los-angeles-ca',
-      'los-feliz-stemm-magnet-los-angeles-ca',
-      'glenfeliz-elementary-los-angeles-ca',
-    ],
-    middleSlugs: [
-      'thomas-starr-king-middle-los-angeles-ca',
-    ],
-    highSlugs: [
-      'john-marshall-high-school-los-angeles-ca',
-    ],
-    playbookSlugs: [
-      'lausd-school-choice-playbook',
-    ],
-  },
-
-  'eagle-rock': {
-    label: 'Eagle Rock / Highland Park',
-    region: 'East LA',
-    districts: ['LAUSD'],
-    elementarySlugs: [
-      'eagle-rock-elementary-los-angeles-ca',
-      'dahlia-heights-elementary-los-angeles-ca',
-      'toland-way-elementary-los-angeles-ca',
-      'aldama-elementary-los-angeles-ca',
-      'yorkdale-elementary-los-angeles-ca',
-      'buchanan-street-elementary-los-angeles-ca',
-      'arroyo-seco-museum-science-magnet-los-angeles-ca',
-    ],
-    middleSlugs: [],
-    highSlugs: [
-      'eagle-rock-high-school-los-angeles-ca',
-      'benjamin-franklin-high-school-los-angeles-ca',
-    ],
-    playbookSlugs: [
-      'lausd-school-choice-playbook',
-    ],
-  },
-
-  'atwater-village': {
-    label: 'Atwater Village / Mt. Washington',
-    region: 'East LA',
-    districts: ['LAUSD'],
-    elementarySlugs: [
-      'atwater-avenue-elementary-los-angeles-ca',
-      'glenfeliz-elementary-los-angeles-ca',
-      'mt-washington-elementary-los-angeles-ca',
-    ],
-    middleSlugs: [
-      'thomas-starr-king-middle-los-angeles-ca',
-    ],
-    highSlugs: [
-      'john-marshall-high-school-los-angeles-ca',
-    ],
-    playbookSlugs: [
-      'lausd-school-choice-playbook',
-    ],
-  },
-
-  // ═══════════════════════════════════════════════════════════════
-  // HOLLYWOOD HILLS
-  // ═══════════════════════════════════════════════════════════════
-
-  'hollywood-hills': {
-    label: 'Hollywood Hills',
-    region: 'Hollywood Hills',
-    districts: ['LAUSD'],
-    elementarySlugs: [
-      // Core Hollywood Hills elementaries
-      'wonderland-avenue-elementary-los-angeles-ca',
-      'gardner-street-elementary-los-angeles-ca',
-      'cheremoya-avenue-elementary-los-angeles-ca',
-      'micheltorena-elementary-los-angeles-ca',
-      'franklin-avenue-elementary-los-angeles-ca',
-      'los-feliz-stemm-magnet-los-angeles-ca',
-      'atwater-avenue-elementary-los-angeles-ca',
-      // Charter / magnet (escape options)
-      'larchmont-charter-school-los-angeles-ca',
-      'cwc-hollywood-los-angeles-ca',
-      'laces-magnet-los-angeles-ca',
-      // Over-the-hill charters (~15 min via Laurel Canyon)
-      'carpenter-charter-studio-city-ca',
-      'colfax-charter-valley-village-ca',
-    ],
-    middleSlugs: [
-      'bancroft-middle-school-los-angeles-ca',
-      'le-conte-middle-school-los-angeles-ca',
-      'john-burroughs-middle-school-los-angeles-ca',
-    ],
-    highSlugs: [
-      'hollywood-high-school-los-angeles-ca',
-      'john-marshall-high-school-los-angeles-ca',
-      'fairfax-high-school-los-angeles-ca',
-    ],
-    playbookSlugs: [
-      'hollywood-hills-school-choice-playbook',
-      'lausd-school-choice-playbook',
-      'la-charter-magnet-school-choice-playbook',
-    ],
-    privateSlugs: [
-      'the-oaks-school-los-angeles-ca',
-      'hollywood-schoolhouse-los-angeles-ca',
-    ],
-  },
-
-  'studio-city': {
-    label: 'Studio City',
-    region: 'Hollywood Hills',
-    districts: ['LAUSD'],
-    elementarySlugs: [
-      'carpenter-charter-studio-city-ca',
-      'colfax-charter-valley-village-ca',
-      'wonderland-avenue-elementary-los-angeles-ca',
-    ],
-    middleSlugs: [
-      'john-burroughs-middle-school-los-angeles-ca',
-    ],
-    highSlugs: [],
-    playbookSlugs: [
-      'lausd-school-choice-playbook',
-    ],
-  },
-
-  'hancock-park': {
-    label: 'Hancock Park',
-    region: 'Hollywood Hills',
-    districts: ['LAUSD'],
-    elementarySlugs: [
-      'hancock-park-elementary-los-angeles-ca',
-      'third-street-elementary-los-angeles-ca',
-      'laces-magnet-los-angeles-ca',
-      'larchmont-charter-school-los-angeles-ca',
-    ],
-    middleSlugs: [
-      'le-conte-middle-school-los-angeles-ca',
-    ],
-    highSlugs: [
-      'fairfax-high-school-los-angeles-ca',
-    ],
-    playbookSlugs: [
-      'lausd-school-choice-playbook',
-      'la-charter-magnet-school-choice-playbook',
-    ],
-  },
-
-  // ═══════════════════════════════════════════════════════════════
-  // SOUTH PASADENA
-  // ═══════════════════════════════════════════════════════════════
-
-  'south-pasadena': {
-    label: 'South Pasadena',
-    region: 'East LA',
-    districts: ['SPUSD'],
-    elementarySlugs: [
-      'marengo-elementary-south-pasadena-ca',
-      'arroyo-vista-elementary-south-pasadena-ca',
-      'monterey-hills-elementary-south-pasadena-ca',
-    ],
-    middleSlugs: [
-      'south-pasadena-middle-school-south-pasadena-ca',
-    ],
-    highSlugs: [
-      'south-pasadena-senior-high-south-pasadena-ca',
-    ],
-    playbookSlugs: [
-      'lausd-school-choice-playbook',
-    ],
-  },
 }
 
 // ── Derived exports ──────────────────────────────────────────────────────────
@@ -556,6 +713,19 @@ export function getNeighborhoodById(id: string): NeighborhoodConfig | null {
 /** Get all neighborhoods in a region */
 export function getNeighborhoodsByRegion(region: string) {
   return NEIGHBORHOOD_LIST.filter((n) => n.region === region)
+}
+
+/** Get all neighborhoods in a metro */
+export function getNeighborhoodsByMetro(metroId: string) {
+  return NEIGHBORHOOD_LIST.filter((n) => n.metro === metroId)
+}
+
+/** Get all unique regions in a metro, in the order they appear in the data */
+export function getRegionsByMetro(metroId: string): string[] {
+  const regions = new Set(
+    NEIGHBORHOOD_LIST.filter((n) => n.metro === metroId).map((n) => n.region)
+  )
+  return Array.from(regions)
 }
 
 /** Get all unique regions */

@@ -57,6 +57,7 @@ export interface SchoolRow {
   greatschools_url: string | null
   niche_url: string | null
   key_insight: string | null
+  metro: string | null
   scraped_at: string
   updated_at: string
   deep_report: string | null

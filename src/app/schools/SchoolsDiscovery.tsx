@@ -1,66 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
-import SchoolBracket from '@/components/SchoolBracket'
-import {
-  getNeighborhoodById,
-  getNeighborhoodsByRegion,
-  getRegions,
-  NEIGHBORHOOD_SCHOOLS,
-} from '@/data/neighborhood-schools'
+import { METROS, DEFAULT_METRO } from '@/data/metro-config'
+import { SCOUT_TAKES, ZIP_TO_TOWN } from '@/data/neighborhood-scout-takes'
+import { getNeighborhoodById } from '@/data/neighborhood-schools'
 import type { School } from '@/lib/types'
-
-// ── ZIP → neighborhood mapping ────────────────────────────────────────────────
-const ZIP_TO_NEIGHBORHOOD: Record<string, string[]> = {
-  '90066': ['mar-vista', 'playa-vista'],
-  '90034': ['palms'],
-  '90230': ['culver-city'],
-  '90401': ['santa-monica'],
-  '90402': ['santa-monica'],
-  '90403': ['santa-monica'],
-  '90404': ['santa-monica'],
-  '90405': ['santa-monica'],
-  '90045': ['playa-vista'],
-  '90292': ['playa-vista'],
-  '90094': ['playa-vista'],
-  '90291': ['venice'],
-  '90064': ['palms'],
-  '90293': ['playa-vista'],
-  '90254': ['hermosa-beach'],
-  '90266': ['manhattan-beach'],
-  '90277': ['redondo-beach'],
-  '90278': ['redondo-beach'],
-  '90245': ['el-segundo'],
-  '90027': ['hollywood-hills'],
-  '90028': ['hollywood-hills'],
-  '90046': ['hollywood-hills'],
-  '90068': ['hollywood-hills'],
-  '90039': ['silver-lake', 'atwater-village'],
-  '90065': ['atwater-village'],
-  '90041': ['eagle-rock'],
-  '90042': ['eagle-rock'],
-  '90030': ['south-pasadena'],
-}
-
-// ── Playbook descriptions ─────────────────────────────────────────────────────
-const PLAYBOOK_DESCRIPTIONS: Record<string, string> = {
-  'smmusd-transfer-playbook':
-    'Every step for getting into Santa Monica-Malibu schools as an out-of-district family. Permit windows, priority tiers, and every deadline.',
-  'ccusd-transfer-playbook':
-    'Permit windows, priority tiers, and every deadline for transferring into Culver City Unified.',
-  'lausd-school-choice-playbook':
-    'Magnets, permits, charters: the complete LAUSD selection timeline decoded.',
-  'beach-cities-school-choice-blueprint':
-    'How to navigate open enrollment across Manhattan Beach, El Segundo, Hermosa, and Redondo unified school districts.',
-  'hollywood-hills-school-choice-playbook':
-    'School options for Hollywood Hills families: LAUSD magnet pathways, local public schools, and nearby private alternatives.',
-  'la-charter-magnet-school-choice-playbook':
-    'Decoding the two systems most parents confuse: the LAUSD Magnet Priority Points system and independent charter school lotteries.',
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -72,131 +20,247 @@ function schoolHref(slug: string): string {
   return isGuideSlug(slug) ? `/guides/${slug}` : `/schools/${slug}`
 }
 
-function getRegionForNeighborhood(id: string): string | null {
-  return NEIGHBORHOOD_SCHOOLS[id]?.region ?? null
-}
-
-function readNeighborhoodsFromUrl(): string[] {
+function readAreasFromUrl(): string[] {
   if (typeof window === 'undefined') return []
-  const q = new URLSearchParams(window.location.search).get('q')
-  if (!q) return []
-  return q.split(',').filter(id => getNeighborhoodById(id) != null)
+  const area = new URLSearchParams(window.location.search).get('area')
+  if (!area) return []
+  return area.split(',').filter(id => getNeighborhoodById(id) != null || SCOUT_TAKES[id] != null)
 }
 
-function getInitialNeighborhoods(): Set<string> {
-  const fromUrl = readNeighborhoodsFromUrl()
-  return fromUrl.length > 0 ? new Set(fromUrl) : new Set<string>()
+function fmtPct(val: number | null | undefined): string {
+  if (!val) return '—'
+  return `${Math.round(val)}%`
 }
 
-function getRegionsForNeighborhoods(ids: Set<string>): Set<string> {
-  const regions = new Set<string>()
-  ids.forEach(id => { const r = getRegionForNeighborhood(id); if (r) regions.add(r) })
-  return regions
-}
+// ── Metro header ──────────────────────────────────────────────────────────────
 
-/** Count distinct school-report schools for a region (deduplicated). */
-function getSchoolCountForRegion(region: string, allSchools: School[]): number {
-  const hoods = getNeighborhoodsByRegion(region)
-  const slugSet = new Set(hoods.flatMap(h => [...h.elementarySlugs, ...h.middleSlugs, ...h.highSlugs]))
-  return allSchools.filter(s => slugSet.has(s.slug)).length
-}
+function MetroLabel({ metro }: { metro: string }) {
+  const metroList = Object.values(METROS)
+  const label = METROS[metro]?.label ?? metro
 
-// ── Onboarding modal ──────────────────────────────────────────────────────────
-function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
+  if (metroList.length <= 1) {
+    return (
+      <p className="text-xs text-[#5B9A6F] font-medium mb-4">
+        📍 {label}
+      </p>
+    )
+  }
+
+  // Future: render active selector when 2+ metros
   return (
-    <>
-      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onDismiss} />
-      <div className="fixed inset-0 z-[201] flex items-center justify-center px-4 pointer-events-none">
-        <div
-          className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl pointer-events-auto"
-          onClick={e => e.stopPropagation()}
+    <div className="flex gap-2 mb-4">
+      {metroList.map(m => (
+        <button
+          key={m.id}
+          className={`px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all ${
+            m.id === metro
+              ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
+              : 'bg-white border-[#E8E5E1] text-[#3D3A36]'
+          }`}
         >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-[#5B9A6F]/10 rounded-full flex items-center justify-center shrink-0">
-              <span className="text-xl">🏫</span>
-            </div>
-            <h2 className="font-serif text-2xl text-[#1A1A2E]">Welcome to EarlyScouts</h2>
-          </div>
-          <p className="text-sm text-[#6E6A65] mb-5">Here's how to explore LA schools:</p>
-          <ul className="flex flex-col gap-3 mb-6">
-            {[
-              'Select your neighborhood to see every school we cover',
-              'Search by school name or ZIP code',
-              'Browse our transfer guides for step-by-step enrollment help',
-            ].map(item => (
-              <li key={item} className="flex gap-3 text-sm text-[#3D3A36]">
-                <span className="w-5 h-5 rounded-full bg-[#5B9A6F]/12 text-[#5B9A6F] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
-                {item}
-              </li>
-            ))}
-          </ul>
+          {m.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Scout's Take card ─────────────────────────────────────────────────────────
+
+function ScoutTakeCard({ townId }: { townId: string }) {
+  const take = SCOUT_TAKES[townId]
+  const [expanded, setExpanded] = useState(false)
+
+  if (!take) return null
+
+  const visibleParagraphs = expanded ? take.paragraphs : take.paragraphs.slice(0, 1)
+  const hasMore = take.paragraphs.length > 1
+
+  return (
+    <div className="mb-6 rounded-2xl overflow-hidden border border-[#D4EEE0] bg-[#F7FBF8]" style={{ borderLeft: '4px solid #5B9A6F' }}>
+      <div className="px-5 pt-5 pb-4">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-base">🔭</span>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F]">
+            Scout's Take
+          </p>
+        </div>
+
+        <h2 className="font-serif text-xl text-[#1A1A2E] mb-3">{take.title}</h2>
+
+        {/* Paragraphs */}
+        <div className="flex flex-col gap-3">
+          {visibleParagraphs.map((p, i) => (
+            <p key={i} className="text-sm text-[#3D3A36] leading-relaxed">{p}</p>
+          ))}
+        </div>
+
+        {/* Read more toggle */}
+        {hasMore && (
           <button
-            onClick={onDismiss}
-            className="w-full bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+            onClick={() => setExpanded(v => !v)}
+            className="mt-3 text-xs font-semibold text-[#5B9A6F] hover:text-[#4a8a5e] flex items-center gap-1 transition-colors"
           >
-            Got it →
+            {expanded ? 'Read less ▴' : 'Read more ▾'}
           </button>
+        )}
+      </div>
+
+      {/* Pipeline */}
+      <div className="border-t border-[#D4EEE0] px-5 py-4">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-3">
+          📍 Your Default Pipeline
+        </p>
+        <div className="flex flex-col gap-1.5">
+          <PipelineRow label="Elementary" text={take.pipeline.elementary} />
+          <div className="ml-2 text-[#B0AAA4] text-sm leading-none">↓</div>
+          <PipelineRow label="Middle" text={take.pipeline.middle} />
+          <div className="ml-2 text-[#B0AAA4] text-sm leading-none">↓</div>
+          <PipelineRow label="High" text={take.pipeline.high} />
         </div>
       </div>
-    </>
+    </div>
+  )
+}
+
+function PipelineRow({ label, text }: { label: string; text: string }) {
+  return (
+    <div className="flex gap-2">
+      <span className="text-[10px] font-mono font-bold text-[#9B9690] uppercase tracking-wider mt-0.5 w-20 shrink-0">{label}</span>
+      <span className="text-xs text-[#3D3A36] leading-snug">{text}</span>
+    </div>
+  )
+}
+
+// ── School card ───────────────────────────────────────────────────────────────
+
+function SchoolCard({ school }: { school: School }) {
+  const href = schoolHref(school.slug)
+  const isGuide = isGuideSlug(school.slug)
+
+  return (
+    <a
+      href={href}
+      className="block bg-white border border-[#E8E5E1] rounded-xl p-4 hover:border-[#5B9A6F]/50 hover:shadow-sm transition-all"
+    >
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <p className="font-semibold text-sm text-[#1A1A2E] leading-snug">{school.name}</p>
+        {school.grades && (
+          <span className="text-[10px] font-mono text-[#9B9690] whitespace-nowrap shrink-0 mt-0.5">
+            {school.grades}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
+        {school.district && (
+          <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#5B9A6F] bg-[#5B9A6F]/8 px-1.5 py-0.5 rounded">
+            {school.district}
+          </span>
+        )}
+        {!isGuide && school.academics.mathProficiency ? (
+          <>
+            <span className="text-[11px] text-[#6E6A65]">
+              Math {fmtPct(school.academics.mathProficiency)}
+            </span>
+            {school.academics.readingProficiency ? (
+              <span className="text-[11px] text-[#6E6A65]">
+                ELA {fmtPct(school.academics.readingProficiency)}
+              </span>
+            ) : null}
+          </>
+        ) : null}
+        {school.ratings.greatSchools ? (
+          <span className="text-[11px] text-[#6E6A65]">
+            GS {school.ratings.greatSchools}/10
+          </span>
+        ) : null}
+      </div>
+
+      <p className="text-xs font-semibold text-[#5B9A6F]">
+        {isGuide ? 'Read Guide →' : 'Read Deep Dive →'}
+      </p>
+    </a>
+  )
+}
+
+// ── Playbook card ─────────────────────────────────────────────────────────────
+
+const PLAYBOOK_DESCRIPTIONS: Record<string, string> = {
+  'smmusd-transfer-playbook':
+    'Every step for getting into Santa Monica-Malibu schools as an out-of-district family.',
+  'ccusd-transfer-playbook':
+    'Permit windows, priority tiers, and every deadline for transferring into Culver City Unified.',
+  'lausd-school-choice-playbook':
+    'Magnets, permits, charters: the complete LAUSD selection timeline decoded.',
+  'beach-cities-school-choice-blueprint':
+    'How to navigate open enrollment across Manhattan Beach, El Segundo, Hermosa, and Redondo.',
+  'hollywood-hills-school-choice-playbook':
+    'School options for Hollywood Hills families: LAUSD magnet pathways, local public schools, and nearby private alternatives.',
+  'la-charter-magnet-school-choice-playbook':
+    'Decoding the LAUSD Magnet Priority Points system and independent charter school lotteries.',
+}
+
+function PlaybookCard({ school }: { school: School }) {
+  return (
+    <a
+      href={`/guides/${school.slug}`}
+      className="block bg-white border border-[#E8E5E1] rounded-xl p-4 hover:border-[#F2945C]/50 hover:shadow-sm transition-all"
+    >
+      <div className="flex items-start gap-2 mb-1.5">
+        <span className="text-sm mt-0.5">📋</span>
+        <p className="font-semibold text-sm text-[#1A1A2E] leading-snug">{school.name}</p>
+      </div>
+      <p className="text-xs text-[#6E6A65] leading-relaxed mb-2 pl-6">
+        {PLAYBOOK_DESCRIPTIONS[school.slug] ?? school.keyInsight ?? 'A complete district transfer guide.'}
+      </p>
+      <p className="text-xs font-semibold text-[#F2945C] pl-6">Read Guide →</p>
+    </a>
   )
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
+
 export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] }) {
   const router = useRouter()
+  const metro = DEFAULT_METRO
+  const metroConfig = METROS[metro]
 
-  const [activeNeighborhoods, setActiveNeighborhoods] = useState<Set<string>>(getInitialNeighborhoods)
-  const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() => {
-    const fromUrl = readNeighborhoodsFromUrl()
-    return fromUrl.length > 0 ? getRegionsForNeighborhoods(new Set(fromUrl)) : new Set()
+  const [activeAreas, setActiveAreas] = useState<Set<string>>(() => {
+    // SSR-safe: window is undefined during initial render
+    return new Set<string>()
   })
-  const [searchQuery, setSearchQuery]   = useState('')
+  const [zipInput, setZipInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<School[]>([])
   const [zipNotCovered, setZipNotCovered] = useState(false)
-  const [showModal, setShowModal]         = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
 
-  // Show onboarding modal on first visit
+  // Read ?area= from URL on mount
   useEffect(() => {
-    try { if (!localStorage.getItem('schoolsOnboarded')) setShowModal(true) } catch {}
+    const ids = readAreasFromUrl()
+    if (ids.length > 0) setActiveAreas(new Set(ids))
   }, [])
-
-  function dismissModal() {
-    try { localStorage.setItem('schoolsOnboarded', 'true') } catch {}
-    setShowModal(false)
-  }
-
-  // Read ?q= on mount (SSR-safe: useState initializer runs with window=undefined)
-  useEffect(() => {
-    const ids = readNeighborhoodsFromUrl()
-    if (ids.length === 0) return
-    const newSet = new Set(ids)
-    setActiveNeighborhoods(newSet)
-    setExpandedRegions(getRegionsForNeighborhoods(newSet))
-  }, [])
-
-  // Persist filter to sessionStorage for school-report back navigation
-  useEffect(() => {
-    try {
-      const val = Array.from(activeNeighborhoods).join(',')
-      if (val) sessionStorage.setItem('schoolsFilter', val)
-      else sessionStorage.removeItem('schoolsFilter')
-    } catch {}
-  }, [activeNeighborhoods])
 
   // Browser back/forward
   useEffect(() => {
     function onPopState() {
-      const ids = readNeighborhoodsFromUrl()
-      if (ids.length > 0) {
-        const newSet = new Set(ids)
-        setActiveNeighborhoods(newSet)
-        setExpandedRegions(prev => new Set([...Array.from(prev), ...Array.from(getRegionsForNeighborhoods(newSet))]))
-      }
+      const ids = readAreasFromUrl()
+      setActiveAreas(ids.length > 0 ? new Set(ids) : new Set())
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
+
+  // Persist to sessionStorage for back-nav
+  useEffect(() => {
+    try {
+      const val = Array.from(activeAreas).join(',')
+      if (val) sessionStorage.setItem('schoolsFilter', val)
+      else sessionStorage.removeItem('schoolsFilter')
+    } catch {}
+  }, [activeAreas])
 
   // School name search
   useEffect(() => {
@@ -204,77 +268,112 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     const q = searchQuery.toLowerCase()
     setSearchResults(
       allSchools.filter(s =>
-        s.name.toLowerCase().includes(q) || s.zip.includes(q) || s.city.toLowerCase().includes(q)
+        s.name.toLowerCase().includes(q) || s.city.toLowerCase().includes(q)
       ).slice(0, 8)
     )
   }, [searchQuery, allSchools])
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
-  function applyNeighborhoods(ids: string[]) {
-    const newSet = new Set(ids.filter(id => getNeighborhoodById(id) != null))
-    if (newSet.size === 0) return
-    setActiveNeighborhoods(newSet)
-    setExpandedRegions(getRegionsForNeighborhoods(newSet))
-    window.history.pushState({}, '', `/schools?q=${Array.from(newSet).join(',')}`)
+  function selectArea(id: string) {
+    const next = new Set([id])
+    setActiveAreas(next)
+    window.history.pushState({}, '', `/schools?metro=${metro}&area=${id}`)
+    setZipInput('')
+    setZipNotCovered(false)
+  }
+
+  function toggleArea(id: string) {
+    setActiveAreas(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      const areaStr = Array.from(next).join(',')
+      window.history.pushState({}, '', next.size > 0 ? `/schools?metro=${metro}&area=${areaStr}` : `/schools?metro=${metro}`)
+      return next
+    })
+  }
+
+  function handleZipKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return
+    const zip = zipInput.trim()
+    if (!/^\d{5}$/.test(zip)) return
+
+    const town = ZIP_TO_TOWN[zip]
+    if (town) {
+      selectArea(town)
+    } else {
+      setZipNotCovered(true)
+    }
   }
 
   function handleSearchChange(val: string) {
     setSearchQuery(val)
     setZipNotCovered(false)
-
-    // ZIP detection: 5 digits → auto-select neighborhood(s)
-    if (/^\d{5}$/.test(val.trim())) {
-      const hoods = ZIP_TO_NEIGHBORHOOD[val.trim()]
-      if (hoods?.length) {
-        applyNeighborhoods(hoods)
-        setSearchQuery('')
-      } else {
-        setZipNotCovered(true)
-      }
-    }
-  }
-
-  function toggleNeighborhood(id: string) {
-    setActiveNeighborhoods(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
-      window.history.pushState({}, '', next.size > 0 ? `/schools?q=${Array.from(next).join(',')}` : '/schools')
-      return next
-    })
-  }
-
-  function toggleRegion(region: string) {
-    setExpandedRegions(prev => {
-      const next = new Set(prev)
-      if (next.has(region)) next.delete(region); else next.add(region)
-      return next
-    })
   }
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
-  const activeHoods = Array.from(activeNeighborhoods)
-    .map(id => getNeighborhoodById(id))
-    .filter((h): h is NonNullable<typeof h> => h != null)
+  const activeAreaIds = Array.from(activeAreas)
+  const singleArea = activeAreaIds.length === 1 ? activeAreaIds[0] : null
+  const showScoutTake = singleArea != null && SCOUT_TAKES[singleArea] != null
 
-  const bracketSchools = allSchools.filter(s =>
-    new Set(activeHoods.flatMap(h => [...h.elementarySlugs, ...h.middleSlugs, ...h.highSlugs])).has(s.slug)
-  )
-  const playbookSchools = allSchools.filter(s =>
-    new Set(activeHoods.flatMap(h => h.playbookSlugs)).has(s.slug)
-  )
-  const privateSchools = (() => {
-    const slugs = new Set(activeHoods.flatMap(h => h.privateSlugs ?? []))
-    return slugs.size ? allSchools.filter(s => slugs.has(s.slug)) : []
+  // Schools in active areas (deduped)
+  const allActiveSlugs = (() => {
+    const elem = new Set<string>()
+    const mid = new Set<string>()
+    const high = new Set<string>()
+    const guides = new Set<string>()
+    const priv = new Set<string>()
+
+    for (const id of activeAreaIds) {
+      const hood = getNeighborhoodById(id)
+      if (!hood) continue
+      hood.elementarySlugs.forEach(s => elem.add(s))
+      hood.middleSlugs.forEach(s => mid.add(s))
+      hood.highSlugs.forEach(s => high.add(s))
+      hood.playbookSlugs.forEach(s => guides.add(s))
+      ;(hood.privateSlugs ?? []).forEach(s => priv.add(s))
+    }
+
+    return { elem, mid, high, guides, priv }
   })()
 
-  const firstHood     = activeHoods[0] ?? null
-  const headerLabel   = activeNeighborhoods.size === 0 ? 'Schools'
-    : activeNeighborhoods.size === 1 ? (firstHood?.label ?? 'Schools')
-    : `${activeNeighborhoods.size} neighborhoods`
-  const activeRegions = getRegionsForNeighborhoods(activeNeighborhoods)
-  const regions       = getRegions()
+  const schoolsBySlug = new Map(allSchools.map(s => [s.slug, s]))
+
+  function getSorted(slugSet: Set<string>): School[] {
+    return Array.from(slugSet)
+      .map(slug => schoolsBySlug.get(slug))
+      .filter((s): s is School => s != null)
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  const elementarySchools = getSorted(allActiveSlugs.elem)
+  const middleSchools = getSorted(allActiveSlugs.mid)
+  const highSchools = getSorted(allActiveSlugs.high)
+  const guideSchools = getSorted(allActiveSlugs.guides)
+  const privateSchools = getSorted(allActiveSlugs.priv)
+
+  const totalSchools = elementarySchools.length + middleSchools.length + highSchools.length
+
+  // ── Chip rows by region ───────────────────────────────────────────────────
+
+  // Build the chip display: only show towns that have both a neighborhood entry AND a scout take
+  const regionChips: { region: string; towns: { id: string; label: string }[] }[] = metroConfig.regions.map(region => {
+    const towns = Object.keys(SCOUT_TAKES)
+      .filter(id => {
+        const hood = getNeighborhoodById(id)
+        return hood?.region === region && hood?.metro === metro
+      })
+      .map(id => ({
+        id,
+        label: getNeighborhoodById(id)!.label,
+      }))
+    return { region, towns }
+  }).filter(r => r.towns.length > 0)
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -283,253 +382,278 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
       <Nav />
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <section className="bg-[#FFFAF6] px-4 pt-8 pb-5">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="font-serif text-3xl text-[#1A1A2E]">{headerLabel}</h1>
-          <p className="text-sm text-[#6E6A65] mt-1">
-            Deep-dive reports from our research team. Tap any school for a preview.
-          </p>
+      <section className="bg-[#FFFAF6] px-4 pt-8 pb-2">
+        <div className="max-w-3xl mx-auto">
+          <MetroLabel metro={metro} />
+          <h1 className="font-serif text-3xl text-[#1A1A2E]">Schools</h1>
         </div>
       </section>
 
-      {/* ── Neighborhood selector ────────────────────────────────────────── */}
-      <section className="bg-[#FFFAF6] px-4 pb-6">
-        <div className="max-w-5xl mx-auto">
-
-          {/* Section label */}
-          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-3">
-            Select your neighborhood
+      {/* ── Town Selector ────────────────────────────────────────────────── */}
+      <section className="bg-[#FFFAF6] px-4 pt-5 pb-4">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-4">
+            Select your area
           </p>
 
-          {/* Region pill buttons */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {regions.map(region => {
-              const count    = getSchoolCountForRegion(region, allSchools)
-              const isActive = activeRegions.has(region)
-              const isOpen   = expandedRegions.has(region)
-              return (
-                <button
-                  key={region}
-                  onClick={() => toggleRegion(region)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border-2 transition-all whitespace-nowrap ${
-                    isActive
-                      ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white shadow-sm'
-                      : 'bg-white border-[#E8E5E1] text-[#3D3A36] hover:border-[#5B9A6F] hover:text-[#5B9A6F]'
-                  }`}
-                >
+          {/* Region chip groups */}
+          <div className="flex flex-col gap-4 mb-5">
+            {regionChips.map(({ region, towns }) => (
+              <div key={region}>
+                <p className="text-[9px] font-mono uppercase tracking-widest text-[#B0AAA4] mb-2">
                   {region}
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-[#F0EDE8] text-[#9B9690]'
-                  }`}>
-                    {count}
-                  </span>
-                  <svg
-                    width="9" height="9" viewBox="0 0 10 10" fill="none"
-                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                    className="transition-transform duration-200"
-                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                  >
-                    <polyline points="2 3 5 7 8 3" />
-                  </svg>
-                </button>
-              )
-            })}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {towns.map(({ id, label }) => {
+                    const isActive = activeAreas.has(id)
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => toggleArea(id)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap ${
+                          isActive
+                            ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white shadow-sm'
+                            : 'bg-white border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F] hover:text-[#5B9A6F]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Neighborhood chips — shown when a region is expanded */}
-          {regions.some(r => expandedRegions.has(r)) && (
-            <div className="bg-white border border-[#E8E5E1] rounded-2xl p-4 mb-3">
-              {regions.map(region => {
-                if (!expandedRegions.has(region)) return null
-                return (
-                  <div key={region} className="mb-3 last:mb-0">
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-[#B0AAA4] mb-2">
-                      {region}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {getNeighborhoodsByRegion(region).map(n => (
-                        <button
-                          key={n.id}
-                          onClick={() => toggleNeighborhood(n.id)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                            activeNeighborhoods.has(n.id)
-                              ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
-                              : 'bg-[#FAFAFA] border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
-                          }`}
-                        >
-                          {n.label}
-                        </button>
-                      ))}
-                    </div>
+          {/* ZIP + name search */}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="ZIP code"
+                value={zipInput}
+                onChange={e => { setZipInput(e.target.value); setZipNotCovered(false) }}
+                onKeyDown={handleZipKey}
+                className="w-28 border border-[#D4D0CC] rounded-xl px-3 py-2.5 text-sm text-[#1A1A2E] bg-white outline-none focus:border-[#5B9A6F] transition-colors"
+              />
+              <div className="relative flex-1">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Search by school name"
+                  value={searchQuery}
+                  onChange={e => handleSearchChange(e.target.value)}
+                  onBlur={() => setTimeout(() => setSearchResults([]), 150)}
+                  className="w-full border border-[#D4D0CC] rounded-xl px-4 py-2.5 text-sm text-[#1A1A2E] bg-white outline-none focus:border-[#5B9A6F] transition-colors"
+                />
+                {searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8E5E1] rounded-xl shadow-lg z-30 overflow-hidden">
+                    {searchResults.map(s => (
+                      <button
+                        key={s.id}
+                        onMouseDown={() => router.push(schoolHref(s.slug))}
+                        className="w-full text-left px-4 py-3 hover:bg-[#F0FAF4] border-b border-[#F0EDE8] last:border-0 transition-colors"
+                      >
+                        <p className="text-sm font-medium text-[#1A1A2E]">{s.name}</p>
+                        <p className="text-xs text-[#9B9690]">{s.city} · {s.zip}</p>
+                      </button>
+                    ))}
                   </div>
-                )
-              })}
+                )}
+              </div>
             </div>
-          )}
 
-          {/* Active selection pills with ×  */}
-          {activeNeighborhoods.size > 0 && (
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#9B9690]">Showing:</span>
-              {Array.from(activeNeighborhoods).map(id => {
-                const hood = getNeighborhoodById(id)
-                if (!hood) return null
-                return (
-                  <button
-                    key={id}
-                    onClick={() => toggleNeighborhood(id)}
-                    className="flex items-center gap-1 bg-[#5B9A6F] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#4a8a5e] transition-colors"
-                  >
-                    {hood.label}
-                    <span className="ml-0.5 opacity-70 text-sm leading-none">×</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
+            {zipNotCovered && (
+              <p className="text-xs text-[#9B9690]">
+                We don&apos;t cover that area yet.{' '}
+                <a
+                  href="mailto:hello@earlyscouts.com?subject=Coverage request"
+                  className="text-[#5B9A6F] hover:underline"
+                >
+                  Email us to get notified.
+                </a>
+              </p>
+            )}
+
+            <p className="text-[10px] text-[#B0AAA4]">
+              Enter ZIP and press Enter to jump to your area
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* ── Search + guides nudge (sticky) ──────────────────────────────── */}
-      <div className="sticky top-16 bg-[#FFFAF6] border-b border-[#E8E5E1] z-10 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex flex-col gap-2">
+      {/* ── Content area ─────────────────────────────────────────────────── */}
+      <section className="px-4 py-4">
+        <div className="max-w-3xl mx-auto">
 
-          {/* Label */}
-          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#9B9690]">
-            Or search by school name or ZIP code
-          </p>
-
-          {/* Search input */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="e.g. 'Mar Vista Elementary' or '90066'"
-              value={searchQuery}
-              onChange={e => handleSearchChange(e.target.value)}
-              onBlur={() => setTimeout(() => setSearchResults([]), 150)}
-              className="w-full border border-[#D4D0CC] rounded-xl px-4 py-2.5 text-sm text-[#1A1A2E] bg-white outline-none focus:border-[#5B9A6F] transition-colors"
-            />
-            {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8E5E1] rounded-xl shadow-lg z-30 overflow-hidden">
-                {searchResults.map(s => (
-                  <button
-                    key={s.id}
-                    onMouseDown={() => router.push(schoolHref(s.slug))}
-                    className="w-full text-left px-4 py-3 hover:bg-[#F0FAF4] border-b border-[#F0EDE8] last:border-0 transition-colors"
-                  >
-                    <p className="text-sm font-medium text-[#1A1A2E]">{s.name}</p>
-                    <p className="text-xs text-[#9B9690]">{s.city} · {s.zip}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ZIP not covered message */}
-          {zipNotCovered && (
-            <p className="text-xs text-[#9B9690]">
-              We don&apos;t cover that ZIP yet — but we&apos;re expanding!{' '}
-              <a href="mailto:hello@earlyscouts.com?subject=Coverage request" className="text-[#5B9A6F] hover:underline">
-                Email us to get notified.
-              </a>
-            </p>
-          )}
-
-          {/* Guides nudge */}
-          <p className="text-xs text-[#9B9690]">
-            📋 Transferring districts?{' '}
-            <Link href="/guides" className="text-[#5B9A6F] font-medium hover:underline">
-              Our transfer guides walk you through every deadline and form →
-            </Link>
-          </p>
-        </div>
-      </div>
-
-      {/* ── School results ───────────────────────────────────────────────── */}
-      <section className="px-4 py-6">
-        <div className="max-w-5xl mx-auto">
-          {activeNeighborhoods.size === 0 ? (
+          {activeAreas.size === 0 ? (
+            /* Empty state */
             <div className="text-center py-20">
               <p className="text-3xl mb-4">🗺️</p>
-              <p className="font-serif text-xl text-[#1A1A2E] mb-2">Select a neighborhood above</p>
-              <p className="text-sm text-[#9B9690]">Choose a region to see schools with analyst-written deep-dive reports.</p>
+              <p className="font-serif text-xl text-[#1A1A2E] mb-2">Select an area above</p>
+              <p className="text-sm text-[#9B9690]">
+                Choose a neighborhood to see schools and our Scout&apos;s Take.
+              </p>
             </div>
-          ) : bracketSchools.length > 0 ? (
-            <SchoolBracket schools={bracketSchools} locationLabel={headerLabel} />
           ) : (
-            <div className="text-center py-16 text-[#9B9690]">
-              <p className="text-base">No deep-dive schools mapped to this neighborhood yet.</p>
-              <p className="text-sm mt-1">Try Mar Vista, Santa Monica, or Culver City.</p>
-            </div>
+            <>
+              {/* Scout's Take — single area only */}
+              {showScoutTake && <ScoutTakeCard townId={singleArea!} />}
+
+              {/* Multiple areas: show label */}
+              {activeAreas.size > 1 && (
+                <div className="flex flex-wrap gap-2 items-center mb-5">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#9B9690]">Showing:</span>
+                  {activeAreaIds.map(id => {
+                    const hood = getNeighborhoodById(id)
+                    if (!hood) return null
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => toggleArea(id)}
+                        className="flex items-center gap-1 bg-[#5B9A6F] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#4a8a5e] transition-colors"
+                      >
+                        {hood.label}
+                        <span className="ml-0.5 opacity-70 text-sm leading-none">×</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {totalSchools === 0 && guideSchools.length === 0 ? (
+                <div className="text-center py-16 text-[#9B9690]">
+                  <p className="text-base">No deep-dive schools mapped to this area yet.</p>
+                  <p className="text-sm mt-1">Try Mar Vista, Santa Monica, or Culver City.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Elementary Schools */}
+                  {elementarySchools.length > 0 && (
+                    <SchoolGroup
+                      label="Elementary Schools"
+                      schools={elementarySchools}
+                      cardComponent={SchoolCard}
+                      privateSchools={privateSchools}
+                    />
+                  )}
+
+                  {/* Middle Schools */}
+                  {middleSchools.length > 0 && (
+                    <SchoolGroup
+                      label="Middle Schools"
+                      schools={middleSchools}
+                      cardComponent={SchoolCard}
+                    />
+                  )}
+
+                  {/* High Schools */}
+                  {highSchools.length > 0 && (
+                    <SchoolGroup
+                      label="High Schools"
+                      schools={highSchools}
+                      cardComponent={SchoolCard}
+                    />
+                  )}
+
+                  {/* Transfer & Enrollment Guides */}
+                  {guideSchools.length > 0 && (
+                    <div className="mb-8">
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#F2945C] mb-3">
+                        Transfer & Enrollment Guides
+                      </p>
+                      <div className="flex flex-col gap-2.5">
+                        {guideSchools.map(s => (
+                          <PlaybookCard key={s.id} school={s} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           )}
         </div>
       </section>
 
-      {/* ── Transfer playbooks ───────────────────────────────────────────── */}
-      {playbookSchools.length > 0 && (
-        <section className="px-4 pb-10">
-          <div className="max-w-5xl mx-auto">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#F2945C] mb-3">
-              📋 Transfer Playbooks
+      {/* ── Guides nudge ─────────────────────────────────────────────────── */}
+      {activeAreas.size === 0 && (
+        <section className="px-4 pb-16">
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-sm text-[#6E6A65] mb-3">
+              Looking to transfer districts? Our step-by-step guides cover every deadline and form.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {playbookSchools.map(pb => (
-                <a
-                  key={pb.id}
-                  href={`/guides/${pb.slug}`}
-                  className="bg-white border border-[#E8E5E1] rounded-xl p-4 hover:border-[#F2945C]/60 hover:shadow-sm transition-all"
-                >
-                  <p className="font-semibold text-sm text-[#1A1A2E] mb-1">{pb.name}</p>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-[#A09A94] mb-2">
-                    {pb.reportData?.sections?.length ?? 0} chapters
-                  </p>
-                  <p className="text-xs text-[#6E6A65] leading-relaxed">
-                    {PLAYBOOK_DESCRIPTIONS[pb.slug] ?? pb.keyInsight ?? 'A complete district transfer guide.'}
-                  </p>
-                  <p className="text-xs font-semibold text-[#F2945C] mt-3">Read Guide →</p>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Private schools ──────────────────────────────────────────────── */}
-      {privateSchools.length > 0 && (
-        <section className="px-4 pb-12">
-          <div className="max-w-5xl mx-auto">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#A78BCA] mb-3">
-              📚 Private Schools
-              <span className="ml-2 font-normal normal-case tracking-normal text-[#C4BFB9]">
-                {privateSchools.length} with reports
-              </span>
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {privateSchools.map(ps => (
-                <a
-                  key={ps.id}
-                  href={`/schools/${ps.slug}`}
-                  className="bg-white border border-[#E8E5E1] rounded-xl p-4 hover:border-[#A78BCA]/60 hover:shadow-sm transition-all"
-                >
-                  <p className="font-semibold text-sm text-[#1A1A2E] mb-1">{ps.name}</p>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-[#A09A94] mb-2">
-                    {ps.grades} · Private
-                  </p>
-                  {ps.keyInsight && (
-                    <p className="text-xs text-[#6E6A65] leading-relaxed">{ps.keyInsight}</p>
-                  )}
-                  <p className="text-xs font-semibold text-[#A78BCA] mt-3">Read Report →</p>
-                </a>
-              ))}
-            </div>
+            <Link
+              href="/guides"
+              className="inline-block bg-white border-2 border-[#5B9A6F] text-[#5B9A6F] font-semibold text-sm px-6 py-2.5 rounded-full hover:bg-[#5B9A6F] hover:text-white transition-colors"
+            >
+              Browse Transfer Guides →
+            </Link>
           </div>
         </section>
       )}
 
       <Footer />
-
-      {/* ── First-visit onboarding modal ─────────────────────────────────── */}
-      {showModal && <OnboardingModal onDismiss={dismissModal} />}
     </main>
+  )
+}
+
+// ── School group ──────────────────────────────────────────────────────────────
+
+function SchoolGroup({
+  label,
+  schools,
+  cardComponent: Card,
+  privateSchools,
+}: {
+  label: string
+  schools: School[]
+  cardComponent: React.ComponentType<{ school: School }>
+  privateSchools?: School[]
+}) {
+  return (
+    <div className="mb-8">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-3">
+        {label}
+      </p>
+      <div className="flex flex-col gap-2.5">
+        {schools.map(s => (
+          <Card key={s.id} school={s} />
+        ))}
+      </div>
+
+      {/* Private school alternatives within elementary group */}
+      {privateSchools && privateSchools.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#A78BCA] mb-2.5">
+            Private School Alternatives
+          </p>
+          <div className="flex flex-col gap-2.5">
+            {privateSchools.map(s => (
+              <a
+                key={s.id}
+                href={`/schools/${s.slug}`}
+                className="block bg-white border border-[#E8E5E1] rounded-xl p-4 hover:border-[#A78BCA]/50 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="font-semibold text-sm text-[#1A1A2E]">{s.name}</p>
+                  {s.grades && (
+                    <span className="text-[10px] font-mono text-[#9B9690] whitespace-nowrap shrink-0 mt-0.5">
+                      {s.grades}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-[#A09A94] mb-2">Private</p>
+                {s.keyInsight && (
+                  <p className="text-xs text-[#6E6A65] leading-relaxed mb-2">{s.keyInsight}</p>
+                )}
+                <p className="text-xs font-semibold text-[#A78BCA]">Read Report →</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
