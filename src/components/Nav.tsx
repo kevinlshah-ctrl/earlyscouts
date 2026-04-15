@@ -21,7 +21,7 @@ export default function Nav() {
     const m = pathname.match(/^\/schools\/(.+)$/)
     if (m) {
       const hood = getNeighborhoodForSlug(m[1])
-      if (hood) return `/schools?q=${hood}`
+      if (hood) return `/schools?area=${hood}`
     }
     return '/schools'
   })
@@ -30,10 +30,10 @@ export default function Nav() {
     if (!m) { setSchoolsHref('/schools'); return }
     try {
       const saved = sessionStorage.getItem('schoolsFilter')
-      if (saved) { setSchoolsHref(`/schools?q=${saved}`); return }
+      if (saved) { setSchoolsHref(`/schools?area=${saved}`); return }
     } catch {}
     const hood = getNeighborhoodForSlug(m[1])
-    setSchoolsHref(hood ? `/schools?q=${hood}` : '/schools')
+    setSchoolsHref(hood ? `/schools?area=${hood}` : '/schools')
   }, [pathname])
 
   // Cap loading skeleton at 500ms — after that, render the logged-out state rather

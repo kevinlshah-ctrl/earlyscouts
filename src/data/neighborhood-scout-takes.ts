@@ -327,6 +327,21 @@ export const SCOUT_TAKES: Record<string, ScoutTake> = {
     },
   },
 
+  'west-la': {
+    title: "Scout's Take: West LA / Sawtelle",
+    metro: 'los-angeles',
+    paragraphs: [
+      "West LA and Sawtelle sit at the crossroads of the Westside school landscape — close enough to access Mar Vista, Culver City, and Santa Monica options, but zoned into LAUSD schools that don't always match the neighborhood's ambitions. Nora Sterry and Stoner Avenue are the neighborhood elementaries, both serving diverse communities with dedicated staff.",
+      "The real story for West LA families is access. You're within striking distance of inter-district transfers to SMMUSD (Grant or Will Rogers are the closest), CCUSD (Culver City is right next door), or charter options like Westwood Charter and New West Charter. LACES, the gifted 6-12 magnet, is physically located in this area and draws applications from across the city.",
+      "Start with your zoned school's deep dive, then explore transfer and charter options. The SMMUSD and CCUSD Transfer Blueprints cover the permit process for families looking to cross district lines.",
+    ],
+    pipeline: {
+      elementary: "Nora Sterry or Stoner Ave (zoned) — varies by address",
+      middle: "LAUSD middle by zone — Palms MS or Mark Twain common feeders",
+      high: "LAUSD high by zone — or LACES (gifted 6-12 magnet, lottery)",
+    },
+  },
+
 }
 
 // ZIP to town mapping — 5-digit ZIP → town key
@@ -360,6 +375,8 @@ export const ZIP_TO_TOWN: Record<string, string> = {
   '90042': 'highland-park',
   '90032': 'highland-park',
   '90030': 'south-pasadena',
+  '90025': 'west-la',
+  '90073': 'west-la',
   '90049': 'brentwood',
   '90272': 'palisades',
   '90401': 'santa-monica',

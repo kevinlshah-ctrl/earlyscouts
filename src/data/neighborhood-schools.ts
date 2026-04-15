@@ -19,6 +19,8 @@ export interface NeighborhoodConfig {
   highSlugs: string[]
   playbookSlugs: string[]
   privateSlugs?: string[]
+  /** Slugs sorted to the FRONT of each card row — the default pipeline schools */
+  pipelineSlugs?: string[]
 }
 
 export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
@@ -34,7 +36,6 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     districts: ['LAUSD'],
     elementarySlugs: [
       'mar-vista-elementary-school-los-angeles-ca',
-      'stoner-avenue-elementary-school-culver-city-ca',
       'grand-view-boulevard-elementary-school-los-angeles-ca',
       'walgrove-avenue-elementary-school-los-angeles-ca',
       'beethoven-street-elementary-school-los-angeles-ca',
@@ -65,6 +66,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'lausd-school-choice-playbook',
       'la-charter-magnet-school-choice-playbook',
     ],
+    pipelineSlugs: [
+      'mar-vista-elementary-school-los-angeles-ca',
+      'mark-twain-middle-school-los-angeles-ca',
+      'venice-high-school-los-angeles-ca',
+    ],
   },
 
   'venice': {
@@ -90,6 +96,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     playbookSlugs: [
       'smmusd-transfer-playbook',
       'lausd-school-choice-playbook',
+    ],
+    pipelineSlugs: [
+      'broadway-elementary-school-los-angeles-ca',
+      'mark-twain-middle-school-los-angeles-ca',
+      'venice-high-school-los-angeles-ca',
     ],
   },
 
@@ -124,6 +135,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'westwood-charter-elementary-los-angeles-ca',
       'laces-magnet-los-angeles-ca',
     ],
+    pipelineSlugs: [
+      'overland-avenue-elementary-school-los-angeles-ca',
+      'palms-middle-school-los-angeles-ca',
+      'venice-high-school-los-angeles-ca',
+    ],
   },
 
   'playa-vista': {
@@ -146,6 +162,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     playbookSlugs: [
       'lausd-school-choice-playbook',
       'la-charter-magnet-school-choice-playbook',
+    ],
+    pipelineSlugs: [
+      'playa-vista-elementary-school-los-angeles-ca',
+      'marina-del-rey-middle-school-los-angeles-ca',
+      'venice-high-school-los-angeles-ca',
     ],
   },
 
@@ -170,30 +191,38 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'lausd-school-choice-playbook',
       'la-charter-magnet-school-choice-playbook',
     ],
+    pipelineSlugs: [
+      'playa-del-rey-elementary-school-los-angeles-ca',
+      'marina-del-rey-middle-school-los-angeles-ca',
+      'westchester-enriched-sciences-magnets-los-angeles-ca',
+    ],
   },
 
   'west-la': {
-    label: 'West LA',
+    label: 'West LA / Sawtelle',
     region: 'Westside',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
-      'overland-avenue-elementary-los-angeles-ca',
-      'westwood-charter-elementary-los-angeles-ca',
-      'laces-magnet-los-angeles-ca',
-      'new-west-charter-school-los-angeles-ca',
-      'community-magnet-charter-school-los-angeles-ca',
-      'wish-charter-schools-los-angeles-ca',
+      'nora-sterry-elementary-los-angeles-ca',
+      'stoner-avenue-elementary-school-culver-city-ca',
+      'brockton-avenue-elementary-los-angeles-ca',
+      'warner-avenue-elementary-los-angeles-ca',
+      'clifford-street-elementary-los-angeles-ca',
     ],
-    middleSlugs: [
-      'emerson-community-charter-middle-los-angeles-ca',
-    ],
-    highSlugs: [
-      'university-high-school-charter-los-angeles-ca',
-    ],
+    middleSlugs: [],
+    highSlugs: [],
     playbookSlugs: [
       'lausd-school-choice-playbook',
-      'la-charter-magnet-school-choice-playbook',
+      'smmusd-transfer-playbook',
+    ],
+    privateSlugs: [
+      'westwood-charter-elementary-los-angeles-ca',
+      'new-west-charter-school-los-angeles-ca',
+      'laces-magnet-los-angeles-ca',
+    ],
+    pipelineSlugs: [
+      'nora-sterry-elementary-los-angeles-ca',
     ],
   },
 
@@ -230,6 +259,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'carlthorp-school-santa-monica-ca',
       'new-roads-school-santa-monica-ca',
     ],
+    pipelineSlugs: [
+      'grant-elementary-school-santa-monica-ca',
+      'lincoln-middle-school-santa-monica-ca',
+      'santa-monica-high-school-santa-monica-ca',
+    ],
   },
 
   'malibu': {
@@ -244,6 +278,9 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     highSlugs: [],
     playbookSlugs: [
       'smmusd-transfer-playbook',
+    ],
+    pipelineSlugs: [
+      'webster-elementary-school-malibu-ca',
     ],
   },
 
@@ -271,6 +308,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'ccusd-transfer-playbook',
+    ],
+    pipelineSlugs: [
+      'farragut-elementary-school-culver-city-ca',
+      'culver-city-middle-school-culver-city-ca',
+      'culver-city-high-school-culver-city-ca',
     ],
   },
 
@@ -316,6 +358,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'the-oaks-school-los-angeles-ca',
       'hollywood-schoolhouse-los-angeles-ca',
     ],
+    pipelineSlugs: [
+      'gardner-street-elementary-los-angeles-ca',
+      'bancroft-middle-school-los-angeles-ca',
+      'hollywood-high-school-los-angeles-ca',
+    ],
   },
 
   'hancock-park': {
@@ -340,6 +387,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'lausd-school-choice-playbook',
       'la-charter-magnet-school-choice-playbook',
     ],
+    pipelineSlugs: [
+      'hancock-park-elementary-los-angeles-ca',
+      'le-conte-middle-school-los-angeles-ca',
+      'fairfax-high-school-los-angeles-ca',
+    ],
   },
 
   'los-feliz': {
@@ -361,6 +413,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+    ],
+    pipelineSlugs: [
+      'ivanhoe-elementary-los-angeles-ca',
+      'thomas-starr-king-middle-los-angeles-ca',
+      'john-marshall-high-school-los-angeles-ca',
     ],
   },
 
@@ -455,6 +512,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     privateSlugs: [
       'goethe-international-charter-school-los-angeles-ca',
     ],
+    pipelineSlugs: [
+      'micheltorena-elementary-los-angeles-ca',
+      'thomas-starr-king-middle-los-angeles-ca',
+      'john-marshall-high-school-los-angeles-ca',
+    ],
   },
 
   'eagle-rock': {
@@ -477,6 +539,10 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+    ],
+    pipelineSlugs: [
+      'eagle-rock-elementary-los-angeles-ca',
+      'eagle-rock-high-school-los-angeles-ca',
     ],
   },
 
@@ -501,6 +567,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     playbookSlugs: [
       'lausd-school-choice-playbook',
     ],
+    pipelineSlugs: [
+      'buchanan-street-elementary-los-angeles-ca',
+      'luther-burbank-middle-school-los-angeles-ca',
+      'eagle-rock-high-school-los-angeles-ca',
+    ],
   },
 
   'atwater-village': {
@@ -521,6 +592,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+    ],
+    pipelineSlugs: [
+      'atwater-avenue-elementary-los-angeles-ca',
+      'thomas-starr-king-middle-los-angeles-ca',
+      'john-marshall-high-school-los-angeles-ca',
     ],
   },
 
@@ -546,6 +622,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+    ],
+    pipelineSlugs: [
+      'marengo-elementary-south-pasadena-ca',
+      'south-pasadena-middle-school-south-pasadena-ca',
+      'south-pasadena-senior-high-south-pasadena-ca',
     ],
   },
 
@@ -577,6 +658,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'windward-school-los-angeles-ca',
       'community-magnet-charter-school-los-angeles-ca',
     ],
+    pipelineSlugs: [
+      'kenter-canyon-elementary-los-angeles-ca',
+      'paul-revere-charter-middle-school-los-angeles-ca',
+      'palisades-charter-high-school-los-angeles-ca',
+    ],
   },
 
   'palisades': {
@@ -597,6 +683,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'lausd-school-choice-playbook',
+    ],
+    pipelineSlugs: [
+      'palisades-charter-elementary-los-angeles-ca',
+      'paul-revere-charter-middle-school-los-angeles-ca',
+      'palisades-charter-high-school-los-angeles-ca',
     ],
   },
 
@@ -654,6 +745,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     playbookSlugs: [
       'beach-cities-school-choice-blueprint',
     ],
+    pipelineSlugs: [
+      'meadows-avenue-elementary-manhattan-beach-ca',
+      'manhattan-beach-middle-school-manhattan-beach-ca',
+      'mira-costa-high-school-manhattan-beach-ca',
+    ],
   },
 
   'el-segundo': {
@@ -674,6 +770,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     playbookSlugs: [
       'beach-cities-school-choice-blueprint',
     ],
+    pipelineSlugs: [
+      'richmond-street-elementary-el-segundo-ca',
+      'el-segundo-middle-school-el-segundo-ca',
+      'el-segundo-high-school-el-segundo-ca',
+    ],
   },
 
   'hermosa-beach': {
@@ -690,6 +791,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     highSlugs: [],
     playbookSlugs: [
       'beach-cities-school-choice-blueprint',
+    ],
+    pipelineSlugs: [
+      'hermosa-view-elementary-hermosa-beach-ca',
+      'hermosa-vista-elementary-hermosa-beach-ca',
+      'hermosa-valley-school-hermosa-beach-ca',
     ],
   },
 
@@ -717,6 +823,11 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
     playbookSlugs: [
       'beach-cities-school-choice-blueprint',
+    ],
+    pipelineSlugs: [
+      'tulita-elementary-redondo-beach-ca',
+      'parras-middle-school-redondo-beach-ca',
+      'redondo-union-high-school-redondo-beach-ca',
     ],
   },
 

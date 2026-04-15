@@ -680,11 +680,11 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
       {/* School header */}
       <section className="bg-charcoal py-10 px-4">
         <div className="max-w-4xl mx-auto">
-          <Link href={schoolsHref} className="text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors mb-4 inline-block">
+          <Link href={schoolsHref} className="text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors mb-6 inline-flex items-center gap-1">
             &larr; Back to Schools
           </Link>
           <div className="flex items-start gap-4 flex-wrap">
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${typeColors[school.type]}`}>
                   {typeLabel[school.type]}
@@ -700,7 +700,7 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
                   </span>
                 )}
               </div>
-              <h1 className="font-serif text-3xl sm:text-4xl text-white mb-1">{school.name}</h1>
+              <h1 className="font-serif text-3xl sm:text-4xl text-white mb-1 break-words">{school.name}</h1>
               <p className="text-gray-400 text-sm">
                 {school.address} &middot; Grades {school.grades} &middot; {school.enrollment.toLocaleString()} students
               </p>

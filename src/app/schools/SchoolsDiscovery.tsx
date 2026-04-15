@@ -422,10 +422,27 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   const [canScrollRegionLeft, setCanScrollRegionLeft] = useState(false)
   const [canScrollRegionRight, setCanScrollRegionRight] = useState(false)
 
-  // Read URL on mount + check onboarding + detect mobile
+  // Read URL on mount + sessionStorage fallback + check onboarding + detect mobile
   useEffect(() => {
     const ids = readAreasFromUrl()
-    if (ids.length > 0) setActiveAreas(new Set(ids))
+    if (ids.length > 0) {
+      setActiveAreas(new Set(ids))
+      // Auto-expand the region for the active area so town chips are visible
+      const firstHood = getNeighborhoodById(ids[0])
+      if (firstHood?.region) setExpandedRegion(firstHood.region)
+    } else {
+      // No URL params — fall back to sessionStorage (e.g. user clicked nav "Schools")
+      try {
+        const saved = sessionStorage.getItem('schoolsFilterState')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (parsed.areas?.length > 0) {
+            setActiveAreas(new Set(parsed.areas))
+            if (parsed.expandedRegion) setExpandedRegion(parsed.expandedRegion)
+          }
+        }
+      } catch {}
+    }
     try {
       if (!localStorage.getItem('schoolsOnboarded')) setShowOnboarding(true)
     } catch {}
@@ -448,24 +465,36 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     return () => el.removeEventListener('scroll', update)
   })
 
-  // Browser back/forward
+  // Browser back/forward — restore areas + expand region
   useEffect(() => {
     function onPopState() {
       const ids = readAreasFromUrl()
-      setActiveAreas(ids.length > 0 ? new Set(ids) : new Set())
+      if (ids.length > 0) {
+        setActiveAreas(new Set(ids))
+        const firstHood = getNeighborhoodById(ids[0])
+        if (firstHood?.region) setExpandedRegion(firstHood.region)
+      } else {
+        setActiveAreas(new Set())
+        setExpandedRegion(null)
+      }
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  // Persist to sessionStorage for back-nav
+  // Persist filter state to sessionStorage (areas + expanded region)
   useEffect(() => {
     try {
-      const val = Array.from(activeAreas).join(',')
-      if (val) sessionStorage.setItem('schoolsFilter', val)
-      else sessionStorage.removeItem('schoolsFilter')
+      const areas = Array.from(activeAreas)
+      if (areas.length > 0) {
+        sessionStorage.setItem('schoolsFilterState', JSON.stringify({ areas, expandedRegion }))
+        sessionStorage.setItem('schoolsFilter', areas.join(','))  // legacy key read by Nav + SchoolPageClient
+      } else {
+        sessionStorage.removeItem('schoolsFilterState')
+        sessionStorage.removeItem('schoolsFilter')
+      }
     } catch {}
-  }, [activeAreas])
+  }, [activeAreas, expandedRegion])
 
   // School name search
   useEffect(() => {
@@ -563,6 +592,17 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     const highSlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.highSlugs ?? [])
     const guideSlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.playbookSlugs ?? [])
 
+    // Pipeline slugs — shown first in each row
+    const pipelineSlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.pipelineSlugs ?? [])
+    const pipelineOrder = new Map(pipelineSlugs.map((slug, i) => [slug, i]))
+    const sortWithPipeline = (arr: School[]) =>
+      [...arr].sort((a, b) => {
+        const ai = pipelineOrder.has(a.slug) ? pipelineOrder.get(a.slug)! : Infinity
+        const bi = pipelineOrder.has(b.slug) ? pipelineOrder.get(b.slug)! : Infinity
+        if (ai !== bi) return ai - bi
+        return a.name.localeCompare(b.name)
+      })
+
     const pubElem: School[] = []
     const charPriv: School[] = []
     const charPrivSlugs = new Set<string>()
@@ -593,12 +633,11 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
       if (school && !guideSlugsSet.has(slug)) { guideList.push(school); guideSlugsSet.add(slug) }
     }
 
-    const sort = (arr: School[]) => [...arr].sort((a, b) => a.name.localeCompare(b.name))
     return {
-      publicElementary: sort(pubElem),
-      charterPrivate: sort(charPriv),
-      middleHigh: sort(midHigh),
-      guides: sort(guideList),
+      publicElementary: sortWithPipeline(pubElem),
+      charterPrivate: sortWithPipeline(charPriv),
+      middleHigh: sortWithPipeline(midHigh),
+      guides: sortWithPipeline(guideList),
     }
   })()
 
