@@ -143,22 +143,86 @@ function ScrollArrow({
       onClick={onClick}
       aria-label={direction === 'left' ? 'Scroll left' : 'Scroll right'}
       className={`
-        hidden md:flex absolute top-1/2 -translate-y-1/2 z-20
-        w-8 h-8 items-center justify-center
-        bg-white border border-gray-200 rounded-full shadow-md
-        text-gray-500 hover:text-[#1A1A2E] hover:border-gray-300 hover:shadow-lg
+        flex absolute top-1/2 -translate-y-1/2 z-20
+        w-7 h-7 items-center justify-center
+        bg-white/90 border border-[#D4D0CC] rounded-full shadow-sm
+        text-[#5B9A6F] hover:border-[#5B9A6F]
         transition-all duration-150
-        opacity-0 group-hover:opacity-100
-        ${direction === 'left' ? '-left-3' : '-right-3'}
+        ${direction === 'left' ? 'left-1' : 'right-1'}
       `}
     >
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         {direction === 'left'
-          ? <polyline points="9 11 5 7 9 3" />
-          : <polyline points="5 3 9 7 5 11" />
+          ? <polyline points="8 2 4 6 8 10" />
+          : <polyline points="4 2 8 6 4 10" />
         }
       </svg>
     </button>
+  )
+}
+
+// ── Scrollable chip row (region pills + town chips) ───────────────────────────
+
+function ScrollableChipRow({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showLeft, setShowLeft] = useState(false)
+  const [showRight, setShowRight] = useState(false)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const check = () => {
+      setShowLeft(el.scrollLeft > 10)
+      setShowRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10)
+    }
+    check()
+    el.addEventListener('scroll', check, { passive: true })
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', check)
+      ro.disconnect()
+    }
+  }, [])
+
+  return (
+    <div className="relative">
+      {showLeft && (
+        <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center">
+          <div className="absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-[#FFFAF6] to-transparent pointer-events-none" />
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: -250, behavior: 'smooth' })}
+            className="relative z-10 ml-0.5 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
+            aria-label="Scroll left"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="8 2 4 6 8 10" />
+            </svg>
+          </button>
+        </div>
+      )}
+      <div
+        ref={scrollRef}
+        className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+        style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+      >
+        {children}
+      </div>
+      {showRight && (
+        <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center justify-end">
+          <div className="absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-[#FFFAF6] to-transparent pointer-events-none" />
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: 250, behavior: 'smooth' })}
+            className="relative z-10 mr-0.5 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
+            aria-label="Scroll right"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="4 2 8 6 4 10" />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -418,9 +482,6 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   const [showScoutModal, setShowScoutModal] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const regionScrollRef = useRef<HTMLDivElement>(null)
-  const [canScrollRegionLeft, setCanScrollRegionLeft] = useState(false)
-  const [canScrollRegionRight, setCanScrollRegionRight] = useState(false)
 
   // Read URL on mount + sessionStorage fallback + check onboarding + detect mobile
   useEffect(() => {
@@ -451,19 +512,6 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-
-  // Region scroll arrows: check after render and whenever regionChips changes
-  useEffect(() => {
-    const el = regionScrollRef.current
-    if (!el) return
-    const update = () => {
-      setCanScrollRegionLeft(el.scrollLeft > 8)
-      setCanScrollRegionRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8)
-    }
-    update()
-    el.addEventListener('scroll', update, { passive: true })
-    return () => el.removeEventListener('scroll', update)
-  })
 
   // Browser back/forward — restore areas + expand region
   useEffect(() => {
@@ -686,95 +734,55 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
             Select your area
           </p>
 
-          {/* Region pills — horizontal scroll with desktop arrows */}
-          <div className="relative">
-            {/* Left arrow + fade */}
-            {canScrollRegionLeft && (
-              <div className="hidden md:flex absolute left-0 top-0 bottom-2 z-10 items-center">
-                <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#FFFAF6] to-transparent pointer-events-none" />
+          {/* Region pills — horizontal scroll with arrows on all devices */}
+          <ScrollableChipRow>
+            {regionChips.map(({ region }) => {
+              const isActive = activeRegions.has(region)
+              const isOpen = expandedRegion === region
+              return (
                 <button
-                  onClick={() => regionScrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
-                  className="relative z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
-                  aria-label="Scroll regions left"
+                  key={region}
+                  onClick={() => toggleRegion(region)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all whitespace-nowrap shrink-0 ${
+                    isActive
+                      ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white shadow-sm'
+                      : 'bg-white border-[#E8E5E1] text-[#3D3A36] hover:border-[#5B9A6F] hover:text-[#5B9A6F]'
+                  }`}
                 >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="8 2 4 6 8 10" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
-            <div
-              ref={regionScrollRef}
-              className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
-              style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-            >
-              {regionChips.map(({ region }) => {
-                const isActive = activeRegions.has(region)
-                const isOpen = expandedRegion === region
-                return (
-                  <button
-                    key={region}
-                    onClick={() => toggleRegion(region)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all whitespace-nowrap shrink-0 ${
-                      isActive
-                        ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white shadow-sm'
-                        : 'bg-white border-[#E8E5E1] text-[#3D3A36] hover:border-[#5B9A6F] hover:text-[#5B9A6F]'
-                    }`}
+                  {region}
+                  <svg
+                    width="10" height="10" viewBox="0 0 10 10" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
                   >
-                    {region}
-                    <svg
-                      width="10" height="10" viewBox="0 0 10 10" fill="none"
-                      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
-                    >
-                      <polyline points="2 3 5 7 8 3" />
-                    </svg>
-                  </button>
-                )
-              })}
-              <div className="w-4 shrink-0" aria-hidden />
-            </div>
-
-            {/* Right arrow + fade */}
-            {canScrollRegionRight && (
-              <div className="hidden md:flex absolute right-0 top-0 bottom-2 z-10 items-center">
-                <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#FFFAF6] to-transparent pointer-events-none" />
-                <button
-                  onClick={() => regionScrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' })}
-                  className="relative z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
-                  aria-label="Scroll regions right"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="4 2 8 6 4 10" />
+                    <polyline points="2 3 5 7 8 3" />
                   </svg>
                 </button>
-              </div>
-            )}
-          </div>
+              )
+            })}
+          </ScrollableChipRow>
 
-          {/* Town chips for expanded region — horizontal scroll */}
+          {/* Town chips for expanded region — horizontal scroll with arrows on all devices */}
           {expandedRegion && (
-            <div
-              className="flex gap-2 overflow-x-auto pt-2 pb-2 scrollbar-hide"
-              style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-            >
-              {regionChips.find(r => r.region === expandedRegion)?.towns.map(({ id, label }) => {
-                const isActive = activeAreas.has(id)
-                return (
-                  <button
-                    key={id}
-                    onClick={() => toggleArea(id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap shrink-0 ${
-                      isActive
-                        ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
-                        : 'bg-[#FAFAFA] border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
+            <div className="mt-2">
+              <ScrollableChipRow key={expandedRegion}>
+                {regionChips.find(r => r.region === expandedRegion)?.towns.map(({ id, label }) => {
+                  const isActive = activeAreas.has(id)
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => toggleArea(id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap shrink-0 ${
+                        isActive
+                          ? 'bg-[#5B9A6F] border-[#5B9A6F] text-white'
+                          : 'bg-[#FAFAFA] border-[#D4D0CC] text-[#3D3A36] hover:border-[#5B9A6F]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </ScrollableChipRow>
             </div>
           )}
 
