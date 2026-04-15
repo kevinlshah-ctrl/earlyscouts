@@ -186,41 +186,35 @@ function ScrollableChipRow({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <div className="relative">
+    <div className="flex items-center gap-1">
       {showLeft && (
-        <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center">
-          <div className="absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-[#FFFAF6] to-transparent pointer-events-none" />
-          <button
-            onClick={() => scrollRef.current?.scrollBy({ left: -250, behavior: 'smooth' })}
-            className="relative z-10 ml-0.5 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
-            aria-label="Scroll left"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="8 2 4 6 8 10" />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={() => scrollRef.current?.scrollBy({ left: -250, behavior: 'smooth' })}
+          className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-[#5B9A6F]"
+          aria-label="Scroll left"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 12L6 8L10 4" />
+          </svg>
+        </button>
       )}
       <div
         ref={scrollRef}
-        className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+        className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide scroll-smooth flex-1 min-w-0"
         style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
       >
         {children}
       </div>
       {showRight && (
-        <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center justify-end">
-          <div className="absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-[#FFFAF6] to-transparent pointer-events-none" />
-          <button
-            onClick={() => scrollRef.current?.scrollBy({ left: 250, behavior: 'smooth' })}
-            className="relative z-10 mr-0.5 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 border border-[#D4D0CC] shadow-sm text-[#5B9A6F] hover:border-[#5B9A6F] transition-all"
-            aria-label="Scroll right"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="4 2 8 6 4 10" />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={() => scrollRef.current?.scrollBy({ left: 250, behavior: 'smooth' })}
+          className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-[#5B9A6F]"
+          aria-label="Scroll right"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 4L10 8L6 12" />
+          </svg>
+        </button>
       )}
     </div>
   )
