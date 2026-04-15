@@ -226,13 +226,37 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     ],
   },
 
+  'beverly-hills': {
+    label: 'Beverly Hills',
+    region: 'Westside',
+    metro: 'los-angeles',
+    districts: ['BHUSD'],
+    elementarySlugs: [
+      'el-rodeo-elementary-beverly-hills-ca',
+      'horace-mann-elementary-beverly-hills-ca',
+    ],
+    middleSlugs: [
+      'beverly-vista-middle-beverly-hills-ca',
+    ],
+    highSlugs: [
+      'beverly-hills-high-school-beverly-hills-ca',
+    ],
+    playbookSlugs: [],
+    privateSlugs: [],
+    pipelineSlugs: [
+      'el-rodeo-elementary-beverly-hills-ca',
+      'beverly-vista-middle-beverly-hills-ca',
+      'beverly-hills-high-school-beverly-hills-ca',
+    ],
+  },
+
   // ═══════════════════════════════════════════════════════════════
   // SANTA MONICA & MALIBU
   // ═══════════════════════════════════════════════════════════════
 
   'santa-monica': {
     label: 'Santa Monica',
-    region: 'Santa Monica & Malibu',
+    region: 'Westside',
     metro: 'los-angeles',
     districts: ['SMMUSD'],
     elementarySlugs: [
@@ -268,7 +292,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'malibu': {
     label: 'Malibu',
-    region: 'Santa Monica & Malibu',
+    region: 'Westside',
     metro: 'los-angeles',
     districts: ['SMMUSD'],
     elementarySlugs: [
@@ -290,7 +314,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'culver-city': {
     label: 'Culver City',
-    region: 'Culver City',
+    region: 'Westside',
     metro: 'los-angeles',
     districts: ['CCUSD'],
     elementarySlugs: [
@@ -487,7 +511,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'silver-lake': {
     label: 'Silver Lake / Echo Park',
-    region: 'Northeast LA',
+    region: 'Northeast LA & Pasadena',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
@@ -521,7 +545,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'eagle-rock': {
     label: 'Eagle Rock',
-    region: 'Northeast LA',
+    region: 'Northeast LA & Pasadena',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
@@ -548,7 +572,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'highland-park': {
     label: 'Highland Park',
-    region: 'Northeast LA',
+    region: 'Northeast LA & Pasadena',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
@@ -576,7 +600,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'atwater-village': {
     label: 'Atwater Village / Mt. Washington',
-    region: 'Northeast LA',
+    region: 'Northeast LA & Pasadena',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
@@ -606,7 +630,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'south-pasadena': {
     label: 'South Pasadena',
-    region: 'South Pasadena',
+    region: 'Northeast LA & Pasadena',
     metro: 'los-angeles',
     districts: ['SPUSD'],
     elementarySlugs: [
@@ -636,7 +660,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'brentwood': {
     label: 'Brentwood',
-    region: 'Brentwood & Palisades',
+    region: 'Westside',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
@@ -667,7 +691,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
 
   'palisades': {
     label: 'Pacific Palisades',
-    region: 'Brentwood & Palisades',
+    region: 'Westside',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [
@@ -694,7 +718,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
   // legacy combined entry — kept for backward compat
   'brentwood-palisades': {
     label: 'Brentwood / Palisades',
-    region: 'Brentwood & Palisades',
+    region: 'Westside',
     metro: 'los-angeles',
     districts: ['LAUSD'],
     elementarySlugs: [

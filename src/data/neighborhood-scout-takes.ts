@@ -327,6 +327,21 @@ export const SCOUT_TAKES: Record<string, ScoutTake> = {
     },
   },
 
+  'beverly-hills': {
+    title: "Scout's Take: Beverly Hills",
+    metro: 'los-angeles',
+    paragraphs: [
+      "Beverly Hills USD is one of the few districts in LA where parents who can afford private school choose to stay public. BHUSD spends nearly $30K per student annually — almost triple LAUSD — resulting in campuses that feel like private schools, teacher retention that's unmatched in the region, and a K-12 pipeline with essentially no drop-off.",
+      "El Rodeo and Horace Mann are the two elementary options, both consistently posting 80%+ math proficiency. Beverly Vista Middle feeds directly into Beverly Hills High, famous for its STEM magnet, performing arts center, and the alumni network that comes with it.",
+      "The catch: you need to live in 90210 or 90212. Inter-district transfers are not offered. This is a district where the real estate is the school choice.",
+    ],
+    pipeline: {
+      elementary: "El Rodeo or Horace Mann (by address) — both 80%+ math proficiency",
+      middle: "Beverly Vista Middle School",
+      high: "Beverly Hills High School — STEM magnet, performing arts center",
+    },
+  },
+
   'west-la': {
     title: "Scout's Take: West LA / Sawtelle",
     metro: 'los-angeles',

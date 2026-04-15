@@ -10,13 +10,9 @@ export const METROS: Record<string, MetroConfig> = {
     label: 'Los Angeles',
     regions: [
       'Westside',
-      'Santa Monica & Malibu',
-      'Culver City',
-      'Hollywood & Mid-City',
-      'Northeast LA',
-      'South Pasadena',
-      'Brentwood & Palisades',
       'Beach Cities',
+      'Hollywood & Mid-City',
+      'Northeast LA & Pasadena',
     ],
   },
   // Future:
