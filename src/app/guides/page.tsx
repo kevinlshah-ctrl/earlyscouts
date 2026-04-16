@@ -34,6 +34,7 @@ const GUIDE_ORDER = [
   'la-charter-magnet-school-choice-playbook',
   'smmusd-transfer-playbook',
   'ccusd-transfer-playbook',
+  'bhusd-transfer-playbook',
   'beach-cities-school-choice-blueprint',
   'hollywood-hills-school-choice-playbook',
 ]
