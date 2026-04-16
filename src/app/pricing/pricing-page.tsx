@@ -35,7 +35,7 @@ export default function PricingPage() {
 
             <ul className="flex flex-col gap-3 mb-8 flex-1">
               {[
-                'Full access to all 40+ school reports',
+                'Full access to all school reports',
                 'All transfer playbooks with calendars',
                 'Comparison tables and tour questions',
                 'Parent review analysis',

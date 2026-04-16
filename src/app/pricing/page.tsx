@@ -9,7 +9,7 @@ export const metadata = {
 }
 
 const COMPARE = [
-  { label: 'School reports',     us: '100+',    consultant: '3–5',       diy: 'Scattered' },
+  { label: 'School reports',     us: 'All',     consultant: '3–5',       diy: 'Scattered' },
   { label: 'Transfer playbooks', us: '✓',       consultant: '✓',         diy: '✗'         },
   { label: 'Time required',      us: '~30 min', consultant: '5+ hrs',    diy: '20+ hrs'   },
   { label: 'Premium',            us: '$59.99 to start', consultant: '$200–$500', diy: 'Free' },
