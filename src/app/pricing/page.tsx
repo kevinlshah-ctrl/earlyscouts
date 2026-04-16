@@ -103,8 +103,8 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
 
               <ul className="flex flex-col gap-2.5 flex-1">
                 {[
-                  '135+ deep-dive school reports',
-                  '6 transfer & school choice guides',
+                  'All deep-dive school reports',
+                  'All transfer & school choice guides',
                   'Full 16-month deadline calendars',
                   'Every contact, phone number & form',
                   'Side-by-side comparison tables',

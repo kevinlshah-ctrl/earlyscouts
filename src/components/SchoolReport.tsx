@@ -1084,7 +1084,7 @@ export default function SchoolReport({
                 padding: '14px 24px', borderRadius: 8, fontSize: 16, fontWeight: 700,
                 fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', marginBottom: 12,
               }}>
-                Unlock 135+ School Reports &amp; 6 Transfer Guides · $59.99
+                Unlock All School Reports &amp; Transfer Guides · $59.99
               </Link>
               <p style={{ textAlign: 'center', fontSize: 13, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
                 $59.99 to start · then $4.99/mo · Cancel anytime
