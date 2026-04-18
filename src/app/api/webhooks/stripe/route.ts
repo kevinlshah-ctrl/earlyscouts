@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 
         const metaUserId    = session.metadata?.userId
         const clientRefId   = session.client_reference_id  // set by /api/checkout as user.id
-        const tier          = session.metadata?.tier as 'premium' | 'extended' | undefined
+        const tier          = session.metadata?.tier as 'premium' | 'extended' | 'starter' | 'full_access' | undefined
         const customerId    = typeof session.customer === 'string' ? session.customer : null
         const customerEmail =
           session.customer_details?.email ??
@@ -145,11 +145,6 @@ export async function POST(request: NextRequest) {
 
         console.log(`[webhook] checkout.session.completed: session=${session.id} metaUserId=${metaUserId} clientRefId=${clientRefId} tier=${tier} customerId=${customerId} customerEmail=${customerEmail} payment_status=${payStatus}`)
 
-        if (!tier) {
-          console.warn('[webhook] checkout.session.completed: missing tier in metadata — cannot determine plan. Skipping.')
-          break
-        }
-
         // Guard: only grant access for sessions that actually succeeded.
         if (payStatus === 'unpaid') {
           console.warn(`[webhook] checkout.session.completed: payment_status=unpaid, skipping`)
@@ -158,20 +153,42 @@ export async function POST(request: NextRequest) {
 
         // ── Build the update payload ─────────────────────────────────────
         const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        const now       = new Date().toISOString()
 
         const premiumUpdate: Record<string, unknown> = {
           plan_type:         'premium',
           access_expires_at: expiresAt,
           stripe_customer_id: customerId,
-          updated_at:        new Date().toISOString(),
+          updated_at:        now,
         }
         const extendedUpdate: Record<string, unknown> = {
           plan_type:           'extended',
           subscription_status: 'trialing',
           stripe_customer_id:  customerId,
-          updated_at:          new Date().toISOString(),
+          updated_at:          now,
         }
-        const updatePayload = tier === 'premium' ? premiumUpdate : extendedUpdate
+        const starterUpdate: Record<string, unknown> = {
+          purchase_tier:     'starter',
+          stripe_customer_id: customerId,
+          updated_at:        now,
+        }
+        const fullAccessUpdate: Record<string, unknown> = {
+          purchase_tier:     'full_access',
+          stripe_customer_id: customerId,
+          updated_at:        now,
+        }
+
+        const updatePayload =
+          tier === 'premium'     ? premiumUpdate    :
+          tier === 'extended'    ? extendedUpdate   :
+          tier === 'starter'     ? starterUpdate    :
+          tier === 'full_access' ? fullAccessUpdate :
+          null
+
+        if (!updatePayload) {
+          console.warn('[webhook] checkout.session.completed: unrecognised tier:', tier)
+          break
+        }
 
         console.log(`[webhook] Will apply update:`, JSON.stringify(updatePayload))
 

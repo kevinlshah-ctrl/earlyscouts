@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   // Also do a targeted select of the access columns so they're easy to spot
   const { data: accessRow } = await supabase
     .from('user_profiles')
-    .select('plan_type, access_expires_at, subscription_status, stripe_customer_id, updated_at')
+    .select('plan_type, purchase_tier, access_expires_at, subscription_status, stripe_customer_id, updated_at')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -57,11 +57,12 @@ export async function GET(request: NextRequest) {
   const expiresAt = accessRow?.access_expires_at ? new Date(accessRow.access_expires_at) : null
   const isExpired = expiresAt ? expiresAt < new Date() : null
 
-  // Top-level plan_type + access_expires_at are read directly by confirmAccess
+  // Top-level plan_type + purchase_tier are read directly by confirmAccess
   // in auth-context.tsx — keep them at the root of the response.
   return NextResponse.json({
     // Fields read by confirmAccess polling loop
     plan_type:         accessRow?.plan_type        ?? null,
+    purchase_tier:     accessRow?.purchase_tier    ?? null,
     access_expires_at: accessRow?.access_expires_at ?? null,
     // Diagnostic fields
     fetched_at:        now,

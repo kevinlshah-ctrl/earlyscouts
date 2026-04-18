@@ -21,8 +21,10 @@ export async function POST(request: NextRequest) {
     const premiumMonthlyPriceId = process.env.STRIPE_PRICE_PREMIUM_MONTHLY
     const extMonthlyPriceId     = process.env.STRIPE_PRICE_EXTENDED_MONTHLY
     const extOnetimePriceId     = process.env.STRIPE_PRICE_EXTENDED_ONETIME
+    const starterPriceId        = process.env.STRIPE_PRICE_STARTER
+    const fullAccessPriceId     = process.env.STRIPE_PRICE_FULL_ACCESS
 
-    console.log('[checkout] price IDs: setup=', setupFeePriceId, 'premiumMonthly=', premiumMonthlyPriceId, 'extMonthly=', extMonthlyPriceId)
+    console.log('[checkout] price IDs: setup=', setupFeePriceId, 'premiumMonthly=', premiumMonthlyPriceId, 'extMonthly=', extMonthlyPriceId, 'starter=', starterPriceId, 'fullAccess=', fullAccessPriceId)
 
     if (!supabaseUrl || !serviceKey) {
       console.error('[checkout] Missing Supabase env vars')
@@ -31,10 +33,6 @@ export async function POST(request: NextRequest) {
     if (!stripeKey) {
       console.error('[checkout] Missing STRIPE_SECRET_KEY')
       return NextResponse.json({ error: 'Payment system not configured' }, { status: 500 })
-    }
-    if (!setupFeePriceId || !premiumMonthlyPriceId || !extMonthlyPriceId) {
-      console.error('[checkout] Missing Stripe price ID env vars — STRIPE_PRICE_SETUP_FEE:', setupFeePriceId, 'STRIPE_PRICE_PREMIUM_MONTHLY:', premiumMonthlyPriceId, 'STRIPE_PRICE_EXTENDED_MONTHLY:', extMonthlyPriceId)
-      return NextResponse.json({ error: 'Payment system not configured — missing price IDs' }, { status: 500 })
     }
 
     // ── Auth ──────────────────────────────────────────────────────────────────
@@ -59,7 +57,11 @@ export async function POST(request: NextRequest) {
       utm_source?: string; utm_medium?: string; utm_campaign?: string
       utm_content?: string; utm_term?: string
     }
-    const tier       = body.tier === 'extended' ? 'extended' : 'premium'
+    const VALID_TIERS = ['premium', 'extended', 'starter', 'full_access'] as const
+    type CheckoutTier = typeof VALID_TIERS[number]
+    const tier: CheckoutTier = VALID_TIERS.includes(body.tier as CheckoutTier)
+      ? (body.tier as CheckoutTier)
+      : 'premium'
     const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim()
       ? body.couponCode.trim().toUpperCase()
       : null
@@ -135,7 +137,39 @@ export async function POST(request: NextRequest) {
     // ── Build checkout session ─────────────────────────────────────────────────
     let session: Stripe.Checkout.Session
 
-    if (tier === 'premium') {
+    if (tier === 'starter') {
+      if (!starterPriceId) {
+        console.error('[checkout] Missing STRIPE_PRICE_STARTER')
+        return NextResponse.json({ error: 'Payment system not configured — missing Starter price ID' }, { status: 500 })
+      }
+      session = await stripe.checkout.sessions.create({
+        mode:     'payment',
+        customer: customerId,
+        client_reference_id: user.id,
+        line_items: [{ price: starterPriceId, quantity: 1 }],
+        metadata:    { userId: user.id, tier: 'starter', ...utmMetadata },
+        success_url: `${appUrl}/schools?welcome=1&tier=starter`,
+        cancel_url:  `${appUrl}/pricing`,
+      })
+    } else if (tier === 'full_access') {
+      if (!fullAccessPriceId) {
+        console.error('[checkout] Missing STRIPE_PRICE_FULL_ACCESS')
+        return NextResponse.json({ error: 'Payment system not configured — missing Full Access price ID' }, { status: 500 })
+      }
+      session = await stripe.checkout.sessions.create({
+        mode:     'payment',
+        customer: customerId,
+        client_reference_id: user.id,
+        line_items: [{ price: fullAccessPriceId, quantity: 1 }],
+        metadata:    { userId: user.id, tier: 'full_access', ...utmMetadata },
+        success_url: `${appUrl}/schools?welcome=1&tier=full_access`,
+        cancel_url:  `${appUrl}/pricing`,
+      })
+    } else if (tier === 'premium') {
+      if (!setupFeePriceId || !premiumMonthlyPriceId) {
+        console.error('[checkout] Missing premium price IDs')
+        return NextResponse.json({ error: 'Payment system not configured — missing price IDs' }, { status: 500 })
+      }
       session = await stripe.checkout.sessions.create({
         mode:     'subscription',
         customer: customerId,
@@ -158,6 +192,11 @@ export async function POST(request: NextRequest) {
         cancel_url:  `${appUrl}/pricing`,
       })
     } else {
+      // extended (legacy trial)
+      if (!extMonthlyPriceId) {
+        console.error('[checkout] Missing STRIPE_PRICE_EXTENDED_MONTHLY')
+        return NextResponse.json({ error: 'Payment system not configured — missing price IDs' }, { status: 500 })
+      }
       session = await stripe.checkout.sessions.create({
         mode:     'subscription',
         customer: customerId,

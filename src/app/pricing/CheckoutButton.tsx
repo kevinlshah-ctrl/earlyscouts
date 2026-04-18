@@ -5,8 +5,10 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { getBrowserClient } from '@/lib/supabase-browser'
 
+type CheckoutTier = 'premium' | 'extended' | 'starter' | 'full_access'
+
 interface Props {
-  tier: 'premium' | 'extended'
+  tier: CheckoutTier
   label: string
   className: string
   loadingLabel?: string
@@ -14,7 +16,7 @@ interface Props {
 }
 
 // ── Shared checkout helper ────────────────────────────────────────────────────
-async function runCheckout(tier: 'premium' | 'extended', token: string): Promise<string | null> {
+async function runCheckout(tier: CheckoutTier, token: string): Promise<string | null> {
   let utmParams: Record<string, string> = {}
   try {
     const stored = sessionStorage.getItem('utm_params')
@@ -62,7 +64,7 @@ function AuthModal({
   tier,
   onClose,
 }: {
-  tier: 'premium' | 'extended'
+  tier: CheckoutTier
   onClose: () => void
 }) {
   const [mode,            setMode]            = useState<'signup' | 'signin'>('signup')

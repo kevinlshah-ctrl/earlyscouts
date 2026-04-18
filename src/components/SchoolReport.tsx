@@ -22,7 +22,7 @@ import type {
 } from '@/lib/types'
 import styles from './SchoolReport.module.css'
 import Footer from './Footer'
-import { useAuth, hasActiveAccess } from '@/lib/auth-context'
+import { useAuth, hasActiveAccess, getUserAccessLevel } from '@/lib/auth-context'
 import { calculateReadTime, calculateSourceCount } from '@/lib/report-metrics'
 import { getNeighborhoodForSlug } from '@/data/neighborhood-schools'
 import CheckoutButton from '@/app/pricing/CheckoutButton'
@@ -637,6 +637,40 @@ function RelatedSchools({ schools }: { schools: RelatedSchoolItem[] }) {
   )
 }
 
+// ── Paywall purchase buttons ──────────────────────────────────────────────────
+
+function PaywallButtons({ isGuide = false }: { isGuide?: boolean }) {
+  const btn: React.CSSProperties = {
+    display: 'block', textAlign: 'center', borderRadius: 8, fontSize: 15,
+    fontWeight: 700, fontFamily: "'DM Sans', sans-serif", textDecoration: 'none',
+    padding: '13px 20px', marginBottom: 0,
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Link href="/pricing" style={{ ...btn, background: '#F5F2EE', color: '#1A1A2E', border: '2px solid #E8E5E1' }}>
+        3 {isGuide ? 'Schools + 1 Guide' : 'Schools + 1 Guide'} · $9.99 &nbsp;—&nbsp; Get Starter Access
+      </Link>
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          position: 'absolute', top: -10, right: 12,
+          background: '#E8B84B', color: '#1A1A2E', fontSize: 10,
+          fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+          padding: '2px 8px', borderRadius: 20, letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+        }}>
+          Best Value
+        </div>
+        <Link href="/pricing" style={{ ...btn, background: '#5B9A6F', color: 'white' }}>
+          All Schools + All Guides · $24.99 &nbsp;—&nbsp; Get Full Access
+        </Link>
+      </div>
+      <p style={{ textAlign: 'center', fontSize: 12, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
+        One-time payment. No subscription.
+      </p>
+    </div>
+  )
+}
+
 // ── Main Export ───────────────────────────────────────────────────────────────
 
 export default function SchoolReport({
@@ -695,14 +729,49 @@ export default function SchoolReport({
   const schoolType = school.type || 'public'
   const typeLabel = schoolType.charAt(0).toUpperCase() + schoolType.slice(1)
 
-  const { profile, user, signOut, isConfirmingAccess, loading: authLoading } = useAuth()
+  const { profile, user, signOut, isConfirmingAccess, loading: authLoading, unlockedSlugs, refreshUnlocks, sessionToken } = useAuth()
+  const accessLevel = getUserAccessLevel(profile)
   // forcePaywall=true overrides even isGuide — used by server-gated guide pages
   // that have already stripped sections before sending to the client.
   // isConfirmingAccess is true while the post-Stripe webhook poll is in flight —
   // treat as paid to prevent the paywall from flashing before the DB update lands.
   // authLoading is true until INITIAL_SESSION fires — prevents paywall flash on
   // slow connections / iOS where profile hasn't loaded yet on first render.
-  const isPaid = !forcePaywall && (isGuide || serverGrantedAccess || authLoading || hasActiveAccess(profile) || isConfirmingAccess)
+  const isPaid = !forcePaywall && (
+    isGuide ||
+    serverGrantedAccess ||
+    authLoading ||
+    accessLevel === 'full_access' ||
+    accessLevel === 'legacy_premium' ||
+    (accessLevel === 'starter' && unlockedSlugs.schools.includes(school.slug)) ||
+    isConfirmingAccess
+  )
+
+  // Unlock state — used when starter user clicks "Unlock This Report"
+  const [isUnlocking,  setIsUnlocking]  = useState(false)
+  const [unlockError,  setUnlockError]  = useState<string | null>(null)
+
+  async function handleUnlock() {
+    if (!sessionToken) return
+    setIsUnlocking(true)
+    setUnlockError(null)
+    try {
+      const res = await fetch('/api/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify({ slug: school.slug, type: 'school' }),
+      })
+      if (res.ok) {
+        await refreshUnlocks()
+      } else {
+        const body = await res.json().catch(() => ({}))
+        setUnlockError((body as { error?: string }).error ?? 'Could not unlock — try again.')
+      }
+    } catch {
+      setUnlockError('Could not unlock — try again.')
+    }
+    setIsUnlocking(false)
+  }
 
   // ── Debug: log access state whenever it changes ───────────────────────────
   useEffect(() => {
@@ -773,10 +842,10 @@ export default function SchoolReport({
         {!isPaid && !bannerDismissed && (
           <div className={styles.previewBanner}>
             <span className={styles.previewBannerText}>
-              Unlock all schools &amp; guides · $59.99
+              Unlock all schools &amp; guides — from $9.99
             </span>
             <Link href="/pricing" className={styles.previewBannerBtn}>
-              Get Access
+              See Plans
             </Link>
             <button
               onClick={() => setBannerDismissed(true)}
@@ -1035,19 +1104,7 @@ export default function SchoolReport({
                   </div>
                 ))}
               </div>
-              <div style={{ textAlign: 'center', marginBottom: 20, fontFamily: "'DM Serif Display', serif", fontSize: 17, fontStyle: 'italic', color: '#2D3436' }}>
-                &ldquo;The guide that replaces a $500/hour education consultant.&rdquo;
-              </div>
-              <Link href="/pricing" style={{
-                display: 'block', background: '#5B9A6F', color: 'white', textAlign: 'center',
-                padding: '14px 24px', borderRadius: 8, fontSize: 16, fontWeight: 700,
-                fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', marginBottom: 12,
-              }}>
-                Unlock All School Reports &amp; Transfer Guides · $59.99
-              </Link>
-              <p style={{ textAlign: 'center', fontSize: 13, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
-                $59.99 to start · $4.99/mo to stay current · Cancel anytime
-              </p>
+              <PaywallButtons isGuide />
             </div>
           ) : (
             // School report paywall card
@@ -1064,31 +1121,59 @@ export default function SchoolReport({
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
                 {[
-                  'Programs & Enrichment — GATE, music, art, after-school, funding details',
-                  'Comparison Table — side-by-side vs. nearby schools',
-                  'Parent Reviews — what families love AND where they express concern',
-                  'Tour Questions — 6 questions based on real parent feedback',
-                  'Enrollment — deadlines, contacts, how to apply',
+                  'Full Scout Take &amp; editorial analysis',
+                  'Side-by-side comparison table',
+                  'Programs &amp; enrichment details',
+                  'Parent reviews — the good AND the bad',
+                  'Tour questions based on real parent feedback',
+                  'Pipeline analysis &amp; enrollment details',
                 ].map((item, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                     <span style={{ color: '#5B9A6F', fontWeight: 700, flexShrink: 0 }}>✓</span>
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#636E72' }}>{item}</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#636E72' }} dangerouslySetInnerHTML={{ __html: item }} />
                   </div>
                 ))}
               </div>
-              <div style={{ textAlign: 'center', marginBottom: 20, fontFamily: "'DM Serif Display', serif", fontSize: 17, fontStyle: 'italic', color: '#2D3436' }}>
-                &ldquo;Stop Googling. Start deciding.&rdquo;
-              </div>
-              <Link href="/pricing" style={{
-                display: 'block', background: '#5B9A6F', color: 'white', textAlign: 'center',
-                padding: '14px 24px', borderRadius: 8, fontSize: 16, fontWeight: 700,
-                fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', marginBottom: 12,
-              }}>
-                Unlock All School Reports &amp; Transfer Guides · $59.99
-              </Link>
-              <p style={{ textAlign: 'center', fontSize: 13, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
-                $59.99 to start · then $4.99/mo · Cancel anytime
-              </p>
+              {accessLevel === 'starter' ? (
+                // Starter unlock UI
+                unlockedSlugs.schools.length < 3 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <button
+                      onClick={handleUnlock}
+                      disabled={isUnlocking}
+                      style={{
+                        display: 'block', width: '100%', background: '#5B9A6F', color: 'white',
+                        textAlign: 'center', padding: '14px 24px', borderRadius: 8, fontSize: 16,
+                        fontWeight: 700, fontFamily: "'DM Sans', sans-serif", border: 'none',
+                        cursor: isUnlocking ? 'not-allowed' : 'pointer', opacity: isUnlocking ? 0.6 : 1,
+                      }}
+                    >
+                      {isUnlocking ? 'Unlocking…' : `Unlock This Report (${3 - unlockedSlugs.schools.length} of 3 remaining)`}
+                    </button>
+                    {unlockError && (
+                      <p style={{ textAlign: 'center', fontSize: 13, color: '#E74C3C', margin: 0 }}>{unlockError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#636E72', textAlign: 'center', margin: '0 0 8px' }}>
+                      You&apos;ve used all 3 school unlocks.
+                    </p>
+                    <Link href="/pricing" style={{
+                      display: 'block', background: '#5B9A6F', color: 'white', textAlign: 'center',
+                      padding: '14px 24px', borderRadius: 8, fontSize: 16, fontWeight: 700,
+                      fontFamily: "'DM Sans', sans-serif", textDecoration: 'none',
+                    }}>
+                      Upgrade to Full Access · $24.99
+                    </Link>
+                    <p style={{ textAlign: 'center', fontSize: 12, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
+                      One-time payment. No subscription.
+                    </p>
+                  </div>
+                )
+              ) : (
+                <PaywallButtons />
+              )}
             </div>
           )}
 

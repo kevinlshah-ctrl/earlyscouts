@@ -27,6 +27,13 @@ export interface UserProfile {
   preferences: Record<string, unknown> | null
   created_at: string
   updated_at: string
+  /** New tiered one-time purchase model (added 2026-04). Absent for legacy users. */
+  purchase_tier?: 'free' | 'starter' | 'full_access' | 'legacy_premium'
+}
+
+export interface UnlockedSlugs {
+  schools: string[]
+  guides: string[]
 }
 
 /** True when the user has a currently-active paid subscription or in-window premium access. */
@@ -43,6 +50,20 @@ export function hasActiveAccess(profile: UserProfile | null): boolean {
   return false
 }
 
+export type AccessLevel = 'free' | 'starter' | 'full_access' | 'legacy_premium'
+
+/** Returns the effective access level for the user, accounting for both old and new models. */
+export function getUserAccessLevel(profile: UserProfile | null): AccessLevel {
+  if (!profile) return 'free'
+  const pt = profile.purchase_tier
+  if (pt === 'full_access')    return 'full_access'
+  if (pt === 'legacy_premium') return 'legacy_premium'
+  if (pt === 'starter')        return 'starter'
+  // Fall back to old subscription check for legacy subscribers
+  if (hasActiveAccess(profile)) return 'legacy_premium'
+  return 'free'
+}
+
 interface AuthState {
   user: User | null
   profile: UserProfile | null
@@ -50,6 +71,10 @@ interface AuthState {
   /** Current access token — updated on every auth state change, never calls getSession(). */
   sessionToken: string | null
   loading: boolean
+  /** Slugs the user has explicitly unlocked (Starter tier only). */
+  unlockedSlugs: UnlockedSlugs
+  /** Re-fetch unlock records from the DB (call after a successful /api/unlock). */
+  refreshUnlocks: () => Promise<void>
   /** Send a magic-link to the given email. Returns error string or null. */
   signIn: (email: string) => Promise<{ error: string | null }>
   /** Sign in with email + password. Returns error string or null. */
@@ -88,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isConfirmingAccess, setIsConfirmingAccess] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [unlockedSlugs, setUnlockedSlugs] = useState<UnlockedSlugs>({ schools: [], guides: [] })
 
   // Holds the current access token without ever calling getSession().
   // Updated synchronously in onAuthStateChange so callbacks can read the token
@@ -124,12 +150,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // user_profiles has no created_at column (only updated_at)
         created_at: (row.created_at as string | undefined) ?? '',
         updated_at: row.updated_at as string,
+        purchase_tier: (row.purchase_tier as UserProfile['purchase_tier']) ?? undefined,
       }
       setProfile(normalized)
       return normalized
     },
     [supabase]
   )
+
+  const fetchUnlocks = useCallback(async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('user_unlocks')
+        .select('slug, unlock_type')
+        .eq('user_id', userId)
+      if (data) {
+        const rows = data as { slug: string; unlock_type: string }[]
+        setUnlockedSlugs({
+          schools: rows.filter(r => r.unlock_type === 'school').map(r => r.slug),
+          guides:  rows.filter(r => r.unlock_type === 'guide').map(r => r.slug),
+        })
+      }
+    } catch {}
+  }, [supabase])
+
+  const refreshUnlocks = useCallback(async () => {
+    if (!user) return
+    await fetchUnlocks(user.id)
+  }, [user, fetchUnlocks])
 
   const refreshProfile = useCallback(async (): Promise<UserProfile | null> => {
     if (!user) return null
@@ -168,7 +216,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('[confirmAccess] debug-profile result:', JSON.stringify(data))
 
-      const expiresAt = data?.access_expires_at as string | null | undefined
+      const expiresAt    = data?.access_expires_at as string | null | undefined
+      const purchaseTier = data?.purchase_tier as string | null | undefined
+
+      // New one-time purchase tiers (starter / full_access) — no expiry check needed
+      if (purchaseTier === 'full_access' || purchaseTier === 'starter') {
+        console.log('[confirmAccess] new purchase tier confirmed:', purchaseTier)
+        const refreshed = await fetchProfile(user.id)
+        if (refreshed) await fetchUnlocks(user.id)
+        setIsConfirmingAccess(false)
+        return
+      }
+
       if (
         data?.plan_type === 'premium' &&
         expiresAt &&
@@ -256,6 +315,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(s?.user ?? null)
       if (s?.user) {
         const profileData = await fetchProfile(s.user.id)
+        // Fetch unlock records in parallel — safe to fire even before user_unlocks table exists
+        fetchUnlocks(s.user.id).catch(() => {})
         // Safety net: if no user_profiles row exists (e.g. account created via
         // AuthModal on the pricing page before this upsert was added), create it now.
         if (!profileData && event === 'SIGNED_IN') {
@@ -290,6 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setProfile(null)
+        setUnlockedSlugs({ schools: [], guides: [] })
       }
       // INITIAL_SESSION is the first event fired — marks the end of bootstrap.
       // Only set loading=false here so the nav never renders in an indeterminate state.
@@ -446,6 +508,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         sessionToken: session?.access_token ?? null,
         loading,
+        unlockedSlugs,
+        refreshUnlocks,
         signIn,
         signInWithPassword,
         signOut,
