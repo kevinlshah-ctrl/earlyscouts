@@ -189,7 +189,7 @@ export default function HomePage() {
             Start exploring schools.
           </h2>
           <p className="text-[#A09A94] text-sm">
-            30 days of full access · $59.99
+            $24.99 one-time payment for full access
           </p>
           <Link
             href="/schools"

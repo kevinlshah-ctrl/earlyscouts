@@ -21,7 +21,7 @@ export interface UserProfile {
   onboarding_data: Record<string, unknown> | null
   subscription_tier: 'free' | 'premium' | 'extended'
   subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled' | null
-  /** UTC ISO timestamp when Premium 30-day access expires (null = never set) */
+  /** UTC ISO timestamp when legacy Premium access expires (null = never set). Unused by the current one-time full-access model. */
   access_expires_at: string | null
   stripe_customer_id: string | null
   preferences: Record<string, unknown> | null

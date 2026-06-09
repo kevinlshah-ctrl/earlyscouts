@@ -62,7 +62,7 @@ export default async function GuidePage({ params }: { params: { slug: string } }
   if (user) {
     const { data: profileRow } = await serviceClient
       .from('user_profiles')
-      .select('plan_type, subscription_status, access_expires_at')
+      .select('plan_type, subscription_status, access_expires_at, purchase_tier')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -70,10 +70,14 @@ export default async function GuidePage({ params }: { params: { slug: string } }
       plan_type: string | null
       subscription_status: string | null
       access_expires_at: string | null
+      purchase_tier: string | null
     } | null
 
     if (p) {
-      if (p.plan_type === 'extended') {
+      // New one-time model: full_access grants everything, no expiry.
+      if (p.purchase_tier === 'full_access') {
+        hasAccess = true
+      } else if (p.plan_type === 'extended') {
         hasAccess = p.subscription_status === 'active' || p.subscription_status === 'trialing'
       } else if (p.plan_type === 'premium') {
         // No expiry set means the row was just created — treat as active.

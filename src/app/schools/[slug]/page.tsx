@@ -20,12 +20,15 @@ export default async function SchoolPage({ params }: { params: { slug: string } 
     const serviceClient = createServerClient()
     const { data: p } = await serviceClient
       .from('user_profiles')
-      .select('plan_type, subscription_status, access_expires_at')
+      .select('plan_type, subscription_status, access_expires_at, purchase_tier')
       .eq('id', user.id)
       .maybeSingle()
 
     if (p) {
-      if (p.plan_type === 'premium') {
+      // New one-time model: full_access grants everything, no expiry.
+      if (p.purchase_tier === 'full_access') {
+        serverGrantedAccess = true
+      } else if (p.plan_type === 'premium') {
         serverGrantedAccess = !p.access_expires_at || new Date(p.access_expires_at) > new Date()
       } else if (p.plan_type === 'extended') {
         serverGrantedAccess = p.subscription_status === 'active' || p.subscription_status === 'trialing'
