@@ -647,23 +647,9 @@ function PaywallButtons({ isGuide = false }: { isGuide?: boolean }) {
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <Link href="/pricing" style={{ ...btn, background: '#F5F2EE', color: '#1A1A2E', border: '2px solid #E8E5E1' }}>
-        3 {isGuide ? 'Schools + 1 Guide' : 'Schools + 1 Guide'} · $9.99 &nbsp;—&nbsp; Get Starter Access
+      <Link href="/pricing" style={{ ...btn, background: '#5B9A6F', color: 'white' }}>
+        All Schools + All Guides · $24.99 &nbsp;—&nbsp; Get Full Access
       </Link>
-      <div style={{ position: 'relative' }}>
-        <div style={{
-          position: 'absolute', top: -10, right: 12,
-          background: '#E8B84B', color: '#1A1A2E', fontSize: 10,
-          fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-          padding: '2px 8px', borderRadius: 20, letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-        }}>
-          Best Value
-        </div>
-        <Link href="/pricing" style={{ ...btn, background: '#5B9A6F', color: 'white' }}>
-          All Schools + All Guides · $24.99 &nbsp;—&nbsp; Get Full Access
-        </Link>
-      </div>
       <p style={{ textAlign: 'center', fontSize: 12, color: '#A0A8B0', fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
         One-time payment. No subscription.
       </p>
@@ -842,7 +828,7 @@ export default function SchoolReport({
         {!isPaid && !bannerDismissed && (
           <div className={styles.previewBanner}>
             <span className={styles.previewBannerText}>
-              Unlock all schools &amp; guides — from $9.99
+              Unlock all schools &amp; guides — $24.99 one-time
             </span>
             <Link href="/pricing" className={styles.previewBannerBtn}>
               See Plans

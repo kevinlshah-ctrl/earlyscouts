@@ -79,7 +79,7 @@ export default function SubscriptionSection() {
             href="/pricing"
             className="inline-block bg-[#5B9A6F] hover:bg-[#4a8a5e] text-white text-sm font-semibold py-2.5 px-5 rounded-xl transition-colors text-center"
           >
-            Unlock School Reports — from $9.99
+            Get Full Access — $24.99
           </Link>
         </div>
       )}
