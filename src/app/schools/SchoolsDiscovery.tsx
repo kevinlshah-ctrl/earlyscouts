@@ -281,17 +281,6 @@ function LevelRow({
 
 // ── Scout Take Modal ──────────────────────────────────────────────────────────
 
-function PipelineRow({ label, text }: { label: string; text: string }) {
-  return (
-    <div className="flex gap-3">
-      <span className="text-[10px] font-mono font-bold text-[#9B9690] uppercase tracking-wider mt-0.5 w-20 shrink-0">
-        {label}
-      </span>
-      <span className="text-xs text-[#3D3A36] leading-snug">{text}</span>
-    </div>
-  )
-}
-
 function ScoutTakeModal({ townId, onClose }: { townId: string; onClose: () => void }) {
   const take = SCOUT_TAKES[townId]
   if (!take) return null
@@ -357,58 +346,7 @@ function ScoutTakeModal({ townId, onClose }: { townId: string; onClose: () => vo
             <p key={i} className="text-sm text-[#3D3A36] leading-relaxed">{p}</p>
           ))}
 
-          {/* Pipeline */}
-          <div className="bg-white border border-[#E8E5E1] rounded-xl p-4 mt-2">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-3">
-              📍 Default Pipeline
-            </p>
-            <div className="flex flex-col gap-2">
-              <PipelineRow label="Elementary" text={take.pipeline.elementary} />
-              <div className="ml-[92px] text-[#B0AAA4] text-sm leading-none">↓</div>
-              <PipelineRow label="Middle" text={take.pipeline.middle} />
-              <div className="ml-[92px] text-[#B0AAA4] text-sm leading-none">↓</div>
-              <PipelineRow label="High" text={take.pipeline.high} />
-            </div>
-          </div>
-
           <div className="h-8" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Inline pipeline (compact, shown below the Scout Take link) ────────────────
-
-function InlinePipeline({ townId }: { townId: string }) {
-  const take = SCOUT_TAKES[townId]
-  if (!take) return null
-
-  return (
-    <div className="bg-white border border-[#E8E5E1] rounded-xl px-4 py-3 mb-6">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#5B9A6F] mb-2">
-        📍 Your Default Pipeline
-      </p>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex gap-2">
-          <span className="text-[10px] font-mono font-bold text-[#9B9690] uppercase tracking-wider shrink-0 w-20 mt-0.5">
-            Elementary
-          </span>
-          <span className="text-xs text-[#3D3A36] leading-snug">{take.pipeline.elementary}</span>
-        </div>
-        <div className="ml-[84px] text-[#B0AAA4] text-xs leading-none">↓</div>
-        <div className="flex gap-2">
-          <span className="text-[10px] font-mono font-bold text-[#9B9690] uppercase tracking-wider shrink-0 w-20 mt-0.5">
-            Middle
-          </span>
-          <span className="text-xs text-[#3D3A36] leading-snug">{take.pipeline.middle}</span>
-        </div>
-        <div className="ml-[84px] text-[#B0AAA4] text-xs leading-none">↓</div>
-        <div className="flex gap-2">
-          <span className="text-[10px] font-mono font-bold text-[#9B9690] uppercase tracking-wider shrink-0 w-20 mt-0.5">
-            High
-          </span>
-          <span className="text-xs text-[#3D3A36] leading-snug">{take.pipeline.high}</span>
         </div>
       </div>
     </div>
@@ -622,7 +560,6 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   const activeAreaIds = Array.from(activeAreas)
   const singleArea = activeAreaIds.length === 1 ? activeAreaIds[0] : null
   const showScoutTakeLink = singleArea != null && Boolean(SCOUT_TAKES[singleArea])
-  const showPipeline = singleArea != null && Boolean(SCOUT_TAKES[singleArea])
 
   const schoolsBySlug = new Map(allSchools.map(s => [s.slug, s]))
 
@@ -876,9 +813,6 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
                   </span>
                 </button>
               )}
-
-              {/* Inline pipeline */}
-              {showPipeline && <InlinePipeline townId={singleArea!} />}
 
               {/* School listings */}
               {hasResults ? (

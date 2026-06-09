@@ -616,8 +616,21 @@ function AlertsCard({ alerts }: { alerts: AlertItem[] }) {
 
 // ── Related Schools ───────────────────────────────────────────────────────────
 
+/** Dedupe related-school items by slug, preserving first occurrence. */
+function dedupeBySlug<T extends { slug: string }>(items: T[]): T[] {
+  const seen = new Set<string>()
+  return items.filter((s) => {
+    if (seen.has(s.slug)) return false
+    seen.add(s.slug)
+    return true
+  })
+}
+
 function RelatedSchools({ schools }: { schools: RelatedSchoolItem[] }) {
-  if (!schools.length) return null
+  // Per-section dedup: this grid shows each school at most once (also avoids
+  // duplicate React keys on s.slug).
+  const unique = dedupeBySlug(schools)
+  if (!unique.length) return null
   return (
     <div className={styles.relatedSection}>
       <div className={styles.relatedLabel}>
@@ -625,7 +638,7 @@ function RelatedSchools({ schools }: { schools: RelatedSchoolItem[] }) {
         <div className={styles.relatedLine} />
       </div>
       <div className={styles.relatedGrid}>
-        {schools.map((s) => (
+        {unique.map((s) => (
           <Link key={s.slug} href={`/schools/${resolveSlug(s.slug)}`} className={styles.relatedCard}>
             <div className={styles.relatedTag}>{s.tag}</div>
             <div className={styles.relatedName}>{s.name}</div>
@@ -816,8 +829,9 @@ export default function SchoolReport({
     const slug = s.slug.toLowerCase()
     return tag.includes('middle') || tag.includes('high') || slug.includes('middle') || slug.includes('high')
   }
-  const elementarySchools = relatedSchools.filter((s) => !isMiddleOrHigh(s) && !isGuideSlug(s.slug))
-  const middleHighSchools = relatedSchools.filter((s) => isMiddleOrHigh(s) && !isGuideSlug(s.slug))
+  // Per-section dedup by slug — each nav row shows a given school at most once.
+  const elementarySchools = dedupeBySlug(relatedSchools.filter((s) => !isMiddleOrHigh(s) && !isGuideSlug(s.slug)))
+  const middleHighSchools = dedupeBySlug(relatedSchools.filter((s) => isMiddleOrHigh(s) && !isGuideSlug(s.slug)))
 
   return (
     <>

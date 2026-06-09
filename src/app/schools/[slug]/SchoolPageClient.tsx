@@ -673,6 +673,36 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
     declining: 'bg-red-400',
   }
 
+  // ── Related schools: per-section dedup by slug ──────────────────────────────
+  // A school may legitimately appear once under "nearby" AND once under the
+  // feeder pipeline (those sections mean different things), so we dedupe each
+  // section independently rather than globally. Within a section the same
+  // school can surface more than once (a school can be both feeder_from and
+  // feeder_into, and fuzzy feeder name-matching can resolve several names to the
+  // same row), so each section shows a given school at most once.
+  const nearbySeen = new Set<string>()
+  const nearbyUnique = (related?.nearby ?? []).filter((s) => {
+    const key = s.slug || s.id
+    if (nearbySeen.has(key)) return false
+    nearbySeen.add(key)
+    return true
+  })
+  // Feeder grid renders feederFrom then feederInto together — dedupe across the
+  // combined list (feederFrom first) so a school isn't shown twice in that grid.
+  const feederSeen = new Set<string>()
+  const feederFromUnique = (related?.feederFrom ?? []).filter((s) => {
+    const key = s.slug || s.id
+    if (feederSeen.has(key)) return false
+    feederSeen.add(key)
+    return true
+  })
+  const feederIntoUnique = (related?.feederInto ?? []).filter((s) => {
+    const key = s.slug || s.id
+    if (feederSeen.has(key)) return false
+    feederSeen.add(key)
+    return true
+  })
+
   return (
     <main>
       <Nav />
@@ -1483,18 +1513,18 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
       </div>
 
       {/* ── Parents Also Researched ─────────────────────────────────────────── */}
-      {related && (related.nearby.length > 0 || related.feederInto.length > 0 || related.feederFrom.length > 0) && (
+      {related && (nearbyUnique.length > 0 || feederIntoUnique.length > 0 || feederFromUnique.length > 0) && (
         <div className="bg-white border-t border-gray-100 py-12 px-4">
           <div className="max-w-4xl mx-auto flex flex-col gap-8">
 
             {/* Nearby schools */}
-            {related.nearby.length > 0 && (
+            {nearbyUnique.length > 0 && (
               <div>
                 <h2 className="font-serif text-xl text-charcoal mb-4 pl-4 border-l-4 border-scout-green">
                   Parents in {school.zip} also researched
                 </h2>
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-                  {related.nearby.map((s) => (
+                  {nearbyUnique.map((s) => (
                     <RelatedSchoolCard key={s.id} school={s} />
                   ))}
                 </div>
@@ -1502,16 +1532,16 @@ export default function SchoolDetailPage({ serverGrantedAccess = false }: { serv
             )}
 
             {/* Feeder pipeline */}
-            {(related.feederInto.length > 0 || related.feederFrom.length > 0) && (
+            {(feederIntoUnique.length > 0 || feederFromUnique.length > 0) && (
               <div>
                 <h2 className="font-serif text-xl text-charcoal mb-4 pl-4 border-l-4 border-scout-green">
                   In the feeder pipeline
                 </h2>
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-                  {related.feederFrom.map((s) => (
+                  {feederFromUnique.map((s) => (
                     <RelatedSchoolCard key={s.id} school={s} label="Feeds from" />
                   ))}
-                  {related.feederInto.map((s) => (
+                  {feederIntoUnique.map((s) => (
                     <RelatedSchoolCard key={s.id} school={s} label="Feeds into" />
                   ))}
                 </div>
