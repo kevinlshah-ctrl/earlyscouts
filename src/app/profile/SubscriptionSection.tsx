@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth, getUserAccessLevel } from '@/lib/auth-context'
 
@@ -11,7 +12,21 @@ const TIER_LABELS: Record<string, { label: string; desc: string; color: string }
 }
 
 export default function SubscriptionSection() {
-  const { user, profile, unlockedSlugs } = useAuth()
+  const { user, profile, unlockedSlugs, refreshProfile, refreshUnlocks } = useAuth()
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshed, setRefreshed]   = useState(false)
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    setRefreshed(false)
+    try {
+      await refreshProfile()
+      await refreshUnlocks()
+      setRefreshed(true)
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   if (!user) return null
 
@@ -105,6 +120,25 @@ export default function SubscriptionSection() {
           </a>
         </div>
       )}
+
+      {/* Refresh status — self-serve recovery if a webhook lands late or the
+          browser is showing a cached (pre-payment) plan. Re-fetches from the DB. */}
+      <div className="mt-4 pt-4 border-t border-[#F0EDE8] flex flex-wrap items-center gap-x-3 gap-y-1">
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="text-xs font-medium text-[#5B9A6F] hover:underline disabled:opacity-60 disabled:no-underline"
+        >
+          {refreshing ? 'Refreshing…' : 'Refresh status'}
+        </button>
+        {!isFull && !refreshing && (
+          <span className="text-[11px] text-[#9B9690]">Just paid? Refresh if your plan looks out of date.</span>
+        )}
+        {refreshed && !refreshing && (
+          <span className="text-[11px] text-[#5B9A6F]">Updated ✓</span>
+        )}
+      </div>
     </div>
   )
 }

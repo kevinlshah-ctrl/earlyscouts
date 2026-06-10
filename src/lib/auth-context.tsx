@@ -187,21 +187,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const confirmAccess = useCallback(() => {
     if (!user) return
     setIsConfirmingAccess(true)
-    let attempts = 0
-    const MAX = 5
 
-    const poll = async () => {
-      attempts++
-      console.log(`[confirmAccess] poll ${attempts}/${MAX} userId=${user.id}`)
+    // Backoff schedule (ms before each check). Spans ~2 minutes so a delayed or
+    // Stripe-retried webhook — or a stale browser cache — doesn't strand a paid
+    // user on a FREE view. Early checks are tight (most webhooks land in seconds);
+    // later checks back off to avoid hammering /api/debug-profile.
+    const SCHEDULE = [1500, 2000, 2000, 3000, 3000, 5000, 5000, 8000, 10000, 15000, 20000, 20000, 30000]
+    let step = 0
 
-      // Read token from ref — zero async, no IndexedDB lock.
-      // sessionTokenRef is updated synchronously in onAuthStateChange.
-      const token = sessionTokenRef.current
-      if (!token) {
-        console.warn('[confirmAccess] no token in ref — retrying')
-        if (attempts < MAX) { setTimeout(poll, 2000) } else { setIsConfirmingAccess(false) }
+    const finish = () => setIsConfirmingAccess(false)
+
+    const scheduleNext = () => {
+      if (step >= SCHEDULE.length) {
+        console.warn('[confirmAccess] poll window exhausted — entitlement not confirmed yet')
+        finish()
         return
       }
+      setTimeout(poll, SCHEDULE[step++])
+    }
+
+    const poll = async () => {
+      // Scope: pause while the tab is backgrounded and resume when it returns,
+      // without consuming the rest of the window (background timer throttling
+      // would otherwise waste the schedule).
+      if (typeof document !== 'undefined' && document.hidden) {
+        const onVisible = () => {
+          document.removeEventListener('visibilitychange', onVisible)
+          poll()
+        }
+        document.addEventListener('visibilitychange', onVisible)
+        return
+      }
+
+      // Read token from ref — zero async, no IndexedDB lock.
+      const token = sessionTokenRef.current
+      if (!token) { scheduleNext(); return }
 
       // Fetch via plain HTTP — bypasses the Supabase JS client lock entirely
       let data: Record<string, unknown> | null = null
@@ -214,17 +234,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('[confirmAccess] fetch error:', err)
       }
 
-      console.log('[confirmAccess] debug-profile result:', JSON.stringify(data))
-
       const expiresAt    = data?.access_expires_at as string | null | undefined
       const purchaseTier = data?.purchase_tier as string | null | undefined
 
       // New one-time purchase tiers (starter / full_access) — no expiry check needed
       if (purchaseTier === 'full_access' || purchaseTier === 'starter') {
-        console.log('[confirmAccess] new purchase tier confirmed:', purchaseTier)
+        console.log('[confirmAccess] purchase tier confirmed:', purchaseTier)
         const refreshed = await fetchProfile(user.id)
         if (refreshed) await fetchUnlocks(user.id)
-        setIsConfirmingAccess(false)
+        finish()
         return
       }
 
@@ -259,23 +277,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             updated_at:          (row.updated_at           as string | undefined)              ?? new Date().toISOString(),
           })
         }
-        setIsConfirmingAccess(false)
+        finish()
         return
       }
 
-      if (attempts >= MAX) {
-        console.warn('[confirmAccess] max attempts reached — plan_type still not premium')
-        setIsConfirmingAccess(false)
-        return
-      }
-
-      setTimeout(poll, 2000)
+      scheduleNext()
     }
 
-    // First check at 1.5s — gives the webhook time to fire
-    setTimeout(poll, 1500)
+    scheduleNext()
   // sessionTokenRef is a stable ref — excluded from deps intentionally.
-  }, [user, fetchProfile])
+  }, [user, fetchProfile, fetchUnlocks])
 
   // ── Post-checkout access confirmation ────────────────────────────────────────
   // CheckoutButton sets 'pendingAccessConfirm' in sessionStorage right before
