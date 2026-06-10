@@ -357,6 +357,81 @@ export const SCOUT_TAKES: Record<string, ScoutTake> = {
     },
   },
 
+  'pico-robertson': {
+    title: "Scout's Take: Pico-Robertson / Beverlywood",
+    metro: 'los-angeles',
+    paragraphs: [
+      "Pico-Robertson and Beverlywood are a rare Westside pocket where the neighborhood public school is genuinely a destination, not a fallback. Canfield Avenue Elementary ranks in the top 9% of California elementaries (around 67-73% math, 72-77% reading) while staying diverse and roughly half free-or-reduced-lunch — a level of equitable performance most Westside families assume they have to pay private tuition to find.",
+      "The pipeline is unusually clean for LAUSD: Canfield feeds Palms Middle and then Alexander Hamilton High, both solid and both covered in our reports. Daniel Webster Middle adds a distinctive STEAM Magnet plus the first on-site middle school French Dual Language program in all of LAUSD — a real draw for families seeking French biliteracy or a STEAM focus.",
+      "For families weighing private, tour Canfield first; its results rival far more expensive options. Start with the deep dives below, and use our LAUSD and LA Charter & Magnet playbooks to plan the middle-school step.",
+    ],
+    pipeline: {
+      elementary: "Canfield Avenue Elementary (zoned) — top 9% CA, SAS gifted track",
+      middle: "Palms Middle (feeder) — or Daniel Webster STEAM + French Dual Language",
+      high: "Alexander Hamilton High (feeder) — Humanities/Music magnet",
+    },
+  },
+
+  'mid-city': {
+    title: "Scout's Take: Mid-City",
+    metro: 'los-angeles',
+    paragraphs: [
+      "Mid-City and the Mid-Wilshire corridor are dense with magnet and dual-language options that reward families who research early. The neighborhood elementaries — Cahuenga (Korean Dual Language since 1992), Van Ness (STEAM), Wilton Place (SAS gifted + arts), Hobart (SAS + Spanish DL), plus Wilshire Crest, Carthay Center, and Rosewood STEM/environmental magnets — give an unusual range of specialized programs in a compact area.",
+      "The corridor's middle and high anchors are John Burroughs Middle (Gifted Magnet + SAS + Spanish/Korean DL, in a new building) and Los Angeles Senior High (STEM/STEAM Magnet + AVID). Most families here navigate by program rather than by zoned default, so the Choices application is central.",
+      "Pick the program that fits your child — dual language, SAS gifted, STEAM, or environmental — then use our LA Charter & Magnet School Choice Playbook to map the application path. The deep dives below show how each compares.",
+    ],
+    pipeline: {
+      elementary: "Cahuenga / Van Ness / Wilton / Hobart — dual language, SAS, STEAM options",
+      middle: "John Burroughs Middle — Gifted Magnet + SAS + Spanish/Korean DL",
+      high: "Los Angeles Senior High — STEM/STEAM Magnet + AVID",
+    },
+  },
+
+  'westwood': {
+    title: "Scout's Take: Westwood",
+    metro: 'los-angeles',
+    paragraphs: [
+      "Westwood families sit next to UCLA with a strong set of public and private options. Fairburn Avenue Elementary is the sought-after neighborhood school, feeding toward Emerson Community Charter Middle and University High School Charter — a relatively coherent public pipeline by Westside standards.",
+      "For families considering private, Westwood and its edges hold two distinctive options: Mirman School, built specifically for highly gifted children, and Geffen Academy at UCLA, a 6-12 independent school with university ties. Both are very different propositions from the neighborhood path and worth understanding on their own terms.",
+      "Start with Fairburn's deep dive and the pipeline below, then compare the charter and private alternatives. Our LAUSD School Choice Blueprint covers the permit and magnet routes if you're looking beyond the zoned school.",
+    ],
+    pipeline: {
+      elementary: "Fairburn Avenue Elementary (zoned) — strong Westwood neighborhood school",
+      middle: "Emerson Community Charter Middle — charter pipeline option",
+      high: "University High School Charter — Westside charter high",
+    },
+  },
+
+  'view-park-baldwin-hills': {
+    title: "Scout's Take: View Park / Baldwin Hills",
+    metro: 'los-angeles',
+    paragraphs: [
+      "View Park and Baldwin Hills anchor a complete K-12 public pipeline in historic Black Los Angeles, and the honest read is to judge these schools by track and trajectory. The area's gifted-magnet elementaries — Windsor Hills (Math/Science/Aerospace) and Baldwin Hills (Pilot & Gifted Magnet), alongside Virginia Road — offer rigorous tracks within a community-rich setting.",
+      "The pipeline runs to Audubon Middle (a Gifted Magnet Center whose statewide percentile climbed from the 2nd to the 18th between 2023 and 2025) and Susan Miller Dorsey High (a 1937 institution with AP and a gifted program and a graduation rate well above its proficiency figures). Aggregate scores are low and we say so plainly; the gifted/magnet tracks are where the value sits.",
+      "For a gifted-identified child, this is a genuine close-to-home option — plan the GATE verification and Choices applications early. The deep dives below, plus our LA Charter & Magnet playbook, lay out the path.",
+    ],
+    pipeline: {
+      elementary: "Baldwin Hills / Windsor Hills — Pilot & Gifted / Aerospace magnets",
+      middle: "Audubon Middle — Gifted Magnet Center, rising trajectory",
+      high: "Susan Miller Dorsey High — AP + gifted; grad rate above proficiency",
+    },
+  },
+
+  'sherman-oaks': {
+    title: "Scout's Take: Sherman Oaks",
+    metro: 'los-angeles',
+    paragraphs: [
+      "Sherman Oaks gives Valley families a strong public pipeline anchored by Dixie Canyon Community Charter — a top-10% California elementary (around 64-66% proficiency) that stays diverse and mixed-income, with affiliated-charter flexibility and no separate lottery for resident families.",
+      "The middle-school anchor is Louis Armstrong (the school long known as Millikan), one of only a handful of LAUSD performing-arts magnet middles, with four dedicated dance studios plus a STEM academy. From there, families target two strong magnet high schools: Van Nuys High (three magnets, including a rare Medical magnet) and Grant High (the respected College Prep & Digital Arts magnet).",
+      "Decide early whether your child leans arts, STEM, or college-prep, then apply through Choices on time — the point system rewards planning. The deep dives below map the full Sherman Oaks pipeline; our LA Charter & Magnet School Choice Playbook covers the applications.",
+    ],
+    pipeline: {
+      elementary: "Dixie Canyon Community Charter — top 10% CA, affiliated charter",
+      middle: "Louis Armstrong (formerly Millikan) — Performing Arts Magnet + STEM",
+      high: "Van Nuys (3 magnets) or Grant (CPDA magnet)",
+    },
+  },
+
 }
 
 // ZIP to town mapping — 5-digit ZIP → town key

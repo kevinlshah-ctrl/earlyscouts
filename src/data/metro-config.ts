@@ -13,6 +13,8 @@ export const METROS: Record<string, MetroConfig> = {
       'Beach Cities',
       'Hollywood & Mid-City',
       'Northeast LA & Pasadena',
+      'South & Southwest LA',
+      'San Fernando Valley',
     ],
   },
   // Future:
