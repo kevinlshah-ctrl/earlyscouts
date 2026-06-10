@@ -112,7 +112,6 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
     districts: ['LAUSD'],
     elementarySlugs: [
       'clover-avenue-elementary-school-los-angeles-ca',
-      'overland-avenue-elementary-school-los-angeles-ca',
       'brockton-avenue-elementary-los-angeles-ca',
       'warner-avenue-elementary-los-angeles-ca',
       'castle-heights-elementary-school-los-angeles-ca',
@@ -138,7 +137,7 @@ export const NEIGHBORHOOD_SCHOOLS: Record<string, NeighborhoodConfig> = {
       'laces-magnet-los-angeles-ca',
     ],
     pipelineSlugs: [
-      'overland-avenue-elementary-school-los-angeles-ca',
+      'overland-avenue-elementary-los-angeles-ca',
       'palms-middle-school-los-angeles-ca',
       'venice-high-school-los-angeles-ca',
     ],
