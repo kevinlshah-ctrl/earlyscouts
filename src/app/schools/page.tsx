@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { getDeepDiveSchools } from './getDeepDiveSchools'
+import { getDiscoveryConfigForSource } from './getDiscoveryConfig'
 import SchoolsDiscovery from './SchoolsDiscovery'
 import WelcomeToast from './WelcomeToast'
 
@@ -14,7 +15,10 @@ export default async function SchoolsPage({
   searchParams?: { metro?: string }
 }) {
   const metro = searchParams?.metro ?? 'los-angeles'
-  const schools = await getDeepDiveSchools(metro)
+  const [schools, discovery] = await Promise.all([
+    getDeepDiveSchools(metro),
+    getDiscoveryConfigForSource(metro),
+  ])
   return (
     <>
       <Suspense fallback={null}>
@@ -26,7 +30,7 @@ export default async function SchoolsPage({
           <div className="text-[#9B9690] text-sm font-mono">Loading schools...</div>
         </div>
       }>
-        <SchoolsDiscovery allSchools={schools} />
+        <SchoolsDiscovery allSchools={schools} discovery={discovery} />
       </Suspense>
     </>
   )

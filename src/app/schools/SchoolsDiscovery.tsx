@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
-import { METROS, DEFAULT_METRO } from '@/data/metro-config'
-import { SCOUT_TAKES, ZIP_TO_TOWN } from '@/data/neighborhood-scout-takes'
-import { getNeighborhoodById } from '@/data/neighborhood-schools'
+import { DEFAULT_METRO } from '@/data/metro-config'
+import { ZIP_TO_TOWN } from '@/data/neighborhood-scout-takes'
+import type { ScoutTake } from '@/data/neighborhood-scout-takes'
 import type { School } from '@/lib/types'
+import type { DiscoveryConfig, DiscoveryNeighborhood } from './getDiscoveryConfig'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -76,11 +77,13 @@ function tagClasses(tag: string): string {
   return 'bg-gray-100 text-gray-500'
 }
 
-function readAreasFromUrl(): string[] {
+function readAreasFromUrl(neighborhoods: Record<string, DiscoveryNeighborhood>): string[] {
   if (typeof window === 'undefined') return []
   const area = new URLSearchParams(window.location.search).get('area')
   if (!area) return []
-  return area.split(',').filter(id => getNeighborhoodById(id) != null || SCOUT_TAKES[id] != null)
+  // Every scout-take id is also a neighborhood id, so a single presence check
+  // reproduces the original (getNeighborhoodById || SCOUT_TAKES) validation.
+  return area.split(',').filter(id => neighborhoods[id] != null)
 }
 
 // ── School Card (mirrors BracketCard from SchoolBracket) ──────────────────────
@@ -281,8 +284,7 @@ function LevelRow({
 
 // ── Scout Take Modal ──────────────────────────────────────────────────────────
 
-function ScoutTakeModal({ townId, onClose }: { townId: string; onClose: () => void }) {
-  const take = SCOUT_TAKES[townId]
+function ScoutTakeModal({ take, onClose }: { take: ScoutTake | null; onClose: () => void }) {
   if (!take) return null
 
   return (
@@ -400,10 +402,12 @@ function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] }) {
+export default function SchoolsDiscovery({ allSchools, discovery }: { allSchools: School[]; discovery: DiscoveryConfig }) {
   const router = useRouter()
   const metro = DEFAULT_METRO
-  const metroConfig = METROS[metro]
+  const neighborhoods = discovery.neighborhoods
+  const nbById = (id: string): DiscoveryNeighborhood | null => neighborhoods[id] ?? null
+  const scoutTakeById = (id: string): ScoutTake | null => neighborhoods[id]?.scoutTake ?? null
 
   const [activeAreas, setActiveAreas] = useState<Set<string>>(new Set())
   const [expandedRegion, setExpandedRegion] = useState<string | null>(null)
@@ -417,11 +421,11 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
 
   // Read URL on mount + sessionStorage fallback + check onboarding + detect mobile
   useEffect(() => {
-    const ids = readAreasFromUrl()
+    const ids = readAreasFromUrl(neighborhoods)
     if (ids.length > 0) {
       setActiveAreas(new Set(ids))
       // Auto-expand the region for the active area so town chips are visible
-      const firstHood = getNeighborhoodById(ids[0])
+      const firstHood = nbById(ids[0])
       if (firstHood?.region) setExpandedRegion(firstHood.region)
     } else {
       // No URL params — fall back to sessionStorage (e.g. user clicked nav "Schools")
@@ -448,10 +452,10 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   // Browser back/forward — restore areas + expand region
   useEffect(() => {
     function onPopState() {
-      const ids = readAreasFromUrl()
+      const ids = readAreasFromUrl(neighborhoods)
       if (ids.length > 0) {
         setActiveAreas(new Set(ids))
-        const firstHood = getNeighborhoodById(ids[0])
+        const firstHood = nbById(ids[0])
         if (firstHood?.region) setExpandedRegion(firstHood.region)
       } else {
         setActiveAreas(new Set())
@@ -496,7 +500,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
       const town = ZIP_TO_TOWN[zip]
       if (town) {
         selectSingleArea(town)
-        const hood = getNeighborhoodById(town)
+        const hood = nbById(town)
         if (hood) setExpandedRegion(hood.region)
       } else {
         setZipNotCovered(true)
@@ -548,7 +552,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
     const town = ZIP_TO_TOWN[zip]
     if (town) {
       selectSingleArea(town)
-      const hood = getNeighborhoodById(town)
+      const hood = nbById(town)
       if (hood) setExpandedRegion(hood.region)
     } else {
       setZipNotCovered(true)
@@ -559,20 +563,20 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
 
   const activeAreaIds = Array.from(activeAreas)
   const singleArea = activeAreaIds.length === 1 ? activeAreaIds[0] : null
-  const showScoutTakeLink = singleArea != null && Boolean(SCOUT_TAKES[singleArea])
+  const showScoutTakeLink = singleArea != null && Boolean(scoutTakeById(singleArea))
 
   const schoolsBySlug = new Map(allSchools.map(s => [s.slug, s]))
 
   // Categorize schools for active areas
   const { publicElementary, charterPrivate, middleHigh, guides } = (() => {
-    const privateSlugSet = new Set(activeAreaIds.flatMap(id => getNeighborhoodById(id)?.privateSlugs ?? []))
-    const elementarySlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.elementarySlugs ?? [])
-    const middleSlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.middleSlugs ?? [])
-    const highSlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.highSlugs ?? [])
-    const guideSlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.playbookSlugs ?? [])
+    const privateSlugSet = new Set(activeAreaIds.flatMap(id => nbById(id)?.privateSlugs ?? []))
+    const elementarySlugs = activeAreaIds.flatMap(id => nbById(id)?.elementarySlugs ?? [])
+    const middleSlugs = activeAreaIds.flatMap(id => nbById(id)?.middleSlugs ?? [])
+    const highSlugs = activeAreaIds.flatMap(id => nbById(id)?.highSlugs ?? [])
+    const guideSlugs = activeAreaIds.flatMap(id => nbById(id)?.playbookSlugs ?? [])
 
     // Pipeline slugs — shown first in each row
-    const pipelineSlugs = activeAreaIds.flatMap(id => getNeighborhoodById(id)?.pipelineSlugs ?? [])
+    const pipelineSlugs = activeAreaIds.flatMap(id => nbById(id)?.pipelineSlugs ?? [])
     const pipelineOrder = new Map(pipelineSlugs.map((slug, i) => [slug, i]))
     const sortWithPipeline = (arr: School[]) =>
       [...arr].sort((a, b) => {
@@ -621,21 +625,24 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
   })()
 
   // Region chip list (only towns with Scout Takes)
-  const regionChips = metroConfig.regions
+  const regionChips = discovery.regions
     .map(region => {
-      const towns = Object.keys(SCOUT_TAKES)
+      // Only neighborhoods with a scout take become town chips (reproduces the
+      // original Object.keys(SCOUT_TAKES) source); iteration order is the canonical
+      // scout-take order baked into the config.
+      const towns = Object.keys(neighborhoods)
         .filter(id => {
-          const hood = getNeighborhoodById(id)
-          return hood?.region === region && hood?.metro === metro
+          const hood = neighborhoods[id]
+          return hood?.scoutTake != null && hood.region === region && hood.metro === metro
         })
-        .map(id => ({ id, label: getNeighborhoodById(id)!.label }))
+        .map(id => ({ id, label: neighborhoods[id].label }))
       return { region, towns }
     })
     .filter(r => r.towns.length > 0)
 
   const activeRegions = new Set(
     activeAreaIds
-      .map(id => getNeighborhoodById(id)?.region)
+      .map(id => nbById(id)?.region)
       .filter((r): r is string => Boolean(r))
   )
 
@@ -722,7 +729,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
             <div className="flex flex-wrap gap-2 items-center mt-2 mb-1">
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#9B9690]">Showing:</span>
               {activeAreaIds.map(id => {
-                const hood = getNeighborhoodById(id)
+                const hood = nbById(id)
                 if (!hood) return null
                 return (
                   <button
@@ -808,7 +815,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
                 >
                   <span className="shrink-0">🔭</span>
                   <span>
-                    Scout&apos;s Take: {SCOUT_TAKES[singleArea!].title.replace("Scout's Take: ", '')}
+                    Scout&apos;s Take: {scoutTakeById(singleArea!)!.title.replace("Scout's Take: ", '')}
                     {' '}— <span className="underline underline-offset-2">Start here</span> →
                   </span>
                 </button>
@@ -872,7 +879,7 @@ export default function SchoolsDiscovery({ allSchools }: { allSchools: School[] 
 
       {/* ── Scout Take modal ─────────────────────────────────────────────── */}
       {showScoutModal && singleArea && (
-        <ScoutTakeModal townId={singleArea} onClose={() => setShowScoutModal(false)} />
+        <ScoutTakeModal take={scoutTakeById(singleArea)} onClose={() => setShowScoutModal(false)} />
       )}
 
       {/* ── Onboarding modal ─────────────────────────────────────────────── */}

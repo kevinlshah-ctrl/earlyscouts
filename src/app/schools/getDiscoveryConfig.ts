@@ -1,6 +1,9 @@
 import { createServerClient } from '@/lib/supabase'
+import { NEIGHBORHOOD_SCHOOLS } from '@/data/neighborhood-schools'
 import type { NeighborhoodConfig } from '@/data/neighborhood-schools'
+import { SCOUT_TAKES } from '@/data/neighborhood-scout-takes'
 import type { ScoutTake } from '@/data/neighborhood-scout-takes'
+import { METROS } from '@/data/metro-config'
 
 /**
  * DB-backed discovery config loader (request-time, like getDeepDiveSchools).
@@ -105,4 +108,56 @@ export async function getDiscoveryConfig(metro: string = 'los-angeles'): Promise
   }
 
   return { regions, neighborhoods }
+}
+
+/**
+ * Canonical neighborhood ordering, shared by the static builder and the migration
+ * generator. Scout-take neighborhoods come first IN SCOUT_TAKES ORDER (this is what
+ * drives town-chip order in the UI and must match the pre-refactor rendering), then
+ * the chip-less neighborhoods in NEIGHBORHOOD_SCHOOLS order.
+ */
+export function orderedNeighborhoodIds(): string[] {
+  const takeIds = Object.keys(SCOUT_TAKES)
+  const takeSet = new Set(takeIds)
+  const rest = Object.keys(NEIGHBORHOOD_SCHOOLS).filter((id) => !takeSet.has(id))
+  return [...takeIds, ...rest]
+}
+
+/**
+ * Static fallback that returns the SAME shape as getDiscoveryConfig, built from the
+ * hardcoded files. Used when DISCOVERY_SOURCE !== 'db'. Ordering matches the DB path
+ * (and the pre-refactor rendering) via orderedNeighborhoodIds().
+ */
+export function getStaticDiscoveryConfig(metro: string = 'los-angeles'): DiscoveryConfig {
+  const regions = METROS[metro]?.regions ?? []
+  const neighborhoods: Record<string, DiscoveryNeighborhood> = {}
+  for (const id of orderedNeighborhoodIds()) {
+    const hood = NEIGHBORHOOD_SCHOOLS[id]
+    if (!hood || hood.metro !== metro) continue
+    neighborhoods[id] = {
+      ...hood,
+      privateSlugs: hood.privateSlugs ?? [],
+      pipelineSlugs: hood.pipelineSlugs ?? [],
+      scoutTake: SCOUT_TAKES[id] ?? null,
+    }
+  }
+  return { regions, neighborhoods }
+}
+
+/**
+ * Source-aware entry point used by the schools page. Reads DISCOVERY_SOURCE
+ * (default 'static') and returns the DB-backed config when set to 'db', otherwise
+ * the static fallback. The static path keeps the site working if the DB is
+ * unreachable or the flag is flipped back.
+ */
+export async function getDiscoveryConfigForSource(metro: string = 'los-angeles'): Promise<DiscoveryConfig> {
+  if (process.env.DISCOVERY_SOURCE === 'db') {
+    try {
+      return await getDiscoveryConfig(metro)
+    } catch (err) {
+      console.error('[discovery] DB load failed, falling back to static:', err)
+      return getStaticDiscoveryConfig(metro)
+    }
+  }
+  return getStaticDiscoveryConfig(metro)
 }
