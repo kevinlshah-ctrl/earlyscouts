@@ -49,8 +49,8 @@ export default function PrivacyPage() {
           <h2 className="font-serif text-2xl text-charcoal mb-4 mt-10">Contact</h2>
           <p className="text-gray-600 leading-relaxed">
             Questions about your data? Email us at{' '}
-            <a href="mailto:hello@earlyscouts.com" className="text-scout-green hover:underline">
-              hello@earlyscouts.com
+            <a href="mailto:earlyscouts@gmail.com" className="text-scout-green hover:underline">
+              earlyscouts@gmail.com
             </a>
             .
           </p>

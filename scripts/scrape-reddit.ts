@@ -58,7 +58,7 @@ function fetchJson(url: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
-        'User-Agent': 'EarlyScouts/1.0 (school research tool; contact@earlyscouts.com)',
+        'User-Agent': 'EarlyScouts/1.0 (school research tool; earlyscouts@gmail.com)',
         'Accept': 'application/json',
       },
     }, (res) => {

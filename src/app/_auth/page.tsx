@@ -92,8 +92,8 @@ export default function SiteAuthPage() {
 
         <p className="text-center text-gray-600 text-xs mt-6">
           Need access?{' '}
-          <a href="mailto:hello@earlyscouts.com" className="text-emerald-400 hover:underline">
-            hello@earlyscouts.com
+          <a href="mailto:earlyscouts@gmail.com" className="text-emerald-400 hover:underline">
+            earlyscouts@gmail.com
           </a>
         </p>
       </div>

@@ -70,10 +70,10 @@ export default function AboutPage() {
         <div className="max-w-2xl mx-auto flex flex-col items-center gap-3">
           <p className="text-[#3D3A36] text-base font-medium">Made with ❤️ in Los Angeles</p>
           <a
-            href="mailto:hello@earlyscouts.com"
+            href="mailto:earlyscouts@gmail.com"
             className="text-[#5B9A6F] font-semibold hover:text-[#4a8a5e] transition-colors text-sm"
           >
-            hello@earlyscouts.com
+            earlyscouts@gmail.com
           </a>
           <p className="text-[#9B9690] text-sm">Have feedback? We read every message.</p>
         </div>

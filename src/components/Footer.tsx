@@ -15,10 +15,10 @@ export default function Footer() {
               For parents who plan ahead.
             </p>
             <a
-              href="mailto:hello@earlyscouts.com"
+              href="mailto:earlyscouts@gmail.com"
               className="text-sm text-scout-green hover:text-mint transition-colors"
             >
-              hello@earlyscouts.com
+              earlyscouts@gmail.com
             </a>
             <p className="text-xs text-gray-500">Made in Los Angeles</p>
           </div>

@@ -785,7 +785,7 @@ export default function SchoolsDiscovery({ allSchools, discovery }: { allSchools
             {zipNotCovered && (
               <p className="text-xs text-[#9B9690]">
                 We don&apos;t cover that area yet.{' '}
-                <a href="mailto:hello@earlyscouts.com?subject=Coverage request" className="text-[#5B9A6F] hover:underline">
+                <a href="mailto:earlyscouts@gmail.com?subject=Coverage request" className="text-[#5B9A6F] hover:underline">
                   Email us to get notified.
                 </a>
               </p>

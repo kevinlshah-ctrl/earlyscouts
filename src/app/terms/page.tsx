@@ -102,8 +102,8 @@ export default function TermsPage() {
               reports and guides are digital content delivered immediately upon purchase, we do not offer
               refunds. If you experience a technical issue preventing access to purchased content, contact
               us at{' '}
-              <a href="mailto:hello@earlyscouts.com" className="text-[#5B9A6F] hover:underline">
-                hello@earlyscouts.com
+              <a href="mailto:earlyscouts@gmail.com" className="text-[#5B9A6F] hover:underline">
+                earlyscouts@gmail.com
               </a>{' '}
               and we will resolve it.
             </p>
@@ -113,8 +113,8 @@ export default function TermsPage() {
             <h2 className="font-serif text-xl text-[#1A1A2E] mb-3">9 — Contact</h2>
             <p className="text-[#4A4743] leading-relaxed text-sm">
               Questions about these terms or our editorial approach can be directed to:{' '}
-              <a href="mailto:hello@earlyscouts.com" className="text-[#5B9A6F] hover:underline">
-                hello@earlyscouts.com
+              <a href="mailto:earlyscouts@gmail.com" className="text-[#5B9A6F] hover:underline">
+                earlyscouts@gmail.com
               </a>
             </p>
           </div>

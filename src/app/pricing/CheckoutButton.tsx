@@ -46,9 +46,9 @@ async function runCheckout(tier: CheckoutTier, token: string): Promise<string | 
       window.location.href = data.url
       return null
     }
-    return data.error ?? 'Payment unavailable — please try again or contact hello@earlyscouts.com'
+    return data.error ?? 'Payment unavailable — please try again or contact earlyscouts@gmail.com'
   } catch {
-    return 'Payment unavailable — please try again or contact hello@earlyscouts.com'
+    return 'Payment unavailable — please try again or contact earlyscouts@gmail.com'
   }
 }
 

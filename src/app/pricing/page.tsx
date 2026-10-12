@@ -203,8 +203,8 @@ export default function PricingPage({ searchParams }: { searchParams?: { next?: 
           </div>
           <p className="text-center text-sm text-[#9B9690] mt-8">
             Questions?{' '}
-            <a href="mailto:hello@earlyscouts.com" className="text-[#5B9A6F] hover:underline">
-              hello@earlyscouts.com
+            <a href="mailto:earlyscouts@gmail.com" className="text-[#5B9A6F] hover:underline">
+              earlyscouts@gmail.com
             </a>
           </p>
         </div>

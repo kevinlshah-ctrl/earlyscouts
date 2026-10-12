@@ -25,10 +25,10 @@ export default function ContactPage() {
           </p>
 
           <a
-            href="mailto:hello@earlyscouts.com"
+            href="mailto:earlyscouts@gmail.com"
             className="inline-block bg-scout-green text-white font-semibold px-8 py-4 rounded-full hover:bg-scout-green-dark transition-colors text-lg"
           >
-            hello@earlyscouts.com
+            earlyscouts@gmail.com
           </a>
 
           <p className="text-gray-400 text-sm mt-8">

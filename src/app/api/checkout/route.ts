@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[checkout] Unhandled error:', msg, err instanceof Error ? err.stack : '')
     return NextResponse.json(
-      { error: 'Payment unavailable — please try again or contact hello@earlyscouts.com' },
+      { error: 'Payment unavailable — please try again or contact earlyscouts@gmail.com' },
       { status: 500 }
     )
   }

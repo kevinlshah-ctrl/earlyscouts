@@ -275,8 +275,8 @@ export default function AccountTab({
           </p>
           <p className="text-xs text-gray-400 mt-2">
             To change your email contact{' '}
-            <a href="mailto:hello@earlyscouts.com" className="text-scout-green hover:underline">
-              hello@earlyscouts.com
+            <a href="mailto:earlyscouts@gmail.com" className="text-scout-green hover:underline">
+              earlyscouts@gmail.com
             </a>
           </p>
         </Card>
